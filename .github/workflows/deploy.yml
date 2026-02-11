@@ -10,20 +10,22 @@ permissions:
   pages: write
   id-token: write
 
-concurrency:
-  group: "pages"
-  cancel-in-progress: false
-
 jobs:
   build:
     runs-on: ubuntu-latest
-    container: ruby:3.2  # Use Docker container to guarantee environment
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.2'
+          bundler-cache: false # Disable cache to force fresh install
       - name: Install dependencies
         run: |
+          rm -f Gemfile.lock
           gem install bundler
+          bundle config set force_ruby_platform true
           bundle install
       - name: Setup Pages
         id: pages
@@ -32,10 +34,6 @@ jobs:
         run: bundle exec jekyll build --baseurl "${{ steps.pages.outputs.base_path }}"
         env:
           JEKYLL_ENV: production
-      - name: Fix permissions
-        if: always()
-        run: |
-          chmod -R +r _site
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
 
