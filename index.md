@@ -113,6 +113,39 @@ impact_statement:
   closing: "At Yajur Healthcare, we are turning knowledge into augmented intelligence, shaping a future where healthcare is proactive, personalized, and powered by data."
   cta: "Let's build the future of AI-driven healthcare—together. 🚀"
 
+legacy_critique:
+  title: "Legacy Systems Can't Support Modern Capabilities"
+  subtitle_lines:
+    - "Healthcare Needs Evolve"
+    - "Faster Than Traditional Software"
+    - "Lifecycle Can Deliver"
+  description: "While you wait 18-24 months for legacy vendors to deliver yesterday's requirements, patient needs and clinical standards continue to advance. The gap keeps growing."
+
+security_compliance:
+  title: "Security Native"
+  subtitle: "Yajur Healthcare: The Medical Data Infrastructure Company."
+  cta_primary: "Get Early Access"
+  cta_secondary: "Tech Stack"
+  certifications_title: "Certified Globally"
+  certifications_subtitle: "Adhering to international medical data standards."
+  certifications:
+    - name: "HIPAA"
+      region: "USA Standard"
+    - name: "SOC 2"
+      region: "Security"
+    - name: "ABDM"
+      region: "India Health"
+    - name: "DHA"
+      region: "UAE Approval Pending"
+  footer_title: "We are ready to help"
+  footer_ctas:
+    - text: "Contact Us"
+      subtext: "Add AI-Capabilities as your Strategic Advantage"
+    - text: "Let's Build the Future of Healthcare Data—Together"
+      subtext: "Discover What Our Platform Can Enable for You"
+    - text: "Learn from Our Journey Across Healthcare, Data & AI"
+      subtext: "Reach out, Let Us Innovate"
+
 vision:
   quote: "There’s a clear paradigm shift taking place across medical information, and we are at the forefront of this transformation."
   label: "YAJUR HEALTHCARE VISION"
