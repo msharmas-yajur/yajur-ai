@@ -1,0 +1,120 @@
+---
+layout: default
+---
+
+<section id="hero" style="border-bottom: 1px solid rgba(0,0,0,0.05); padding: 72px 0 120px;">
+    <div class="container">
+        <div style="max-width: 900px;">
+            <h1>{{ page.hero.title }}</h1>
+            <div
+                style="font-size: 22px; color: #5e5d59; margin-top: 32px; font-family: 'Georgia', serif; line-height: 1.6;">
+                {% for paragraph in page.hero.description %}
+                <p {% if forloop.first==false %}style="margin-top: 24px;" {% endif %}>{{ paragraph }}</p>
+                {% endfor %}
+            </div>
+            <div style="margin-top: 48px;">
+                <a href="{{ page.hero.cta_link }}" class="button">{{ page.hero.cta_text }}</a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section id="seamless-impact" style="text-align: center; padding: 96px 0; background-color: #faf9f5;">
+    <div class="container" style="max-width: 1000px;">
+        <div style="margin-bottom: 32px;">
+            <img src="{{ site.baseurl }}/assets/logo.png" alt="Yajur Logo"
+                style="width: 120px; display: inline-block; vertical-align: middle; border-radius: 50%; background: white; padding: 10px; border: 1px solid #eee;">
+        </div>
+        <span class="tag" style="font-weight: 600; font-style: italic; display: block;">{{ page.impact.tag }}</span>
+        <h2 style="font-size: 42px; line-height: 1.2; margin-top: 16px;">{{ page.impact.title }}</h2>
+        <p
+            style="font-size: 18px; color: #5e5d59; margin-top: 32px; max-width: 800px; margin-left: auto; margin-right: auto; line-height: 1.6;">
+            {{ page.impact.description }}</p>
+    </div>
+</section>
+
+<section id="mission">
+    <div class="container">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 96px; align-items: start;">
+            <div>
+                <h2 style="font-size: 44px;">{{ page.mission.title }}</h2>
+            </div>
+            <div>
+                {% for paragraph in page.mission.content %}
+                <p {% if forloop.first==false %}style="margin-top: 24px;" {% endif %}>{{ paragraph }}</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</section>
+
+<section id="solutions" class="bg-alt">
+    <div class="container">
+        <h2 style="text-align: center; margin-bottom: 64px;">{{ page.pillars_title }}</h2>
+
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px;">
+            {% for pillar in page.pillars %}
+            <div class="list-item">
+                <span class="tag">{{ pillar.tag }}</span>
+                <h3>{{ pillar.title }}</h3>
+                <p style="font-size: 17px; color: #5e5d59;">{{ pillar.description }}</p>
+                <ul style="padding-left: 20px; font-size: 16px; margin-top: 16px; line-height: 2;">
+                    {% for item in pillar.items %}
+                    <li>{{ item }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+{% for service in page.services %}
+<section id="{{ service.id }}" style="padding: 120px 0; background-color: {% cycle '#faf9f5', '#fcfbf8' %};">
+    <div class="container">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 120px; align-items: center;">
+            <div style="{% if service.image_position == 'left' %}order: 2;{% endif %}">
+                <span class="tag">{{ service.tag }}</span>
+                <h2 style="font-size: 44px; margin-bottom: 32px;">{{ service.title }}</h2>
+
+                <div style="display: grid; gap: 24px;">
+                    {% for feature in service.features %}
+                    <div>
+                        <h3 style="font-size: 24px; margin-bottom: 4px;">{{ feature.title }}</h3>
+                        <p style="color: #5e5d59; max-width: 540px; font-size: 17px;">{{ feature.description }}</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            <div style="{% if service.image_position == 'left' %}order: 1;{% endif %}">
+                <img src="{{ site.baseurl }}{{ service.image }}" alt="{{ service.title }} Visualization"
+                    style="width: 100%; border-radius: 24px; box-shadow: 0 40px 80px rgba(0,0,0,0.08);">
+            </div>
+        </div>
+    </div>
+</section>
+{% endfor %}
+
+<section id="vision">
+    <div class="container" style="text-align: center;">
+        <div style="max-width: 800px; margin: 0 auto;">
+            <blockquote
+                style="font-size: 32px; font-family: 'Georgia', serif; line-height: 1.4; border: none; padding: 0;">
+                "{{ page.vision.quote }}"
+            </blockquote>
+            <p style="margin-top: 32px; font-weight: 600; font-family: 'Inter', sans-serif;">{{ page.vision.label }}</p>
+        </div>
+    </div>
+</section>
+
+<section id="contact"
+    style="background-color: #010101; color: #faf9f5; text-align: center; border-radius: 48px; margin: 0 64px 64px; padding: 96px 0;">
+    <div class="container">
+        <h2 style="color: #faf9f5; font-size: 48px;">{{ page.contact.title }}</h2>
+        <p style="font-size: 20px; opacity: 0.8; margin-top: 24px;">{{ page.contact.description }}</p>
+        <div style="margin-top: 64px;">
+            <a href="{{ page.contact.cta_link }}" class="button" style="background-color: #faf9f5; color: #010101;">{{
+                page.contact.cta_text }}</a>
+        </div>
+    </div>
+</section>
