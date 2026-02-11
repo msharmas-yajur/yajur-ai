@@ -104,6 +104,15 @@ services:
       - title: "AI-Ready & Future-Proof Pipelines"
         description: "Curated, versioned datasets engineered for clinical AI, research, and evolving national healthcare frameworks."
 
+impact_statement:
+  title: "Our Impact"
+  items:
+    - "✅ **Bridging the Gap** – We eliminate inefficiencies in patient care by reducing redundant tests, broken care pathways, and high out-of-pocket expenses."
+    - "✅ **Enhancing Clinical Outcomes** – By leveraging AI and multi-modal data, we bring precision, consistency, and real-world insights to healthcare."
+    - "✅ **Empowering Stakeholders** – Our solutions benefit hospitals, researchers, insurers, and startups, ensuring data-driven decision-making at every level."
+  closing: "At Yajur Healthcare, we are turning knowledge into augmented intelligence, shaping a future where healthcare is proactive, personalized, and powered by data."
+  cta: "Let's build the future of AI-driven healthcare—together. 🚀"
+
 vision:
   quote: "There’s a clear paradigm shift taking place across medical information, and we are at the forefront of this transformation."
   label: "YAJUR HEALTHCARE VISION"

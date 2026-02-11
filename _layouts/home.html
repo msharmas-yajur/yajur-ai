@@ -95,6 +95,30 @@ layout: default
 </section>
 {% endfor %}
 
+<section id="impact-statement" style="padding: 96px 0; background-color: #faf9f5;">
+    <div class="container" style="max-width: 900px;">
+        <h2 style="text-align: center; font-size: 44px; margin-bottom: 48px;">{{ page.impact_statement.title }}</h2>
+
+        <div style="display: grid; gap: 32px; margin-bottom: 48px;">
+            {% for item in page.impact_statement.items %}
+            <div style="font-size: 20px; line-height: 1.6; color: #2d2c28;">
+                {{ item | markdownify }}
+            </div>
+            {% endfor %}
+        </div>
+
+        <div style="text-align: center; margin-top: 48px;">
+            <p
+                style="font-size: 22px; font-family: 'Georgia', serif; line-height: 1.6; color: #2d2c28; margin-bottom: 24px;">
+                {{ page.impact_statement.closing }}
+            </p>
+            <p style="font-size: 24px; font-weight: 600; color: #010101;">
+                {{ page.impact_statement.cta }}
+            </p>
+        </div>
+    </div>
+</section>
+
 <section id="vision">
     <div class="container" style="text-align: center;">
         <div style="max-width: 800px; margin: 0 auto;">
