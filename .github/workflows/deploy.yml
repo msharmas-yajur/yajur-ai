@@ -32,9 +32,9 @@ jobs:
           ruby-version: '3.2'
       - name: Install dependencies
         run: |
+          rm -f Gemfile.lock
           gem install bundler
-          bundle config path vendor/bundle
-          bundle install --jobs 4 --retry 3
+          bundle install
       - name: Setup Pages
         id: pages
         uses: actions/configure-pages@v5
