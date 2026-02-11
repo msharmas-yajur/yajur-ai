@@ -1,0 +1,13 @@
+title: Yajur Healthcare AI
+email: connect@yajur.ai
+description: "The Medical Data Structure Company"
+
+# Domain Settings
+url: "https://yajur.ai"
+baseurl: "" 
+
+# Build Settings
+markdown: kramdown
+theme: minima  # You can change this later
+plugins:
+  - jekyll-feed
