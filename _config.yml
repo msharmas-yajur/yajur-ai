@@ -1,8 +1,8 @@
 title: Yajur Healthcare AI
 email: connect@yajur.ai
 description: "The Medical Data Structure Company"
-url: "https://yajur.ai"
-baseurl: ""
+url: "https://msharmas-yajur.github.io"
+baseurl: "/yajur-ai"
 
 # Hydra Theme Configuration (Manual)
 logo: /assets/logo.png
