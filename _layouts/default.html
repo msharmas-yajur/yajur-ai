@@ -17,17 +17,23 @@
 </head>
 
 <body>
-	<header style="padding: 24px 0; border-bottom: 1px solid rgba(0,0,0,0.05);">
-		<div class="container" style="display: flex; justify-content: space-between; align-items: center;">
-			<a href="{{ '/' | relative_url }}"
-				style="text-decoration: none; font-family: 'Inter', sans-serif; font-weight: 700; font-size: 20px; letter-spacing: -0.02em; color: #010101; display: flex; align-items: center; gap: 12px;">
-				<img src="/assets/logo.png" alt="" style="height: 32px; width: auto; border-radius: 50%;">
+	<header class="site-header">
+		<div class="container site-header__inner">
+			<a href="{{ '/' | relative_url }}" class="site-header__logo">
+				<img src="/assets/logo.png" alt="">
 				<span>YAJUR HEALTHCARE</span>
 			</a>
-			<nav style="font-family: 'Inter', sans-serif; font-size: 15px; font-weight: 500;">
-				<a href="#mission" style="margin-left: 32px; text-decoration: none; color: inherit;">Mission</a>
-				<a href="#solutions" style="margin-left: 32px; text-decoration: none; color: inherit;">Solutions</a>
-				<a href="#contact" style="margin-left: 32px; text-decoration: none; color: inherit;">Contact</a>
+			<button class="nav-toggle" aria-label="Toggle navigation" aria-expanded="false">
+				<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+					<line x1="3" y1="6" x2="21" y2="6"/>
+					<line x1="3" y1="12" x2="21" y2="12"/>
+					<line x1="3" y1="18" x2="21" y2="18"/>
+				</svg>
+			</button>
+			<nav class="site-nav">
+				<a href="#mission">Mission</a>
+				<a href="#solutions">Solutions</a>
+				<a href="#contact">Contact</a>
 			</nav>
 		</div>
 	</header>
@@ -36,35 +42,47 @@
 		{{ content }}
 	</main>
 
-	<footer style="background-color: #0f0f0e; color: #faf9f5; padding: 64px 0; margin-top: 96px;">
+	<footer class="site-footer">
 		<div class="container">
-			<div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 48px;">
+			<div class="footer-grid">
 				<div>
-					<h3 style="color: #faf9f5;">Yajur Healthcare AI</h3>
-					<p style="font-size: 16px; opacity: 0.8;">The Medical Data Infrastructure Company. Building the
+					<h3>Yajur Healthcare AI</h3>
+					<p>The Medical Data Infrastructure Company. Building the
 						bedrock for AI-first medicine.</p>
 				</div>
 				<div>
-					<h4 style="color: #faf9f5; font-size: 14px; text-transform: uppercase;">Company</h4>
-					<ul style="list-style: none; padding: 0; font-size: 14px; opacity: 0.8; line-height: 2;">
-						<li><a href="#mission" style="text-decoration: none; color: inherit;">Mission</a></li>
-						<li><a href="#about" style="text-decoration: none; color: inherit;">About Us</a></li>
+					<h4>Company</h4>
+					<ul>
+						<li><a href="#mission">Mission</a></li>
+						<li><a href="#about">About Us</a></li>
 					</ul>
 				</div>
 				<div>
-					<h4 style="color: #faf9f5; font-size: 14px; text-transform: uppercase;">Legal</h4>
-					<ul style="list-style: none; padding: 0; font-size: 14px; opacity: 0.8; line-height: 2;">
-						<li><a href="#" style="text-decoration: none; color: inherit;">Privacy Policy</a></li>
-						<li><a href="#" style="text-decoration: none; color: inherit;">Terms of Service</a></li>
+					<h4>Legal</h4>
+					<ul>
+						<li><a href="#">Privacy Policy</a></li>
+						<li><a href="#">Terms of Service</a></li>
 					</ul>
 				</div>
 			</div>
-			<div
-				style="margin-top: 48px; padding-top: 24px; border-top: 1px solid rgba(255,255,255,0.1); font-size: 12px; opacity: 0.6;">
+			<div class="footer-bottom">
 				&copy; {{ site.time | date: '%Y' }} Yajur Healthcare AI. All rights reserved.
 			</div>
 		</div>
 	</footer>
+
+	<script>
+	(function() {
+		var toggle = document.querySelector('.nav-toggle');
+		var nav = document.querySelector('.site-nav');
+		if (toggle && nav) {
+			toggle.addEventListener('click', function() {
+				var open = nav.classList.toggle('is-open');
+				toggle.setAttribute('aria-expanded', open);
+			});
+		}
+	})();
+	</script>
 </body>
 
 </html>

@@ -2,42 +2,38 @@
 layout: default
 ---
 
-<section id="hero" style="border-bottom: 1px solid rgba(0,0,0,0.05); padding: 72px 0 120px;">
+<section id="hero" class="hero">
     <div class="container">
-        <div style="max-width: 900px;">
+        <div class="hero__content">
             <h1>{{ page.hero.title }}</h1>
-            <div
-                style="font-size: 22px; color: #5e5d59; margin-top: 32px; font-family: 'Georgia', serif; line-height: 1.6;">
+            <div class="hero__description">
                 {% for paragraph in page.hero.description %}
-                <p {% if forloop.first==false %}style="margin-top: 24px;" {% endif %}>{{ paragraph }}</p>
+                <p>{{ paragraph }}</p>
                 {% endfor %}
             </div>
-            <div style="margin-top: 48px;">
+            <div class="hero__cta">
                 <a href="{{ page.hero.cta_link }}" class="button">{{ page.hero.cta_text }}</a>
             </div>
         </div>
     </div>
 </section>
 
-<section id="seamless-impact" style="text-align: center; padding: 96px 0; background-color: #faf9f5;">
-    <div class="container" style="max-width: 1000px;">
-        <div style="margin-bottom: 32px;">
-            <img src="{{ site.baseurl }}/assets/logo.png" alt="Yajur Logo"
-                style="width: 120px; display: inline-block; vertical-align: middle; border-radius: 50%; background: white; padding: 10px; border: 1px solid #eee;">
+<section id="seamless-impact" class="seamless-impact">
+    <div class="container">
+        <div>
+            <img src="{{ site.baseurl }}/assets/logo.png" alt="Yajur Logo" class="seamless-impact__logo">
         </div>
-        <span class="tag" style="font-weight: 600; font-style: italic; display: block;">{{ page.impact.tag }}</span>
-        <h2 style="font-size: 42px; line-height: 1.2; margin-top: 16px;">{{ page.impact.title }}</h2>
-        <p
-            style="font-size: 18px; color: #5e5d59; margin-top: 32px; max-width: 800px; margin-left: auto; margin-right: auto; line-height: 1.6;">
-            {{ page.impact.description }}</p>
+        <span class="tag" style="font-style: italic; display: block;">{{ page.impact.tag }}</span>
+        <h2>{{ page.impact.title }}</h2>
+        <p>{{ page.impact.description }}</p>
     </div>
 </section>
 
 <section id="mission">
     <div class="container">
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 96px; align-items: start;">
+        <div class="mission-grid">
             <div>
-                <h2 style="font-size: 44px;">{{ page.mission.title }}</h2>
+                <h2>{{ page.mission.title }}</h2>
             </div>
             <div>
                 {% for paragraph in page.mission.content %}
@@ -50,15 +46,15 @@ layout: default
 
 <section id="solutions" class="bg-alt">
     <div class="container">
-        <h2 style="text-align: center; margin-bottom: 64px;">{{ page.pillars_title }}</h2>
+        <h2 class="pillars-title">{{ page.pillars_title }}</h2>
 
-        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px;">
+        <div class="pillars-grid">
             {% for pillar in page.pillars %}
             <div class="list-item">
                 <span class="tag">{{ pillar.tag }}</span>
                 <h3>{{ pillar.title }}</h3>
-                <p style="font-size: 17px; color: #5e5d59;">{{ pillar.description }}</p>
-                <ul style="padding-left: 20px; font-size: 16px; margin-top: 16px; line-height: 2;">
+                <p class="pillar-description">{{ pillar.description }}</p>
+                <ul class="pillar-list">
                     {% for item in pillar.items %}
                     <li>{{ item }}</li>
                     {% endfor %}
@@ -70,114 +66,99 @@ layout: default
 </section>
 
 {% for service in page.services %}
-<section id="{{ service.id }}" style="padding: 120px 0; background-color: {% cycle '#faf9f5', '#fcfbf8' %};">
+<section id="{{ service.id }}" class="service-section" style="background-color: {% cycle '#faf9f5', '#fcfbf8' %};">
     <div class="container">
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 120px; align-items: center;">
-            <div style="{% if service.image_position == 'left' %}order: 2;{% endif %}">
+        <div class="service-grid{% if service.image_position == 'left' %} service-grid--image-left{% endif %}">
+            <div class="service-text">
                 <span class="tag">{{ service.tag }}</span>
-                <h2 style="font-size: 44px; margin-bottom: 32px;">{{ service.title }}</h2>
+                <h2>{{ service.title }}</h2>
 
-                <div style="display: grid; gap: 24px;">
+                <div class="service-features">
                     {% for feature in service.features %}
                     <div>
-                        <h3 style="font-size: 24px; margin-bottom: 4px;">{{ feature.title }}</h3>
-                        <p style="color: #5e5d59; max-width: 540px; font-size: 17px;">{{ feature.description }}</p>
+                        <h3>{{ feature.title }}</h3>
+                        <p>{{ feature.description }}</p>
                     </div>
                     {% endfor %}
                 </div>
             </div>
-            <div style="{% if service.image_position == 'left' %}order: 1;{% endif %}">
-                <img src="{{ site.baseurl }}{{ service.image }}" alt="{{ service.title }} Visualization"
-                    style="width: 100%; border-radius: 24px; box-shadow: 0 40px 80px rgba(0,0,0,0.08);">
+            <div class="service-image">
+                <img src="{{ site.baseurl }}{{ service.image }}" alt="{{ service.title }} Visualization">
             </div>
         </div>
     </div>
 </section>
 {% endfor %}
 
-<section id="impact-statement" style="padding: 96px 0; background-color: #faf9f5;">
-    <div class="container" style="max-width: 900px;">
-        <h2 style="text-align: center; font-size: 44px; margin-bottom: 48px;">{{ page.impact_statement.title }}</h2>
+<section id="impact-statement" class="impact-statement">
+    <div class="container">
+        <h2>{{ page.impact_statement.title }}</h2>
 
-        <div style="display: grid; gap: 32px; margin-bottom: 48px;">
+        <div class="impact-items">
             {% for item in page.impact_statement.items %}
-            <div style="font-size: 20px; line-height: 1.6; color: #2d2c28;">
+            <div class="impact-item">
                 {{ item | markdownify }}
             </div>
             {% endfor %}
         </div>
 
-        <div style="text-align: center; margin-top: 48px;">
-            <p
-                style="font-size: 22px; font-family: 'Georgia', serif; line-height: 1.6; color: #2d2c28; margin-bottom: 24px;">
-                {{ page.impact_statement.closing }}
-            </p>
-            <p style="font-size: 24px; font-weight: 600; color: #010101;">
-                {{ page.impact_statement.cta }}
-            </p>
+        <div class="impact-closing">
+            <p>{{ page.impact_statement.closing }}</p>
+            <p>{{ page.impact_statement.cta }}</p>
         </div>
     </div>
 </section>
 
-<section id="legacy-critique" style="padding: 120px 0; background-color: #010101; color: #faf9f5;">
-    <div class="container" style="max-width: 900px; text-align: center;">
-        <h2 style="font-size: 52px; color: #faf9f5; margin-bottom: 32px;">{{ page.legacy_critique.title }}</h2>
+<section id="legacy-critique" class="legacy-critique">
+    <div class="container">
+        <h2>{{ page.legacy_critique.title }}</h2>
 
-        <div style="font-size: 36px; font-weight: 700; line-height: 1.3; margin-bottom: 48px; color: #faf9f5;">
+        <div class="legacy-critique__subtitle">
             {% for line in page.legacy_critique.subtitle_lines %}
             {{ line }}<br>
             {% endfor %}
         </div>
 
-        <p
-            style="font-size: 22px; line-height: 1.6; color: rgba(250, 249, 245, 0.8); max-width: 700px; margin: 0 auto;">
-            {{ page.legacy_critique.description }}
-        </p>
+        <p>{{ page.legacy_critique.description }}</p>
     </div>
 </section>
 
-<section id="security-compliance" style="padding: 120px 0; background-color: #faf9f5;">
-    <div class="container" style="max-width: 1100px;">
+<section id="security-compliance" class="security-section">
+    <div class="container">
         <!-- Header -->
-        <div style="text-align: center; margin-bottom: 64px;">
-            <h2 style="font-size: 48px; margin-bottom: 16px;">{{ page.security_compliance.title }}</h2>
-            <p style="font-size: 24px; color: #5e5d59; margin-bottom: 32px;">{{ page.security_compliance.subtitle }}</p>
-            <div style="display: flex; gap: 16px; justify-content: center;">
+        <div class="security-header">
+            <h2>{{ page.security_compliance.title }}</h2>
+            <p>{{ page.security_compliance.subtitle }}</p>
+            <div class="security-cta-row">
                 <a href="mailto:connect@yajur.ai" class="button">{{ page.security_compliance.cta_primary }}</a>
-                <a href="#contact" class="button"
-                    style="background-color: transparent; color: #010101; border: 2px solid #010101;">{{
-                    page.security_compliance.cta_secondary }}</a>
+                <a href="#contact" class="button button--outline">{{ page.security_compliance.cta_secondary }}</a>
             </div>
         </div>
 
         <!-- Certifications -->
-        <div style="margin-bottom: 96px;">
-            <h3 style="text-align: center; font-size: 32px; margin-bottom: 16px;">{{
-                page.security_compliance.certifications_title }}</h3>
-            <p style="text-align: center; font-size: 18px; color: #5e5d59; margin-bottom: 48px;">{{
-                page.security_compliance.certifications_subtitle }}</p>
+        <div class="certifications">
+            <h3>{{ page.security_compliance.certifications_title }}</h3>
+            <p>{{ page.security_compliance.certifications_subtitle }}</p>
 
-            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 32px;">
+            <div class="certifications-grid">
                 {% for cert in page.security_compliance.certifications %}
-                <div
-                    style="text-align: center; padding: 32px; background-color: white; border-radius: 16px; border: 1px solid rgba(0,0,0,0.08);">
-                    <h4 style="font-size: 28px; font-weight: 700; margin-bottom: 8px;">{{ cert.name }}</h4>
-                    <p style="font-size: 16px; color: #5e5d59;">{{ cert.region }}</p>
+                <div class="cert-card">
+                    <h4>{{ cert.name }}</h4>
+                    <p>{{ cert.region }}</p>
                 </div>
                 {% endfor %}
             </div>
         </div>
 
         <!-- Footer CTAs -->
-        <div style="text-align: center;">
-            <h3 style="font-size: 36px; margin-bottom: 48px;">{{ page.security_compliance.footer_title }}</h3>
+        <div class="footer-ctas">
+            <h3>{{ page.security_compliance.footer_title }}</h3>
 
-            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px;">
+            <div class="footer-ctas-grid">
                 {% for cta in page.security_compliance.footer_ctas %}
-                <div
-                    style="padding: 32px; background-color: white; border-radius: 16px; border: 1px solid rgba(0,0,0,0.08);">
-                    <h4 style="font-size: 20px; font-weight: 600; margin-bottom: 12px;">{{ cta.text }}</h4>
-                    <p style="font-size: 16px; color: #5e5d59; line-height: 1.5;">{{ cta.subtext }}</p>
+                <div class="footer-cta-card">
+                    <h4>{{ cta.text }}</h4>
+                    <p>{{ cta.subtext }}</p>
                 </div>
                 {% endfor %}
             </div>
@@ -185,26 +166,23 @@ layout: default
     </div>
 </section>
 
-<section id="vision">
-    <div class="container" style="text-align: center;">
-        <div style="max-width: 800px; margin: 0 auto;">
-            <blockquote
-                style="font-size: 32px; font-family: 'Georgia', serif; line-height: 1.4; border: none; padding: 0;">
+<section id="vision" class="vision">
+    <div class="container">
+        <div class="vision__inner">
+            <blockquote>
                 "{{ page.vision.quote }}"
             </blockquote>
-            <p style="margin-top: 32px; font-weight: 600; font-family: 'Inter', sans-serif;">{{ page.vision.label }}</p>
+            <p class="vision__label">{{ page.vision.label }}</p>
         </div>
     </div>
 </section>
 
-<section id="contact"
-    style="background-color: #010101; color: #faf9f5; text-align: center; border-radius: 48px; margin: 0 64px 64px; padding: 96px 0;">
+<section id="contact" class="contact-section">
     <div class="container">
-        <h2 style="color: #faf9f5; font-size: 48px;">{{ page.contact.title }}</h2>
-        <p style="font-size: 20px; opacity: 0.8; margin-top: 24px;">{{ page.contact.description }}</p>
-        <div style="margin-top: 64px;">
-            <a href="{{ page.contact.cta_link }}" class="button" style="background-color: #faf9f5; color: #010101;">{{
-                page.contact.cta_text }}</a>
+        <h2>{{ page.contact.title }}</h2>
+        <p>{{ page.contact.description }}</p>
+        <div class="contact-section__cta">
+            <a href="{{ page.contact.cta_link }}" class="button button--light">{{ page.contact.cta_text }}</a>
         </div>
     </div>
 </section>
