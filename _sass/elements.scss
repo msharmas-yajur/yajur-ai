@@ -7,19 +7,84 @@ img {
 
 .button {
 	display: inline-block;
-	padding: 12px 24px;
+	padding: 14px 32px;
 	background-color: $clr-text;
 	color: $clr-bg;
 	text-decoration: none;
-	border-radius: 40px;
+	border-radius: 50px;
 	font-family: $font-sans;
 	font-weight: 600;
 	font-size: 16px;
-	transition: transform 0.2s;
+	letter-spacing: 0.01em;
+	position: relative;
+	overflow: hidden;
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+	transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+	border: 2px solid transparent;
+
+	// Subtle gradient overlay
+	&::before {
+		content: '';
+		position: absolute;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0) 100%);
+		opacity: 0;
+		transition: opacity 0.3s ease;
+	}
 
 	&:hover {
-		transform: scale(1.02);
-		opacity: 0.9;
+		transform: translateY(-2px);
+		box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+
+		&::before {
+			opacity: 1;
+		}
+	}
+
+	&:active {
+		transform: translateY(0);
+		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+	}
+
+	// Secondary button variant (light background)
+	&.button-secondary {
+		background-color: transparent;
+		color: $clr-text;
+		border: 2px solid $clr-text;
+		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+
+		&:hover {
+			background-color: $clr-text;
+			color: $clr-bg;
+		}
+	}
+
+	// Outline button variant
+	&.button-outline {
+		background-color: transparent;
+		color: $clr-text;
+		border: 2px solid rgba(0, 0, 0, 0.2);
+		box-shadow: none;
+
+		&:hover {
+			border-color: $clr-text;
+			background-color: rgba(0, 0, 0, 0.02);
+		}
+	}
+
+	// Large button variant
+	&.button-lg {
+		padding: 18px 40px;
+		font-size: 18px;
+	}
+
+	// Small button variant
+	&.button-sm {
+		padding: 10px 24px;
+		font-size: 14px;
 	}
 }
 
