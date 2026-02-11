@@ -1,13 +1,26 @@
 title: Yajur Healthcare AI
 email: connect@yajur.ai
 description: "The Medical Data Structure Company"
-
-# Domain Settings
 url: "https://yajur.ai"
-baseurl: "" 
+baseurl: ""
 
-# Build Settings
-markdown: kramdown
-theme: minima  # You can change this later
+# Hydra Theme Configuration (Manual)
+logo: /assets/logo.png
+
 plugins:
+  - jekyll-archives
+  - jekyll-sitemap
+  - jekyll-seo-tag
   - jekyll-feed
+  - jekyll-paginate
+  - jekyll-sass-converter
+
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - README.md
+  - LICENSE
+
+sass:
+  sass_dir: _sass
+  style: :expanded

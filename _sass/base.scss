@@ -1,0 +1,76 @@
+body {
+    background-color: $clr-bg;
+    color: $clr-text;
+    font-family: $font-serif;
+    font-size: 19px;
+    line-height: 1.6;
+    margin: 0;
+    -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    font-family: $font-sans;
+    font-weight: 700;
+    margin-top: 0;
+    line-height: 1.1;
+}
+
+h1 {
+    font-size: 52px;
+    letter-spacing: -0.02em;
+}
+
+h2 {
+    font-size: 36px;
+    letter-spacing: -0.01em;
+    margin-bottom: $spacing-sm;
+}
+
+h3 {
+    font-size: 24px;
+}
+
+a {
+    color: inherit;
+    text-decoration: underline;
+    text-underline-offset: 4px;
+    transition: opacity 0.2s;
+
+    &:hover {
+        opacity: 0.7;
+    }
+}
+
+.container {
+    max-width: $container-max;
+    margin: 0 auto;
+    padding: 0 64px;
+
+    @media (max-width: 800px) {
+        padding: 0 24px;
+    }
+}
+
+section {
+    padding: $spacing-lg 0;
+}
+
+.editable-img {
+    border-radius: $radius;
+    width: 100%;
+    height: auto;
+}
+
+.bg-alt {
+    background-color: $clr-bg-alt;
+}
+
+.list-item {
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+    padding: $spacing-sm 0;
+}

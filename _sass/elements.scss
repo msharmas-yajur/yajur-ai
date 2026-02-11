@@ -1,0 +1,34 @@
+// Minimalist elements
+img {
+	max-width: 100%;
+	height: auto;
+	display: block;
+}
+
+.button {
+	display: inline-block;
+	padding: 12px 24px;
+	background-color: $clr-text;
+	color: $clr-bg;
+	text-decoration: none;
+	border-radius: 40px;
+	font-family: $font-sans;
+	font-weight: 600;
+	font-size: 16px;
+	transition: transform 0.2s;
+
+	&:hover {
+		transform: scale(1.02);
+		opacity: 0.9;
+	}
+}
+
+.tag {
+	font-family: $font-sans;
+	font-size: 14px;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	color: $clr-text-muted;
+	margin-bottom: 8px;
+	display: block;
+}

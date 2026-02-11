@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="{{ page.lang | default: site.lang | default: 'en' }}">
+
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	{% seo %}
+	<link rel="stylesheet" href="{{ site.baseurl }}/assets/css/screen.css">
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link
+		href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap"
+		rel="stylesheet">
+	{% feed_meta %}
+</head>
+
+<body>
+	<header style="padding: 24px 0; border-bottom: 1px solid rgba(0,0,0,0.05);">
+		<div class="container" style="display: flex; justify-content: space-between; align-items: center;">
+			<a href="{{ '/' | relative_url }}"
+				style="text-decoration: none; font-family: 'Inter', sans-serif; font-weight: 700; font-size: 20px; letter-spacing: -0.02em; color: #010101; display: flex; align-items: center; gap: 12px;">
+				<img src="/assets/logo.png" alt="" style="height: 32px; width: auto; border-radius: 50%;">
+				<span>YAJUR HEALTHCARE</span>
+			</a>
+			<nav style="font-family: 'Inter', sans-serif; font-size: 15px; font-weight: 500;">
+				<a href="#mission" style="margin-left: 32px; text-decoration: none; color: inherit;">Mission</a>
+				<a href="#solutions" style="margin-left: 32px; text-decoration: none; color: inherit;">Solutions</a>
+				<a href="#contact" style="margin-left: 32px; text-decoration: none; color: inherit;">Contact</a>
+			</nav>
+		</div>
+	</header>
+
+	<main aria-label="Content">
+		{{ content }}
+	</main>
+
+	<footer style="background-color: #0f0f0e; color: #faf9f5; padding: 64px 0; margin-top: 96px;">
+		<div class="container">
+			<div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 48px;">
+				<div>
+					<h3 style="color: #faf9f5;">Yajur Healthcare AI</h3>
+					<p style="font-size: 16px; opacity: 0.8;">The Medical Data Infrastructure Company. Building the
+						bedrock for AI-first medicine.</p>
+				</div>
+				<div>
+					<h4 style="color: #faf9f5; font-size: 14px; text-transform: uppercase;">Company</h4>
+					<ul style="list-style: none; padding: 0; font-size: 14px; opacity: 0.8; line-height: 2;">
+						<li><a href="#mission" style="text-decoration: none; color: inherit;">Mission</a></li>
+						<li><a href="#about" style="text-decoration: none; color: inherit;">About Us</a></li>
+					</ul>
+				</div>
+				<div>
+					<h4 style="color: #faf9f5; font-size: 14px; text-transform: uppercase;">Legal</h4>
+					<ul style="list-style: none; padding: 0; font-size: 14px; opacity: 0.8; line-height: 2;">
+						<li><a href="#" style="text-decoration: none; color: inherit;">Privacy Policy</a></li>
+						<li><a href="#" style="text-decoration: none; color: inherit;">Terms of Service</a></li>
+					</ul>
+				</div>
+			</div>
+			<div
+				style="margin-top: 48px; padding-top: 24px; border-top: 1px solid rgba(255,255,255,0.1); font-size: 12px; opacity: 0.6;">
+				&copy; {{ site.time | date: '%Y' }} Yajur Healthcare AI. All rights reserved.
+			</div>
+		</div>
+	</footer>
+</body>
+
+</html>

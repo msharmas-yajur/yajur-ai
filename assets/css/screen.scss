@@ -1,0 +1,32 @@
+---
+---
+$clr-bg: #faf9f5;
+$clr-bg-alt: #f0eee6;
+$clr-text: #010101;
+$clr-text-muted: #5e5d59;
+$clr-accent: #d97757;
+$brand-color: #010101;
+$spacing-lg: 96px;
+$spacing-md: 48px;
+$spacing-sm: 24px;
+$container-max: 1400px;
+$radius: 24px;
+$font-sans: 'Inter', system-ui, sans-serif;
+$font-serif: 'Georgia', serif;
+
+body {
+    background-color: $clr-bg;
+    color: $clr-text;
+    font-family: $font-serif;
+    font-size: 19px;
+    line-height: 1.6;
+    margin: 0;
+}
+
+h1, h2, h3 { font-family: $font-sans; font-weight: 700; }
+h1 { font-size: 52px; }
+h2 { font-size: 36px; }
+
+.container { max-width: $container-max; margin: 0 auto; padding: 0 64px; }
+section { padding: $spacing-lg 0; }
+.bg-alt { background-color: $clr-bg-alt; }
