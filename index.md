@@ -5,9 +5,7 @@ title: "Yajur Healthcare AI - The Medical Data Infrastructure Company"
 hero:
   title: "The Medical Data <br>Infrastructure Company"
   description:
-    - "We believe that healthcare is fundamentally also a data problem, and solving this requires a paradigm shift in how medical information is structured, accessed, and utilized."
-    - "At Yajur Healthcare, we are revolutionizing the future of healthcare by transforming medical data into actionable intelligence."
-    - "Our mission is to bridge the knowledge gap in healthcare through disease-specific datasets and cutting-edge AI-driven applications that empower doctors, nurses, patients, radiologists, and pathologists."
+    - "We believe that healthcare is fundamentally also a data problem, and solving this requires a paradigm shift in how medical information is structured, accessed, and utilized. At Yajur Healthcare, we are revolutionizing the future of healthcare by transforming medical data into actionable intelligence. Our mission is to bridge the knowledge gap in healthcare through disease-specific datasets and cutting-edge AI-driven applications that empower doctors, nurses, patients, radiologists, and pathologists."
   cta_text: "Build with us"
   cta_link: "#contact"
 
