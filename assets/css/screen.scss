@@ -32,7 +32,7 @@ h1, h2, h3, h4 { font-family: $font-sans; font-weight: 700; }
 h1 { font-size: clamp(32px, 6vw, 52px); }
 h2 { font-size: clamp(26px, 5vw, 36px); }
 
-img { max-width: 100%; height: auto; }
+img { max-width: 100%; height: auto; display: block; }
 
 a { color: inherit; }
 
@@ -132,6 +132,9 @@ section { padding: $spacing-lg 0; }
     color: $clr-text;
 }
 .nav-toggle svg { display: block; }
+.nav-toggle--close line:nth-child(1) { transform: rotate(45deg) translate(5px, -3px); transform-origin: center; }
+.nav-toggle--close line:nth-child(2) { opacity: 0; }
+.nav-toggle--close line:nth-child(3) { transform: rotate(-45deg) translate(5px, 3px); transform-origin: center; }
 
 // ─── Footer ──────────────────────────────────────────────────────────
 .site-footer {
@@ -277,8 +280,11 @@ section { padding: $spacing-lg 0; }
 }
 .service-features p {
     color: $clr-text-muted;
-    max-width: 540px;
     font-size: 17px;
+}
+.service-image {
+    overflow: hidden;
+    min-width: 0;
 }
 .service-image img {
     width: 100%;
@@ -479,6 +485,7 @@ section { padding: $spacing-lg 0; }
 
     // Nav
     .nav-toggle { display: block; }
+    .site-header { position: relative; }
     .site-nav {
         display: none;
         position: absolute;
@@ -487,17 +494,19 @@ section { padding: $spacing-lg 0; }
         right: 0;
         background-color: $clr-bg;
         border-bottom: 1px solid rgba(0,0,0,0.1);
-        padding: 16px 24px;
+        padding: 0 24px;
         box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+        z-index: 100;
     }
     .site-nav.is-open { display: block; }
     .site-nav a {
         display: block;
         margin: 0;
-        padding: 12px 0;
+        padding: 16px 0;
         border-bottom: 1px solid rgba(0,0,0,0.05);
+        font-size: 17px;
     }
-    .site-header__inner { position: relative; }
+    .site-nav a:last-child { border-bottom: none; }
 
     // Hero
     .hero { padding: 48px 0 72px; }
@@ -554,26 +563,50 @@ section { padding: $spacing-lg 0; }
 
 // ─── Responsive: Mobile (<=480px) ───────────────────────────────────
 @media (max-width: 480px) {
-    body { font-size: 17px; }
-    .container { padding: 0 16px; }
-    section { padding: 48px 0; }
+    body { font-size: 16px; }
+    .container { padding: 0 12px; }
+    section { padding: 40px 0; }
 
-    .hero { padding: 32px 0 48px; }
-    .hero__cta { margin-top: 32px; }
+    .site-header { padding: 16px 0; }
+    .site-header__logo { font-size: 16px; gap: 8px; }
+    .site-header__logo img { height: 28px; }
+
+    .hero { padding: 24px 0 40px; }
+    .hero__cta { margin-top: 24px; }
+    .hero__description { font-size: 17px; margin-top: 20px; }
 
     .button { padding: 14px 28px; font-size: 15px; }
 
-    .service-section { padding: 48px 0; }
+    .service-section { padding: 40px 0; }
+    .service-grid { gap: 32px; }
     .service-features h3 { font-size: 20px; }
+    .service-image img { border-radius: 16px; }
 
     .certifications-grid { grid-template-columns: 1fr; }
+    .cert-card { padding: 24px; }
+
+    .list-item { padding: 24px; }
+
+    .legacy-critique { padding: 48px 0; }
+    .legacy-critique__subtitle { margin-bottom: 24px; }
+
+    .security-section { padding: 48px 0; }
+    .security-header { margin-bottom: 40px; }
 
     .contact-section {
-        margin: 0 12px 12px;
-        border-radius: 16px;
+        margin: 0;
+        border-radius: 0;
         padding: 48px 0;
     }
 
+    .site-footer { margin-top: 0; padding: 40px 0; }
+
     .seamless-impact__logo { width: 80px; }
-    .seamless-impact { padding: 64px 0; }
+    .seamless-impact { padding: 48px 0; }
+
+    .impact-closing p:first-child { font-size: 18px; }
+    .impact-closing p:last-child { font-size: 20px; }
+
+    .vision blockquote { font-size: 20px; }
+    .vision__label { font-size: 14px; }
 }
