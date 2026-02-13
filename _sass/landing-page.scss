@@ -49,7 +49,8 @@
 		align-items: center;
 		flex-direction: row;
 
-		.text, .image {
+		.text,
+		.image {
 			-webkit-flex: 1;
 			flex: 1;
 			padding: 0 20px;
@@ -58,5 +59,53 @@
 
 	.content section:nth-child(even) .flex {
 		flex-direction: row-reverse;
+	}
+}
+
+.insights-section {
+	background-color: $clr-bg;
+	padding: 100px 0;
+
+	h2 {
+		text-align: center;
+		margin-bottom: 50px;
+	}
+
+	.insights-grid {
+		display: grid;
+		grid-template-columns: 1fr;
+		gap: 30px;
+		max-width: 800px;
+		margin: 0 auto;
+
+		@media #{$tablet} {
+			grid-template-columns: 1fr;
+		}
+	}
+
+	.insight-card {
+		background: #fff;
+		padding: 40px;
+		border-radius: $radius;
+		box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+		transition: transform 0.3s ease;
+
+		&:hover {
+			transform: translateY(-5px);
+		}
+
+		h3 {
+			margin-top: 0;
+			color: $brand-color;
+		}
+
+		p {
+			color: $clr-text-muted;
+			margin-bottom: 30px;
+		}
+
+		.button {
+			display: inline-block;
+		}
 	}
 }

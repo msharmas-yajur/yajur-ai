@@ -109,6 +109,23 @@ layout: default
     </div>
 </section>
 
+{% if page.insights %}
+<section id="insights" class="insights-section">
+    <div class="container">
+        <h2>{{ page.insights.title }}</h2>
+        <div class="insights-grid">
+            {% for item in page.insights.items %}
+            <div class="insight-card">
+                <h3>{{ item.title }}</h3>
+                <p>{{ item.description }}</p>
+                <a href="{{ item.link }}" class="button button--outline">Read More</a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
 <section id="legacy-critique" class="legacy-critique">
     <div class="container">
         <h2>{{ page.legacy_critique.title }}</h2>

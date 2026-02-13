@@ -111,6 +111,13 @@ impact_statement:
   closing: "At Yajur Healthcare, we are turning knowledge into augmented intelligence, shaping a future where healthcare is proactive, personalized, and powered by data."
   cta: "Let's build the future of AI-driven healthcare—together. 🚀"
 
+insights:
+  title: "Insights & Perspectives"
+  items:
+    - title: "Why Digitization Alone Couldn't Fix India's Health Claims Ecosystem"
+      description: "Exploring the fundamental challenges of data fragmentation and the promise of NHCX."
+      link: "/2026/02/13/why-digitization-alone-couldnt-fix-indias-health-claims-ecosystem.html"
+
 legacy_critique:
   title: "Legacy Systems Can't Support Modern Capabilities"
   subtitle_lines:
