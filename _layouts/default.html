@@ -32,6 +32,47 @@
 	}
 	</script>
 
+	<!-- WebSite & SiteNavigation Schema -->
+	<script type="application/ld+json">
+	[
+	  {
+	    "@context": "https://schema.org",
+	    "@type": "WebSite",
+	    "name": "Yajur Healthcare",
+	    "url": "https://yajur.ai",
+	    "potentialAction": {
+	      "@type": "SearchAction",
+	      "target": "https://yajur.ai/search?q={search_term_string}",
+	      "query-input": "required name=search_term_string"
+	    }
+	  },
+	  {
+	    "@context": "https://schema.org",
+	    "@type": "ItemList",
+	    "itemListElement": [
+	      {
+	        "@type": "SiteNavigationElement",
+	        "position": 1,
+	        "name": "Mission",
+	        "url": "https://yajur.ai/#mission"
+	      },
+	      {
+	        "@type": "SiteNavigationElement",
+	        "position": 2,
+	        "name": "Solutions",
+	        "url": "https://yajur.ai/#solutions"
+	      },
+	      {
+	        "@type": "SiteNavigationElement",
+	        "position": 3,
+	        "name": "Pontifex",
+	        "url": "https://yajur.ai/pontifex.html"
+	      }
+	    ]
+	  }
+	]
+	</script>
+
 	{% seo %}
 	<link rel="stylesheet" href="{{ site.baseurl }}/assets/css/screen.css">
 	<link rel="preconnect" href="https://fonts.googleapis.com">
