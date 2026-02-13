@@ -7,6 +7,8 @@ author: "Manish Sharma"
 
 At Yajur Healthcare, we advocate for a robust framework for healthcare AI. This framework is built upon four core principles of interoperability to ensure AI is both ethical and economically sustainable.
 
+![Framework for Ethical & Economically Sustainable AI](/assets/ai_framework_interop.jpg)
+
 ## Core Principles of Interoperability
 
 ### 1. Transparency
