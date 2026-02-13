@@ -4,7 +4,7 @@ title: "Terms of Service and Privacy Policy"
 permalink: /terms-and-privacy/
 ---
 
-<div class="legal-content">
+<div class="legal-content" markdown="1">
 
 # Yajur Healthcare Terms of Service and Privacy Policy
 
