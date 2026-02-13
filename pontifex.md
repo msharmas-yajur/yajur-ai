@@ -1,6 +1,6 @@
 ---
 layout: default
-title: Pontifex
+title: "Pontifex | Insights & Perspectives | Yajur Healthcare AI"
 permalink: /pontifex.html
 ---
 
@@ -9,6 +9,7 @@ permalink: /pontifex.html
     <header class="post-archive__header">
       <h1 class="post-archive__title">Pontifex</h1>
       <p class="post-archive__subtitle">Insights & Perspectives from Yajur Healthcare AI</p>
+      <p class="post-archive__tagline">Building Bridges not Silos</p>
     </header>
 
     <div class="post-archive__list">
@@ -50,6 +51,14 @@ permalink: /pontifex.html
 .post-archive__subtitle {
   font-size: 1.25rem;
   color: #5e5d59;
+  margin-bottom: 5px;
+}
+
+.post-archive__tagline {
+  font-size: 1.1rem;
+  font-style: italic;
+  color: #d97757;
+  font-weight: 500;
 }
 
 .post-archive__list {
