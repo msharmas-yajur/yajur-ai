@@ -49,6 +49,7 @@ services:
     tag: "Data"
     title: "Disease Specific Datasets"
     image: "/assets/data_visual.png"
+    image_alt: "Visual representation of disease-specific medical datasets and data curation pipelines"
     image_position: "right"
     features:
       - title: "Disease-Specific Dataset Design"
@@ -68,6 +69,7 @@ services:
     tag: "Ai-First"
     title: "Ai Driven Applications"
     image: "/assets/ai_visual_v2.jpg"
+    image_alt: "AI-driven clinical applications and intelligent agent orchestration interface"
     image_position: "left"
     features:
       - title: "Patient-Centric Data Constructs"
@@ -87,6 +89,7 @@ services:
     tag: "Interoperability"
     title: "Compliance Driven Data Pipelines"
     image: "/assets/interop_visual.jpg"
+    image_alt: "Interoperable healthcare data pipeline architecture showing seamless flow between systems"
     image_position: "right"
     features:
       - title: "Interoperable Data Ingestion"
@@ -114,6 +117,9 @@ impact_statement:
 insights:
   title: "Insights & Perspectives"
   items:
+    - title: "A Task Framework for Healthcare: Enabling Agentic AI Workflows in EHR Systems"
+      description: "Moving from traditional transaction-driven models to task-driven frameworks for AI implementation."
+      link: "/2025/03/19/a-task-framework-for-healthcare-for-enabling-ai-agentic-workflows-in-ehr-systems.html"
     - title: "Why Digitization Alone Couldn't Fix India's Health Claims Ecosystem"
       description: "Exploring the fundamental challenges of data fragmentation and the promise of NHCX."
       link: "/2026/02/13/why-digitization-alone-couldnt-fix-indias-health-claims-ecosystem.html"

@@ -5,6 +5,33 @@
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="keywords" content="{{ site.keywords }}">
+	<meta name="geo.region" content="IN-KA" />
+	<meta name="geo.placename" content="Bengaluru" />
+	<meta name="geo.position" content="12.9716;77.5946" />
+	<meta name="ICBM" content="12.9716, 77.5946" />
+
+	<!-- JSON-LD Structured Data -->
+	<script type="application/ld+json">
+	{
+	  "@context": "https://schema.org",
+	  "@type": "Organization",
+	  "name": "Yajur Healthcare AI",
+	  "url": "https://yajur.ai",
+	  "logo": "https://yajur.ai/assets/logo.png",
+	  "sameAs": [
+	    "https://www.linkedin.com/company/yajur-healthcare"
+	  ],
+	  "description": "{{ site.description }}",
+	  "address": {
+	    "@type": "PostalAddress",
+	    "addressLocality": "Bengaluru",
+	    "addressRegion": "KA",
+	    "addressCountry": "IN"
+	  }
+	}
+	</script>
+
 	{% seo %}
 	<link rel="stylesheet" href="{{ site.baseurl }}/assets/css/screen.css">
 	<link rel="preconnect" href="https://fonts.googleapis.com">

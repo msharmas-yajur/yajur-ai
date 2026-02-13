@@ -83,7 +83,8 @@ layout: default
                 </div>
             </div>
             <div class="service-image">
-                <img src="{{ site.baseurl }}{{ service.image }}" alt="{{ service.title }} Visualization">
+                <img src="{{ site.baseurl }}{{ service.image }}"
+                    alt="{{ service.image_alt | default: service.title | append: ' Visualization' }}">
             </div>
         </div>
     </div>
