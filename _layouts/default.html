@@ -24,15 +24,17 @@
 				<span>YAJUR HEALTHCARE</span>
 			</a>
 			<button class="nav-toggle" aria-label="Toggle navigation" aria-expanded="false">
-				<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-					<line x1="3" y1="6" x2="21" y2="6"/>
-					<line x1="3" y1="12" x2="21" y2="12"/>
-					<line x1="3" y1="18" x2="21" y2="18"/>
+				<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+					stroke-linecap="round">
+					<line x1="3" y1="6" x2="21" y2="6" />
+					<line x1="3" y1="12" x2="21" y2="12" />
+					<line x1="3" y1="18" x2="21" y2="18" />
 				</svg>
 			</button>
 			<nav class="site-nav">
 				<a href="#mission">Mission</a>
 				<a href="#solutions">Solutions</a>
+				<a href="/pontifex.html">Pontifex</a>
 				<a href="#contact">Contact</a>
 			</nav>
 		</div>
@@ -72,27 +74,27 @@
 	</footer>
 
 	<script>
-	(function() {
-		var toggle = document.querySelector('.nav-toggle');
-		var nav = document.querySelector('.site-nav');
-		if (!toggle || !nav) return;
+		(function () {
+			var toggle = document.querySelector('.nav-toggle');
+			var nav = document.querySelector('.site-nav');
+			if (!toggle || !nav) return;
 
-		toggle.addEventListener('click', function() {
-			var open = nav.classList.toggle('is-open');
-			toggle.classList.toggle('nav-toggle--close', open);
-			toggle.setAttribute('aria-expanded', open);
-		});
-
-		// Close menu when a nav link is clicked
-		var links = nav.querySelectorAll('a');
-		for (var i = 0; i < links.length; i++) {
-			links[i].addEventListener('click', function() {
-				nav.classList.remove('is-open');
-				toggle.classList.remove('nav-toggle--close');
-				toggle.setAttribute('aria-expanded', 'false');
+			toggle.addEventListener('click', function () {
+				var open = nav.classList.toggle('is-open');
+				toggle.classList.toggle('nav-toggle--close', open);
+				toggle.setAttribute('aria-expanded', open);
 			});
-		}
-	})();
+
+			// Close menu when a nav link is clicked
+			var links = nav.querySelectorAll('a');
+			for (var i = 0; i < links.length; i++) {
+				links[i].addEventListener('click', function () {
+					nav.classList.remove('is-open');
+					toggle.classList.remove('nav-toggle--close');
+					toggle.setAttribute('aria-expanded', 'false');
+				});
+			}
+		})();
 	</script>
 </body>
 
