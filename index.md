@@ -117,9 +117,11 @@ impact_statement:
 insights:
   title: "Insights & Perspectives"
   items:
+    - title: "Fine-Tuning Large Language Models for Oncology: Key Challenges"
+      description: "Explore the 13 essential recommendations for building robust, recency-aware AI systems for cancer care."
+      link: "/2024/12/15/fine-tuning-large-language-models-for-oncology-key-challenges.html"
     - title: "Health Record Formats: Essential for Fine-Tuning a Citizen's Healthcare Journey"
       description: "Discover the four essential health record formats—clinical notes, lab results, radiology, and prescriptions—that are rebuilding the digital health journey."
-      link: "/2024/11/20/health-record-formats-essential-for-fine-tuning-a-citizens-healthcare-journey.html"
     - title: "A Task Framework for Healthcare: Enabling Agentic AI Workflows in EHR Systems"
       description: "Moving from traditional transaction-driven models to task-driven frameworks for AI implementation."
       link: "/2025/03/19/a-task-framework-for-healthcare-for-enabling-ai-agentic-workflows-in-ehr-systems.html"
