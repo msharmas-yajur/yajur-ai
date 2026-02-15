@@ -1,6 +1,6 @@
 ---
 layout: default
-title: "Pontifex | Insights & Perspectives | Yajur Healthcare AI"
+title: "Pontifex | Insights & Perspectives | YAJUR.ai"
 permalink: /pontifex.html
 ---
 
@@ -8,7 +8,7 @@ permalink: /pontifex.html
   <div class="container container--narrow">
     <header class="post-archive__header">
       <h1 class="post-archive__title">Pontifex</h1>
-      <p class="post-archive__subtitle">Insights & Perspectives from Yajur Healthcare AI</p>
+      <p class="post-archive__subtitle">Insights & Perspectives from YAJUR.ai</p>
       <p class="post-archive__tagline">Building Bridges not Silos</p>
     </header>
 
