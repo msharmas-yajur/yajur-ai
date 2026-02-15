@@ -1,4 +1,11 @@
-# **Need For A Robust ABDM Healthcare Network Enabling Cancer Care Without Walls By Manish Sharma @Msharmas**
+---
+layout: post
+title: "Need For A Robust ABDM Healthcare Network Enabling Cancer Care Without Walls"
+date: 2026-02-15 17:00:00 +0530
+author: "Manish Sharma"
+---
+
+# Need For A Robust ABDM Healthcare Network Enabling Cancer Care Without Walls
 
 The idea of expecting a doctor/physician to be responsible for keeping a patient’s health records up to date throughout his/her care journey, is obviously not preferred these days. Neither is the practice scalable nor does it allow adoption and application of recent and new technologies.
 
