@@ -1,9 +1,9 @@
 ---
 layout: home
-title: "Yajur Healthcare | The Medical Data Infrastructure Company"
+title: "YAJUR.ai | The Medical Data Infrastructure Company"
 
 hero:
-  title: "Yajur Healthcare: The Medical Data Infrastructure Company"
+  title: "YAJUR.ai: The Medical Data Infrastructure Company"
   description:
     - "We believe that healthcare is fundamentally also a data problem, and solving this requires a paradigm shift in how medical information is structured, accessed, and utilized. At Yajur Healthcare, we are revolutionizing the future of healthcare by transforming medical data into actionable intelligence. Our mission is to bridge the knowledge gap in healthcare through disease-specific datasets and cutting-edge AI-driven applications that empower doctors, nurses, patients, radiologists, and pathologists."
   cta_text: "Build with us"
@@ -139,7 +139,7 @@ legacy_critique:
 
 security_compliance:
   title: "Security Native"
-  subtitle: "Yajur Healthcare: The Medical Data Infrastructure Company."
+  subtitle: "YAJUR.ai: The Medical Data Infrastructure Company."
   cta_primary: "Get Early Access"
   cta_secondary: "Tech Stack"
   certifications_title: "Certified Globally"
@@ -164,7 +164,7 @@ security_compliance:
 
 vision:
   quote: "There’s a clear paradigm shift taking place across medical information, and we are at the forefront of this transformation."
-  label: "YAJUR HEALTHCARE VISION"
+  label: "YAJUR.ai VISION"
 
 contact:
   title: "Build the future of medical AI together."
