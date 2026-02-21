@@ -106,6 +106,10 @@ The hackathon masterclass invited a new generation of builders to tackle the uns
 
 The masterclass represents something significant: a government infrastructure owner publicly inviting domain experts—not just IT companies—to build on an open platform. This is the ABDM and NHCX ecosystem making the same bet that the broader AI coding revolution has already validated: that the people closest to the problem are, with the right tools, the most capable builders of its solution.
 
+And the numbers make urgency unavoidable. India processes hundreds of millions of health insurance transactions annually across **500+ million ABHA-registered citizens**, 30,000+ hospitals, and over 200 insurers and TPAs. A pre-authorization delay that costs an average patient 6 hours is not a minor inefficiency at this scale—it is a systemic failure affecting millions of care episodes every year. A fraud pattern that costs 2% of claim value is not a rounding error—it is thousands of crores diverted from care delivery.
+
+These problems cannot wait for traditional enterprise software procurement cycles of 18 to 36 months. They require solutions that can be conceived, built, validated, and deployed in **weeks**—which is now possible for the first time.
+
 ---
 
 ## 6. The Yajur Healthcare Perspective: Opportunity Meets Obligation
@@ -148,6 +152,8 @@ When you combine:
 
 You get something genuinely new: a healthcare software ecosystem that is built from the inside out—by the people who deliver care—rather than from the outside in, by technologists who must be taught what care actually looks like.
 
+The speed at which this can now happen is the most underappreciated part of the story. Healthcare IT has historically operated on timescales that are wildly out of sync with clinical urgency. A hospital administrator who identifies a workflow breakdown today would, in the old model, spend six months writing a requirements document, another six months in vendor evaluation, and a year in implementation—by which time the context has changed, the champion has moved on, and the tool no longer fits. With AI-assisted development, the same administrator can prototype a working solution this week, validate it with real users next week, and iterate it into something deployable within a month. The feedback loop between problem and solution has compressed by an order of magnitude. At India's scale—where every efficiency gain multiplies across a billion interactions—this compression is not incremental. It is transformational.
+
 ---
 
 ## 8. What We Are Watching
@@ -167,9 +173,15 @@ We are paying close attention to:
 
 Healthcare has always suffered from a translation problem. The people who know what patients need cannot build the tools. The people who can build the tools cannot know what patients need.
 
-AI coding platforms are dissolving that barrier. What replaces it—the quality of the clinical context, the rigor of the infrastructure, the discipline of the engineering—is the work that remains. It is the work Yajur Healthcare was built to do.
+AI coding platforms are dissolving that barrier. But dissolving the translation problem only creates a new obligation: the solutions that emerge must be worthy of the scale they are about to reach.
 
-The tools are ready. The question is whether the ecosystem around them is ready too.
+India does not have the luxury of slow. With 1.4 billion people, a rapidly aging population, a chronic disease burden accelerating faster than care infrastructure can absorb it, and a health insurance system that still leaves the majority of citizens navigating paper-based chaos—the gap between the problem and the solution has always been measured in lives, not just efficiency metrics.
+
+What has changed is that the speed of building can now match the urgency of the problem. A clinician who sees what is broken can now build what fixes it—this week, not this decade. An infrastructure like NHCX that was built for scale can now be built upon at speed. A country with one of the largest skilled clinical and technical workforces in the world can now deploy that workforce directly on the problems it understands best.
+
+The tools are ready. The infrastructure is ready. The builders—many of them not yet thinking of themselves as builders—are ready.
+
+The question is whether we move with the urgency the moment demands.
 
 ---
 
