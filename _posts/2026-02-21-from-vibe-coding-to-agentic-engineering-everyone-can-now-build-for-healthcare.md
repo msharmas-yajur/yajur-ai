@@ -4,12 +4,41 @@ title: "From Vibe Coding to Agentic Engineering: Everyone Can Now Build for Heal
 date: 2026-02-21 10:00:00 +0530
 author: "Manish Sharma"
 description: "AI coding platforms like Claude Code, Cursor, and Windsurf are dismantling the technical barriers to software creation. For healthcare, this is more than a developer trend—it is the beginning of a new era where clinicians, administrators, and domain experts can build the tools they actually need."
-keywords: "vibe coding, agentic engineering, Claude Code, Windsurf, AI coding platforms, healthcare software, non-technical builders, healthcare AI India, digital health innovation"
+keywords: "vibe coding, agentic engineering, Claude Code, Windsurf, Cursor, AI coding platforms, healthcare software, non-technical builders, healthcare AI India, digital health innovation, NHCX hackathon, NHCX API, ABDM developers, FHIR India, health claims automation India, digital health India 2026, AI tools for doctors, Andrej Karpathy agentic engineering, Boris Cherny Claude Code, National Health Claims Exchange, healthcare interoperability India, cashless claims automation, health insurance technology India, clinical AI India, vibe coding healthcare"
+tags:
+  - healthcare
+  - AI
+  - digital-health
+  - NHCX
+  - ABDM
+  - vibe-coding
+  - agentic-engineering
+  - India
+  - health-insurance
+  - clinical-AI
+categories:
+  - Technology
+  - Healthcare Innovation
+reading_time: "8 min read"
+og_title: "From Vibe Coding to Agentic Engineering: Everyone Can Now Build for Healthcare"
+og_description: "AI coding platforms are dismantling the technical barriers to healthcare software. Clinicians, administrators, and domain experts can now build the tools they actually need—and India's NHCX infrastructure means those tools can reach scale from day one."
+og_type: article
+twitter_card: summary_large_image
+canonical_url: "https://yajur.ai/from-vibe-coding-to-agentic-engineering-everyone-can-now-build-for-healthcare"
 ---
 
 # From Vibe Coding to Agentic Engineering: Everyone Can Now Build for Healthcare
 
 ### The most consequential shift in software is not about better developers. It is about removing the need to be one.
+
+---
+
+**Key Takeaways**
+- Andrej Karpathy coined **vibe coding** in February 2025; by February 2026 he declared it passé, replaced by **agentic engineering**—AI-assisted development with professional oversight and scrutiny
+- At Anthropic, **70–90% of production code is now AI-generated**; Claude Code accounts for ~4% of all public GitHub commits globally
+- OpenAI acquired **Windsurf ($3B)** and **Torch ($100M health AI)**—a deliberate bet that domain experts with AI tools will build the next wave of healthcare software
+- India's **NHCX** mandates 1-hour pre-authorization and 3-hour discharge approvals; most claims currently take **15–30 days**—that gap is the opportunity
+- The "one rail, many claims" architecture of NHCX means any solution built on its APIs can reach **500+ million ABHA-registered citizens** from day one
 
 ---
 
@@ -166,6 +195,31 @@ We are paying close attention to:
 - **Agentic workflows** that can handle the multi-step complexity of clinical processes—prior authorization, care coordination, discharge planning—not just isolated data entry
 - **Evaluation frameworks** for AI-generated healthcare software that go beyond functional testing to include clinical safety, data privacy (DPDP Act compliance), and interoperability validation
 - **The regulatory posture** of agencies like NHA and CDSCO as clinician-built software begins entering procurement pipelines
+
+---
+
+## Frequently Asked Questions
+
+**What is vibe coding?**
+Vibe coding is a term coined by Andrej Karpathy in February 2025 to describe AI-assisted software development where the developer describes intent in natural language and accepts AI-generated code with minimal review—sometimes without reading the diffs at all. It was named Collins English Dictionary's Word of the Year for 2025.
+
+**What is agentic engineering?**
+Agentic engineering is Karpathy's follow-up concept, introduced in February 2026, describing a more disciplined form of AI-assisted development where LLM agents handle implementation autonomously while the developer maintains oversight, scrutiny, and engineering judgment. It is the evolution of vibe coding for professional and production contexts.
+
+**What is NHCX (National Health Claims Exchange)?**
+NHCX is India's government-built interoperability platform for health insurance claims, developed by the National Health Authority (NHA). Built on FHIR R4 standards and integrated with ABDM, it provides a single API framework—"one rail, many claims"—through which hospitals, insurers, TPAs, and government schemes exchange structured claims data. It eliminates the need for hospitals to manage separate integrations with each insurer.
+
+**Can non-technical healthcare professionals build software with AI coding tools?**
+Yes. Platforms like Claude Code, Cursor, and Windsurf allow clinicians, administrators, pharmacists, and other domain experts to prototype functional software by describing what they need in plain language. A British doctor built a working patient health-tracking application for approximately £200 (~₹21,000) with no technical co-founder or agency.
+
+**What were the NHCX Hackathon 2025 problem statements?**
+The NHCX Hackathon Masterclass (February 18, 2025) defined four problem areas: (1) converting legacy HMIS data into FHIR-compliant NHCX/ABDM format, (2) extracting data from PDF medical documents (lab reports, discharge summaries) into ABDM-compliant FHIR bundles, (3) converting PDF insurance policy documents into machine-readable FHIR InsurancePlan objects, and (4) fraud detection and claims processing time optimization using NHCX's structured data.
+
+**What is the regulatory mandate for cashless claim processing in India?**
+Under current IRDAI guidelines, cashless pre-authorizations must be processed within 1 hour and discharge approvals within 3 hours from the time the first document is received. Most claims today take 15 to 30 days due to repeated manual queries and fragmented workflows—a gap that NHCX is designed to close.
+
+**How does NHCX relate to ABDM?**
+NHCX is built on the ABDM (Ayushman Bharat Digital Mission) ecosystem. Participants must be ABDM-registered to access NHCX APIs. ABHA IDs (Ayushman Bharat Health Accounts) are used to validate beneficiaries, and ABDM's access control and security layer governs all NHCX transactions.
 
 ---
 
