@@ -188,3 +188,5 @@ The question is whether we move with the urgency the moment demands.
 *Manish Sharma is the Founder & Director of Yajur Healthcare, a medical data infrastructure company building the context and annotation layer for safe clinical AI in India.*
 
 *Connect with us if you are working on ABDM-integrated applications, clinical agentic workflows, or healthcare-specific AI tooling: [connect@yajur.ai](mailto:connect@yajur.ai)*
+
+*This article was generated with the help of AI agents.*
