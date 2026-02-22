@@ -22,14 +22,15 @@ This file tracks changes made on `claude/` branches during AI-assisted sessions.
 | `156cd64` | SEO & GEO: add llms.txt, robots.txt, BlogPosting schema, OG/Twitter meta, enriched keywords for Yajur brand |
 | `ed3e3d8` | SEO & GEO: rebased onto updated main, pushed for auto-merge |
 | `d4622ad` | Update claude-branch.md with SEO/GEO change log |
-| `pending` | Fix invalid JSON-LD in default.html and post.html (Liquid-in-string quoting bug) |
+| `7b01ef2` | Fix invalid JSON-LD in default.html and post.html (Liquid-in-string quoting bug) |
+| `7fbb4f7` | Rename claude-branch.md to CLAUDE.md for auto-loading on session start |
 
 ### Status
 
 - [x] ABDM blog post duplicate title fix — merged to `main` (PR #5)
 - [x] auto-pr.yml workflow (create + merge) — merged to `main` (PR #5)
 - [ ] SEO & GEO improvements — pending merge (PR #6 in queue)
-- [ ] JSON-LD fix — pending commit + push
+- [x] JSON-LD fix — committed (`7b01ef2`)
 
 ### Notes
 
