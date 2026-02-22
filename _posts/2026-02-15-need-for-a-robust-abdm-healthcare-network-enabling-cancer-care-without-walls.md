@@ -5,8 +5,6 @@ date: 2026-02-15 17:00:00 +0530
 author: "Manish Sharma"
 ---
 
-# Need For A Robust ABDM Healthcare Network Enabling Cancer Care Without Walls
-
 The idea of expecting a doctor/physician to be responsible for keeping a patient’s health records up to date throughout his/her care journey, is obviously not preferred these days. Neither is the practice scalable nor does it allow adoption and application of recent and new technologies.
 
 In healthcare, information about a patient/citizen is created from the moment the citizen interacts with a hospital, clinical, etc or avails of a service online. Every subsequent activity adds **recency, relevancy**, context of care linkage to the citizen information in that hospital’s information system. The information is filled in by any hospital employee who encounters a patient, i.e., the hospital’s front desk staff/registration person, nurse, doctor, surgeon, anesthetist, pharmacist, pathologist, radiologist, radiation oncologist, surgical oncologist, cardiologist, and many more clinicians across the continuum of care of the citizens’ journey in that facility.
