@@ -19,6 +19,9 @@ This file tracks changes made on `claude/` branches during AI-assisted sessions.
 | `012b620` | Update auto-PR workflow to also auto-merge after creation |
 | `77978a1` | Update auto-PR workflow to use Gitea API via curl for reliable PR create+merge |
 
+| `c3c181b` | Use Gitea API in workflow for reliable auto-merge; add claude-branch.md change log |
+| `156cd64` | SEO & GEO: add llms.txt, robots.txt, BlogPosting schema, OG/Twitter meta, enriched keywords for Yajur brand |
+
 ### Status
 
 - [x] Fix applied on feature branch
