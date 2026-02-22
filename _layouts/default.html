@@ -5,7 +5,28 @@
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<meta name="keywords" content="{{ site.keywords }}">
+	<meta name="description" content="{{ page.description | default: site.description | escape }}">
+	<meta name="keywords" content="{{ page.keywords | default: site.keywords }}">
+	<meta name="author" content="{{ page.author | default: site.author }}">
+	<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+	<link rel="canonical" href="{{ site.url }}{{ page.url | replace:'index.html','' }}">
+
+	<!-- Open Graph -->
+	<meta property="og:site_name" content="Yajur.ai">
+	<meta property="og:title" content="{{ page.og_title | default: page.title | default: site.title | escape }}">
+	<meta property="og:description" content="{{ page.og_description | default: page.description | default: site.description | escape }}">
+	<meta property="og:url" content="{{ site.url }}{{ page.url }}">
+	<meta property="og:type" content="{{ page.og_type | default: 'website' }}">
+	<meta property="og:image" content="{{ site.url }}/assets/logo.png">
+	<meta property="og:locale" content="en_IN">
+
+	<!-- Twitter Card -->
+	<meta name="twitter:card" content="{{ page.twitter_card | default: 'summary_large_image' }}">
+	<meta name="twitter:title" content="{{ page.title | default: site.title | escape }}">
+	<meta name="twitter:description" content="{{ page.description | default: site.description | escape }}">
+	<meta name="twitter:image" content="{{ site.url }}/assets/logo.png">
+
+	<!-- Geo -->
 	<meta name="geo.region" content="IN-KA" />
 	<meta name="geo.placename" content="Bengaluru" />
 	<meta name="geo.position" content="12.9716;77.5946" />
@@ -16,13 +37,21 @@
 	{
 	  "@context": "https://schema.org",
 	  "@type": "Organization",
-	  "name": "YAJUR.ai",
+	  "name": "Yajur.ai",
+	  "alternateName": ["YAJUR.ai", "Yajur Healthcare", "Yajur"],
 	  "url": "https://yajur.ai",
-	  "logo": "https://yajur.ai/assets/logo.png",
+	  "logo": {
+	    "@type": "ImageObject",
+	    "url": "https://yajur.ai/assets/logo.png"
+	  },
 	  "sameAs": [
-	    "https://www.linkedin.com/company/yajur-ai/"
+	    "https://www.linkedin.com/company/yajur-ai/",
+	    "https://yajur.ai"
 	  ],
-	  "description": "{{ site.description }}",
+	  "description": "{{ site.description | escape }}",
+	  "email": "connect@yajur.ai",
+	  "foundingLocation": "Bengaluru, India",
+	  "knowsAbout": ["Healthcare AI", "Medical Data Infrastructure", "ABDM", "FHIR", "Clinical Datasets", "Healthcare Interoperability", "NHCX"],
 	  "address": {
 	    "@type": "PostalAddress",
 	    "addressLocality": "Bengaluru",
@@ -88,7 +117,7 @@
 	<header class="site-header">
 		<div class="container site-header__inner">
 			<a href="{{ '/' | relative_url }}" class="site-header__logo">
-				<img src="/assets/logo.png" alt="">
+				<img src="/assets/logo.png" alt="Yajur.ai — The Medical Data Infrastructure Company">
 				<span>YAJUR.ai</span>
 			</a>
 			<button class="nav-toggle" aria-label="Toggle navigation" aria-expanded="false">
