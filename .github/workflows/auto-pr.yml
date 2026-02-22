@@ -16,26 +16,53 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Create Pull Request if not exists
+      - name: Create and merge Pull Request via Gitea API
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          API_URL: ${{ github.api_url }}
+          REPO: ${{ github.repository }}
+          BRANCH: ${{ github.ref_name }}
         run: |
-          BRANCH="${{ github.ref_name }}"
-          EXISTING=$(gh pr list --head "$BRANCH" --base main --json number --jq '.[0].number')
+          echo "Branch: $BRANCH"
+          echo "API: $API_URL"
+          echo "Repo: $REPO"
+
+          # Check for existing open PR
+          EXISTING=$(curl -s -H "Authorization: token $GH_TOKEN" \
+            "$API_URL/repos/$REPO/pulls?state=open&head=$BRANCH&base=main" \
+            | python3 -c "import sys,json; prs=json.load(sys.stdin); print(prs[0]['number'] if prs else '')" 2>/dev/null)
 
           if [ -n "$EXISTING" ]; then
-            echo "PR #$EXISTING already exists for branch $BRANCH."
+            echo "PR #$EXISTING already exists."
             PR_NUMBER=$EXISTING
           else
-            PR_NUMBER=$(gh pr create \
-              --title "Auto PR: $BRANCH" \
-              --body "This pull request was created automatically from branch \`$BRANCH\`." \
-              --base main \
-              --head "$BRANCH" \
-              --json number --jq '.number')
-            echo "Pull request #$PR_NUMBER created for branch $BRANCH."
+            echo "Creating new PR..."
+            PR_NUMBER=$(curl -s -X POST \
+              -H "Authorization: token $GH_TOKEN" \
+              -H "Content-Type: application/json" \
+              -d "{\"title\":\"Auto PR: $BRANCH\",\"body\":\"Automatically created from branch \`$BRANCH\`.\",\"head\":\"$BRANCH\",\"base\":\"main\"}" \
+              "$API_URL/repos/$REPO/pulls" \
+              | python3 -c "import sys,json; pr=json.load(sys.stdin); print(pr.get('number',''))" 2>/dev/null)
+            echo "Created PR #$PR_NUMBER"
           fi
 
+          if [ -z "$PR_NUMBER" ]; then
+            echo "ERROR: Could not find or create PR."
+            exit 1
+          fi
+
+          # Merge the PR
           echo "Merging PR #$PR_NUMBER..."
-          gh pr merge "$PR_NUMBER" --merge --admin
-          echo "PR #$PR_NUMBER merged successfully."
+          MERGE_RESULT=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
+            -H "Authorization: token $GH_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "{\"Do\":\"merge\",\"merge_message_field\":\"Auto-merge: $BRANCH\"}" \
+            "$API_URL/repos/$REPO/pulls/$PR_NUMBER/merge")
+
+          echo "Merge HTTP status: $MERGE_RESULT"
+          if [ "$MERGE_RESULT" = "200" ] || [ "$MERGE_RESULT" = "204" ]; then
+            echo "PR #$PR_NUMBER merged successfully."
+          else
+            echo "Merge may have failed (status $MERGE_RESULT). Trying gh CLI fallback..."
+            gh pr merge "$PR_NUMBER" --merge --admin || echo "gh CLI fallback also failed."
+          fi
