@@ -48,7 +48,7 @@
 	    "https://www.linkedin.com/company/yajur-ai/",
 	    "https://yajur.ai"
 	  ],
-	  "description": "{{ site.description | escape }}",
+	  "description": {{ site.description | jsonify }},
 	  "email": "connect@yajur.ai",
 	  "foundingLocation": "Bengaluru, India",
 	  "knowsAbout": ["Healthcare AI", "Medical Data Infrastructure", "ABDM", "FHIR", "Clinical Datasets", "Healthcare Interoperability", "NHCX"],

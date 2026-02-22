@@ -8,10 +8,10 @@ layout: default
   "@type": "BlogPosting",
   "headline": {{ page.title | jsonify }},
   "description": {{ page.description | default: page.excerpt | strip_html | jsonify }},
-  "image": "{{ site.url }}/assets/logo.png",
-  "url": "{{ site.url }}{{ page.url }}",
-  "datePublished": "{{ page.date | date_to_xmlschema }}",
-  "dateModified": "{{ page.last_modified_at | default: page.date | date_to_xmlschema }}",
+  "image": {{ "/assets/logo.png" | prepend: site.url | jsonify }},
+  "url": {{ page.url | prepend: site.url | jsonify }},
+  "datePublished": {{ page.date | date_to_xmlschema | jsonify }},
+  "dateModified": {{ page.last_modified_at | default: page.date | date_to_xmlschema | jsonify }},
   "author": {
     "@type": "Person",
     "name": {{ page.author | default: site.author | jsonify }},
@@ -22,12 +22,12 @@ layout: default
     "name": "Yajur.ai",
     "logo": {
       "@type": "ImageObject",
-      "url": "{{ site.url }}/assets/logo.png"
+      "url": {{ "/assets/logo.png" | prepend: site.url | jsonify }}
     }
   },
   "mainEntityOfPage": {
     "@type": "WebPage",
-    "@id": "{{ site.url }}{{ page.url }}"
+    "@id": {{ page.url | prepend: site.url | jsonify }}
   },
   "keywords": {{ page.keywords | default: site.keywords | jsonify }}
 }
