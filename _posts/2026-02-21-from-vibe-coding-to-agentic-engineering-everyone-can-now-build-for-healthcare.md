@@ -27,8 +27,6 @@ twitter_card: summary_large_image
 canonical_url: "https://yajur.ai/from-vibe-coding-to-agentic-engineering-everyone-can-now-build-for-healthcare"
 ---
 
-# From Vibe Coding to Agentic Engineering: Everyone Can Now Build for Healthcare
-
 ### The most consequential shift in software is not about better developers. It is about removing the need to be one.
 
 ---
