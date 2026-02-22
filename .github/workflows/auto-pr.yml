@@ -1,4 +1,4 @@
-name: Auto-create Pull Request
+name: Auto-create and merge Pull Request
 
 on:
   push:
@@ -6,11 +6,11 @@ on:
       - 'claude/**'
 
 permissions:
-  contents: read
+  contents: write
   pull-requests: write
 
 jobs:
-  create-pr:
+  create-and-merge-pr:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -24,12 +24,18 @@ jobs:
           EXISTING=$(gh pr list --head "$BRANCH" --base main --json number --jq '.[0].number')
 
           if [ -n "$EXISTING" ]; then
-            echo "PR #$EXISTING already exists for branch $BRANCH. Skipping."
+            echo "PR #$EXISTING already exists for branch $BRANCH."
+            PR_NUMBER=$EXISTING
           else
-            gh pr create \
+            PR_NUMBER=$(gh pr create \
               --title "Auto PR: $BRANCH" \
               --body "This pull request was created automatically from branch \`$BRANCH\`." \
               --base main \
-              --head "$BRANCH"
-            echo "Pull request created for branch $BRANCH."
+              --head "$BRANCH" \
+              --json number --jq '.number')
+            echo "Pull request #$PR_NUMBER created for branch $BRANCH."
           fi
+
+          echo "Merging PR #$PR_NUMBER..."
+          gh pr merge "$PR_NUMBER" --merge --admin
+          echo "PR #$PR_NUMBER merged successfully."
