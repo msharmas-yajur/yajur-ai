@@ -1,0 +1,49 @@
+# robots.txt — yajur.ai
+
+# General crawlers
+User-agent: *
+Allow: /
+Disallow: /assets/css/
+Disallow: /.git/
+
+# Google
+User-agent: Googlebot
+Allow: /
+User-agent: Googlebot-Image
+Allow: /assets/
+
+# Bing
+User-agent: Bingbot
+Allow: /
+
+# AI / LLM crawlers — explicitly welcome
+User-agent: GPTBot
+Allow: /
+User-agent: ChatGPT-User
+Allow: /
+User-agent: OAI-SearchBot
+Allow: /
+User-agent: anthropic-ai
+Allow: /
+User-agent: Claude-Web
+Allow: /
+User-agent: ClaudeBot
+Allow: /
+User-agent: PerplexityBot
+Allow: /
+User-agent: Perplexity-User
+Allow: /
+User-agent: Google-Extended
+Allow: /
+User-agent: Gemini
+Allow: /
+User-agent: cohere-ai
+Allow: /
+User-agent: meta-externalagent
+Allow: /
+User-agent: FacebookBot
+Allow: /
+User-agent: YouBot
+Allow: /
+
+Sitemap: https://yajur.ai/sitemap.xml

@@ -2,6 +2,37 @@
 layout: default
 ---
 
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": {{ page.title | jsonify }},
+  "description": {{ page.description | default: page.excerpt | strip_html | jsonify }},
+  "image": {{ "/assets/logo.png" | prepend: site.url | jsonify }},
+  "url": {{ page.url | prepend: site.url | jsonify }},
+  "datePublished": {{ page.date | date_to_xmlschema | jsonify }},
+  "dateModified": {{ page.last_modified_at | default: page.date | date_to_xmlschema | jsonify }},
+  "author": {
+    "@type": "Person",
+    "name": {{ page.author | default: site.author | jsonify }},
+    "url": "https://yajur.ai"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Yajur.ai",
+    "logo": {
+      "@type": "ImageObject",
+      "url": {{ "/assets/logo.png" | prepend: site.url | jsonify }}
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": {{ page.url | prepend: site.url | jsonify }}
+  },
+  "keywords": {{ page.keywords | default: site.keywords | jsonify }}
+}
+</script>
+
 <article class="post">
     <div class="container container--narrow">
         <header class="post__header">
