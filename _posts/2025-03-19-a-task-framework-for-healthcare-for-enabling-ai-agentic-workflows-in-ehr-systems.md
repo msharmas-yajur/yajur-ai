@@ -3,6 +3,8 @@ layout: post
 title: "A Task Framework for Healthcare: Enabling Agentic AI Workflows in Healthcare EHR Systems"
 date: 2025-03-19 10:00:00 +0530
 author: "Manish Sharma"
+description: "Yajur Healthcare introduces a phase-wise task framework for enabling agentic AI workflows in EHR systems, addressing healthcare's inherent non-linearity and building automation-ready clinical operations."
+keywords: "agentic AI healthcare, EHR task framework, healthcare workflow automation, agentic workflows EHR, Yajur Healthcare, clinical AI India, task-driven healthcare, AI in hospital systems"
 ---
 
 As healthcare systems continue to evolve towards more integrated and data-driven models, the need for structured task execution mechanisms has become increasingly evident. The article addresses this need by introducing a phase-wise and scalable approach to enabling healthcare task based workflows that will ensure enhanced workflow automation and efficiency in completing tasks by the various team members of a Patient Care Team.
