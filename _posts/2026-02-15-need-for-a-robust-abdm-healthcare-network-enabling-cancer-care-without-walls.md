@@ -3,6 +3,8 @@ layout: post
 title: "Need For A Robust ABDM Healthcare Network Enabling Cancer Care Without Walls"
 date: 2026-02-15 17:00:00 +0530
 author: "Manish Sharma"
+description: "Yajur Healthcare makes the case for a robust ABDM healthcare network to enable seamless cross-institutional cancer care, eliminating fragmented oncology records across the care continuum in India."
+keywords: "ABDM cancer care, ABDM healthcare network India, oncology interoperability, cancer care data India, Yajur Healthcare ABDM, ABHA health records, longitudinal cancer records, cross-institutional oncology India"
 ---
 
 The idea of expecting a doctor/physician to be responsible for keeping a patient’s health records up to date throughout his/her care journey, is obviously not preferred these days. Neither is the practice scalable nor does it allow adoption and application of recent and new technologies.

@@ -3,6 +3,8 @@ layout: post
 title: "Framework Based On Interoperability Principles For Ethical & Economically Sustainable Ai In Health Systems"
 date: 2025-10-29 10:00:00 +0530
 author: "Manish Sharma"
+description: "Yajur Healthcare presents a framework built on four interoperability principles—transparency, accessibility, scalability, and accountability—to ensure AI in health systems is ethical and economically sustainable."
+keywords: "ethical AI healthcare, interoperability principles, sustainable AI health systems, Yajur Healthcare, healthcare AI framework, responsible AI India, healthcare AI governance, FHIR AI interoperability"
 ---
 
 At Yajur Healthcare, we advocate for a robust framework for healthcare AI. This framework is built upon four core principles of interoperability to ensure AI is both ethical and economically sustainable.

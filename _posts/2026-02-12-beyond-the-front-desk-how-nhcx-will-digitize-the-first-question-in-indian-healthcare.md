@@ -3,6 +3,8 @@ layout: post
 title: "Beyond the Front Desk - How NHCX Will Digitize the First Question in Indian Healthcare"
 date: 2026-02-12 12:00:00 +0530
 author: "NHCX Series Editorial"
+description: "How NHCX will replace manual insurance eligibility phone calls with a real-time digital handshake—eliminating the biggest operational hurdle at India's hospital front desks. Part 1 of Yajur's NHCX Series."
+keywords: "NHCX India, National Health Claims Exchange, health insurance eligibility India, hospital pre-authorization digital, cashless claims automation, Yajur NHCX series, health insurance digitization India, NHCX API"
 ---
 
 **Article 1: Beyond the Front Desk - How NHCX Will Digitize the First Question in Indian Healthcare**
