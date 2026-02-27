@@ -42,6 +42,95 @@ This file tracks changes made on `claude/` branches during AI-assisted sessions.
 
 ---
 
+## Branch: `claude/convergence-healthcare-post-2026`
+
+**Session:** 2026-02-27
+**Base branch:** `main`
+
+### Changes Made
+
+| Commit | Description |
+|--------|-------------|
+| `0bc31a5` | Add new Pontifex post: The Convergence — AI leaders on healthcare |
+| `5fd97bf` | SEO/GEO fixes: internal links, FAQ H3s, mentions schema, reading time |
+| `4f594ec` | Fix title tags sitewide for SEO — remove verbose site.title duplication |
+| `c8ed784` | Add Google Search Console verification meta tag |
+
+### PRs Merged
+
+| PR | Title |
+|----|-------|
+| #8 | New Pontifex post: The Convergence |
+| #9 | SEO: Fix title tags sitewide + all audit gaps |
+| #10 | Add Google Search Console verification tag |
+
+### Status
+
+- [x] New blog post published — "The Convergence: Why Every Major AI Leader Has Landed on Healthcare" (2026-02-27)
+- [x] SEO/GEO audit completed — 9/10 SEO, 9.5/10 GEO
+- [x] All audit gaps fixed (internal links, FAQ H3 headings, mentions JSON-LD, reading time, author bio, post.html improvements)
+- [x] Sitewide title tag fix (_config.yml, index.md, pontifex.md)
+- [x] Google Search Console verification tag added to default.html
+- [ ] User to complete: verify ownership in GSC → submit sitemap.xml → request indexing
+
+### New Post Details
+
+**File:** `_posts/2026-02-27-the-convergence-why-every-major-ai-leader-has-landed-on-healthcare.md`
+**URL:** https://yajur.ai/2026/02/27/the-convergence-why-every-major-ai-leader-has-landed-on-healthcare
+
+**Content:** Long-form synthesis (4,730 words) of six major AI leaders' convergence on healthcare:
+- Andrej Karpathy — agentic engineering, domain experts as builders
+- Dario Amodei — biology compression thesis (Machines of Loving Grace + Adolescence of Technology)
+- Demis Hassabis — AlphaFold, first AI-designed cancer drug in Phase 1 trials
+- Satya Nadella — Dragon Copilot 21M patient encounters, "social permission" warning
+- Sundar Pichai — India $15B investment, leapfrog thesis, AI acting for you
+- Andrew Ng — agentic workflows > next-gen models, data drift warning
+
+**Internal links added:**
+- → [NHCX article](/2026/02/12/beyond-the-front-desk-how-nhcx-will-digitize-the-first-question-in-indian-healthcare.html)
+- → [ABDM cancer care article](/2026/02/15/need-for-a-robust-abdm-healthcare-network-enabling-cancer-care-without-walls.html)
+- → [Clinical reasoning pipelines article](/2025/07/09/smarter-ai-demands-smarter-context-how-yajur-healthcare-is-re-architecting-clinical-reasoning-pipelines.html)
+- → [Task framework article](/2025/03/19/a-task-framework-for-healthcare-for-enabling-ai-agentic-workflows-in-ehr-systems.html) (x2)
+
+### post.html Layout Improvements (applies to ALL posts)
+
+- `page.og_image` support — custom OG image per post, falls back to site logo
+- `inLanguage: "en"` added to BlogPosting JSON-LD
+- `mentions` array rendered in JSON-LD when `page.mentions` front matter is set
+- Reading time displayed in post header when `page.reading_time` is set
+
+### Sitewide Title Tag Fix
+
+| Page | Before | After |
+|------|--------|-------|
+| `site.title` (_config.yml) | `YAJUR.ai \| The Medical Data Infrastructure Company` | `Yajur.ai` |
+| Homepage (index.md) | `YAJUR.ai \| The Medical Data Infrastructure Company` | `Medical Data Infrastructure for Healthcare AI` |
+| Pontifex | `Pontifex \| Insights & Perspectives \| YAJUR.ai` | `Pontifex \| Insights & Perspectives` |
+
+Result: all page titles now render as `[Page Title] | Yajur.ai` (clean, under 60 chars for brand suffix)
+
+### SEO Keyword Performance Audit Findings (2026-02-27)
+
+Critical gaps identified for yajur.ai brand:
+
+1. **yajur.ai not indexed by Google** — `site:yajur.ai` returns zero results. All SEO equity is on hcitexpert.com.
+2. **Zero external backlinks** to yajur.ai
+3. **Absent from all major healthtech directories** — Tracxn, AIM, Inc42, YourStory, Growth Jockey
+4. **No AI engine citations** (Perplexity, ChatGPT) — blocked by indexation gap
+
+**Pending (user action required):**
+- [ ] Verify Google Search Console ownership → submit sitemap.xml → request indexing for all pages
+- [ ] Submit Bing Webmaster Tools sitemap
+- [ ] Create Crunchbase profile
+- [ ] Get listed on Tracxn, YourStory Startups, Inc42
+- [ ] Ensure every hcitexpert.com article links to yajur.ai (dofollow)
+- [ ] Guest article on external publication (ET HealthWorld, HIMSS, Inc42)
+
+### One Outstanding Gap (requires design work)
+- Custom OG social image (1200×630px) for the Convergence post — add as `/assets/og/2026-02-27-convergence.png` and set `og_image: /assets/og/2026-02-27-convergence.png` in post front matter
+
+---
+
 ## SEO/GEO Measurement Framework
 
 ### Tools to Use
@@ -89,14 +178,17 @@ Ask each of these AI engines the following prompts and record the responses:
 
 ### Measurement Cadence
 
-| Timeframe | What to Check |
-|-----------|---------------|
-| Week 1 | Confirm robots.txt, llms.txt, sitemap.xml are live and accessible |
-| Week 1 | Run Google Rich Results Test on homepage and a blog post |
-| Week 2 | Submit sitemap to Google Search Console and Bing Webmaster Tools |
-| Week 4 | Re-run GEO baseline prompts — compare to initial responses |
-| Week 8 | Check Google Search Console for "Yajur" keyword impressions |
-| Month 3 | Track organic traffic growth from AI-referred sessions |
+| Timeframe | What to Check | Status |
+|-----------|---------------|--------|
+| Week 1 | Confirm robots.txt, llms.txt, sitemap.xml are live and accessible | ✅ Done |
+| Week 1 | Run Google Rich Results Test on homepage and a blog post | Pending |
+| Week 1 | Google Search Console: verify ownership + submit sitemap.xml | ⚡ In progress — tag added 2026-02-27, user to verify |
+| Week 1 | Submit sitemap to Bing Webmaster Tools | Pending |
+| Week 2 | Request indexing for all 10 blog posts via GSC URL Inspection | Pending |
+| Week 2 | Create Crunchbase + YourStory + Tracxn profiles | Pending |
+| Week 4 | Re-run GEO baseline prompts — compare to initial responses | Pending |
+| Week 8 | Check Google Search Console for "Yajur" / "Yajur.ai" impressions | Pending |
+| Month 3 | Track organic traffic growth; check if yajur.ai outranks hcitexpert.com | Pending |
 
 ---
 
