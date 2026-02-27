@@ -8,7 +8,7 @@ layout: default
   "@type": "BlogPosting",
   "headline": {{ page.title | jsonify }},
   "description": {{ page.description | default: page.excerpt | strip_html | jsonify }},
-  "image": {{ "/assets/logo.png" | prepend: site.url | jsonify }},
+  "image": {{ page.og_image | default: "/assets/logo.png" | prepend: site.url | jsonify }},
   "url": {{ page.url | prepend: site.url | jsonify }},
   "datePublished": {{ page.date | date_to_xmlschema | jsonify }},
   "dateModified": {{ page.last_modified_at | default: page.date | date_to_xmlschema | jsonify }},
@@ -29,7 +29,9 @@ layout: default
     "@type": "WebPage",
     "@id": {{ page.url | prepend: site.url | jsonify }}
   },
-  "keywords": {{ page.keywords | default: site.keywords | jsonify }}
+  "keywords": {{ page.keywords | default: site.keywords | jsonify }},
+  "inLanguage": "en"{% if page.mentions %},
+  "mentions": [{% for mention in page.mentions %}{"@type":{{ mention.type | jsonify }},"name":{{ mention.name | jsonify }}{% if mention.url %},"url":{{ mention.url | jsonify }}{% endif %}}{% unless forloop.last %},{% endunless %}{% endfor %}]{% endif %}
 }
 </script>
 
@@ -40,6 +42,9 @@ layout: default
                 <time datetime="{{ page.date | date_to_xmlschema }}">{{ page.date | date: "%B %d, %Y" }}</time>
                 {% if page.author %}
                 <span class="post__author">by {{ page.author }}</span>
+                {% endif %}
+                {% if page.reading_time %}
+                <span class="post__reading-time">{{ page.reading_time }}</span>
                 {% endif %}
             </div>
             <h1 class="post__title">{{ page.title }}</h1>
