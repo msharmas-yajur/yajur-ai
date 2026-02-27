@@ -1,6 +1,6 @@
 ---
 layout: home
-title: "YAJUR.ai | The Medical Data Infrastructure Company"
+title: "Medical Data Infrastructure for Healthcare AI"
 description: "Yajur.ai is the Medical Data Infrastructure Company. We build disease-specific datasets, AI-driven healthcare applications, and ABDM/FHIR interoperability pipelines that power modern medicine in India."
 
 hero:
