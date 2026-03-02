@@ -14,6 +14,7 @@ const App: React.FC = () => {
     const [pendingTranscript, setPendingTranscript] = useState<string | null>(null);
     const [ttsLanguage, setTtsLanguage] = useState("en-IN");
     const [speakResponse, setSpeakResponse] = useState(false);
+    const [voiceError, setVoiceError] = useState<string | null>(null);
 
     const audioContextRef = useRef<AudioContext | null>(null);
     const analyserRef = useRef<AnalyserNode | null>(null);
@@ -23,8 +24,10 @@ const App: React.FC = () => {
     const audioChunksRef = useRef<Blob[]>([]);
 
     const startVoice = async () => {
+        setVoiceError(null);
         try {
             const resp = await fetch(`${LIVEKIT_TOKEN_URL}?room=yajur-voice&username=visitor`);
+            if (!resp.ok) throw new Error(`Backend error: ${resp.status}`);
             const data = await resp.json();
             setToken(data.accessToken);
 
@@ -80,8 +83,16 @@ const App: React.FC = () => {
             mediaRecorderRef.current = recorder;
 
             setIsVoiceActive(true);
-        } catch (e) {
+        } catch (e: any) {
             console.error("Failed to start voice", e);
+            const msg = e?.message || String(e);
+            if (msg.includes("Failed to fetch") || msg.includes("NetworkError") || msg.includes("fetch")) {
+                setVoiceError("Voice unavailable: backend not reachable. Please use text chat.");
+            } else if (msg.includes("NotAllowedError") || msg.includes("Permission")) {
+                setVoiceError("Microphone access denied. Please allow mic permissions and try again.");
+            } else {
+                setVoiceError("Voice unavailable. Please use text chat.");
+            }
         }
     };
 
@@ -140,6 +151,8 @@ const App: React.FC = () => {
                     onTtsComplete={() => setSpeakResponse(false)}
                     ttsLanguage={ttsLanguage}
                     backendBase={BACKEND_BASE}
+                    voiceError={voiceError}
+                    clearVoiceError={() => setVoiceError(null)}
                 />
             </div>
         </CopilotKit>

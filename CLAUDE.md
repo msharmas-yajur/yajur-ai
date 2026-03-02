@@ -131,6 +131,61 @@ Critical gaps identified for yajur.ai brand:
 
 ---
 
+## Branch: `claude/convergence-healthcare-post-2026` (Session 2: Copilot Voice + Knowledge Base)
+
+**Session:** 2026-03-02
+**Base branch:** `claude/convergence-healthcare-post-2026`
+
+### Changes Made
+
+| File | Description |
+|------|-------------|
+| `copilot/knowledge/yajur-healthcare.md` | NEW: Comprehensive 500+ line knowledge base — full company info, services, ABDM/NHCX, all blog insights, glossary |
+| `copilot/knowledge/yajur-summary.md` | NEW: Concise 2-page summary version for quick reference |
+| `copilot/widget/src/components/UnifiedChat.tsx` | Added `useCopilotReadable` to inject Yajur knowledge into every LLM context; updated system prompt to accurately describe Yajur; added `voiceError` banner display |
+| `copilot/widget/src/App.tsx` | Added `voiceError` state with specific error messages for network/permission failures; pass `voiceError` + `clearVoiceError` to UnifiedChat |
+| `assets/js/copilot-widget.js` | Rebuilt IIFE bundle with all changes |
+
+### Copilot Architecture (Current State)
+
+| Layer | Implementation |
+|-------|---------------|
+| LLM routing | CopilotKit Cloud (`publicApiKey: ck_pub_3e7127dba63bdcd42c0eb65ba64c9289`) |
+| Knowledge injection | `useCopilotReadable` — injects `YAJUR_KNOWLEDGE` constant into every conversation context |
+| System prompt | `CopilotPopup` `instructions` prop — positions assistant as Yajur business AI |
+| STT | Sarvam `saarika:v2.5` via `/api/sarvam/stt` on backend |
+| TTS | Sarvam `bulbul:v2` / speaker `anushka` via `/api/sarvam/tts` on backend |
+| Voice token | LiveKit JWT via `/api/livekit` on backend |
+| Backend | Next.js on `caladriusprod.tail5b7deb.ts.net:3330` (HTTP, Tailscale-only) |
+
+### Voice Bug — Root Cause & Fix Required
+
+**Problem:** Mic button does nothing on live yajur.ai site.
+**Root cause:** Mixed content — yajur.ai is HTTPS but backend is HTTP-only and Tailscale-internal (not public internet).
+**Fix (requires server access):**
+1. On production server: run `tailscale serve 3330` → exposes backend as `https://caladriusprod.tail5b7deb.ts.net`
+2. Update `BACKEND_BASE` in `copilot/widget/src/App.tsx` from `http://caladriusprod...` to `https://caladriusprod...`
+3. Rebuild and redeploy widget
+
+**Interim UX fix:** Widget now shows yellow warning banner when voice fails instead of silently doing nothing.
+
+### Knowledge Base Contents
+
+`copilot/knowledge/yajur-healthcare.md` covers:
+- Company overview, mission, vision, contact
+- Three core pillars (Data, AI, Interoperability) with all service details
+- Compliance: HIPAA, SOC 2, ABDM, DHA
+- Four core health record types (clinical, lab, radiology, prescriptions)
+- Clinical reasoning pipelines and HITL approach
+- Task Framework for Healthcare AI (agentic architecture)
+- 13 LLM fine-tuning recommendations for oncology
+- ABDM / NHCX deep dives
+- The Convergence — all 6 AI leaders (Amodei, Hassabis, Nadella, Pichai, Karpathy, Ng)
+- Ethical AI framework (4 interoperability principles)
+- Full vocabulary glossary (20+ terms)
+
+---
+
 ## SEO/GEO Measurement Framework
 
 ### Tools to Use
