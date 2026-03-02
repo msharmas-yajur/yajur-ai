@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from "react";
-import { useCopilotChatHeadless_c } from "@copilotkit/react-core";
+import { useCopilotChat } from "@copilotkit/react-core";
 import { CopilotPopup } from "@copilotkit/react-ui";
 import { TranscriptionSync } from "./TranscriptionSync";
 import { Visualizer } from "./Visualizer";
@@ -49,20 +49,20 @@ export const UnifiedChat: React.FC<UnifiedChatProps> = ({
     ttsLanguage,
     backendBase,
 }) => {
-    const { messages, sendMessage } = useCopilotChatHeadless_c();
+    const { visibleMessages, appendMessage } = useCopilotChat();
     const lastSpokenIdRef = useRef<string | null>(null);
 
     // Auto-submit STT transcript as a user message
     useEffect(() => {
         if (!pendingTranscript) return;
-        sendMessage({ id: Date.now().toString(), role: "user", content: pendingTranscript }, { followUp: false });
+        appendMessage({ id: Date.now().toString(), role: "user", content: pendingTranscript });
         clearTranscript();
     }, [pendingTranscript]);
 
     // Speak new assistant messages via Sarvam TTS
     useEffect(() => {
         if (!speakResponse) return;
-        const lastMsg = [...messages].reverse().find(m => m.role === "assistant");
+        const lastMsg = [...visibleMessages].reverse().find((m: any) => m.role === "assistant");
         if (!lastMsg || lastMsg.id === lastSpokenIdRef.current) return;
         const text = (lastMsg as any).content;
         if (!text) return;
@@ -83,7 +83,7 @@ export const UnifiedChat: React.FC<UnifiedChatProps> = ({
                 onTtsComplete();
             }
         })();
-    }, [messages, speakResponse]);
+    }, [visibleMessages, speakResponse]);
 
     // Custom Input component with mic button
     const CustomInput = (props: any) => {
@@ -173,7 +173,7 @@ export const UnifiedChat: React.FC<UnifiedChatProps> = ({
     };
 
     const handleTranscription = (text: string, role: 'user' | 'assistant') => {
-        sendMessage({ id: Date.now().toString(), role, content: text }, { followUp: false });
+        appendMessage({ id: Date.now().toString(), role, content: text });
     };
 
     return (
