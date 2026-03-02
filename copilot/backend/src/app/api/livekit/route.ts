@@ -27,7 +27,14 @@ export async function GET(req: NextRequest) {
         identity: username,
     });
 
-    at.addGrant({ roomJoin: true, room: room });
+    // roomAgentDispatch in the token automatically dispatches yajur-agent
+    // when the browser connects — no separate API call needed
+    // (roomAgentDispatch not yet in SDK types, cast to any)
+    at.addGrant({
+        roomJoin: true,
+        room: room,
+        roomAgentDispatch: [{ agentName: "yajur-agent" }],
+    } as any);
 
     const response = NextResponse.json({ accessToken: await at.toJwt(), wsUrl });
     response.headers.set("Access-Control-Allow-Origin", "*");
