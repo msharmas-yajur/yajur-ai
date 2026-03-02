@@ -38,8 +38,12 @@ export const Visualizer: React.FC<VisualizerProps> = ({ active, audioData }) => 
 
             if (active && audioData && audioData.length > 0) {
                 for (let i = 0; i < bufferLength; i++) {
-                    const v = (audioData[i] || 0) / 128.0;
-                    const y = (v * height) / 2;
+                    // Time-domain: silence = 128, range 0-255.
+                    // Amplify deviation from centre so speech is visually obvious.
+                    // deviation: -1.0 (trough) to +1.0 (peak), 0 at silence.
+                    const deviation = ((audioData[i] || 128) - 128) / 128;
+                    // ±45% of height around the centre line.
+                    const y = height / 2 + deviation * height * 0.45;
 
                     if (i === 0) {
                         ctx.moveTo(x, y);

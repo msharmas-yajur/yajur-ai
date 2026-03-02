@@ -11,11 +11,11 @@ export const TranscriptionSync: React.FC<TranscriptionSyncProps> = ({ onTranscri
 
     useEffect(() => {
         transcriptions.forEach((segment: any) => {
-            if (segment.streamInfo?.type === 'transcript' && segment.streamInfo?.final) {
-                const uniqueId = `${segment.participantInfo?.identity}-${segment.streamInfo?.id}`;
+            if (segment.final) {
+                const uniqueId = `${segment.participant?.identity}-${segment.id}`;
 
                 if (uniqueId !== lastProcessedId.current) {
-                    const isAgent = segment.participantInfo?.identity.startsWith('agent-');
+                    const isAgent = segment.participant?.identity?.startsWith('agent-');
                     onTranscription(segment.text, isAgent ? 'assistant' : 'user');
                     lastProcessedId.current = uniqueId;
                 }

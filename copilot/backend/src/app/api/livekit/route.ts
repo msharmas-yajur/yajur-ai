@@ -29,7 +29,7 @@ export async function GET(req: NextRequest) {
 
     at.addGrant({ roomJoin: true, room: room });
 
-    const response = NextResponse.json({ accessToken: await at.toJwt() });
+    const response = NextResponse.json({ accessToken: await at.toJwt(), wsUrl });
     response.headers.set("Access-Control-Allow-Origin", "*");
     return response;
 }

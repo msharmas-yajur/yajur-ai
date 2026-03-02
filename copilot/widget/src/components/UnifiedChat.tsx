@@ -1,9 +1,11 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, createContext, useContext, useCallback } from "react";
 import { useCopilotChat, useCopilotReadable } from "@copilotkit/react-core";
 import { CopilotPopup } from "@copilotkit/react-ui";
+import { TextMessage, Role } from "@copilotkit/runtime-client-gql";
+import { LiveKitRoom, RoomAudioRenderer, useVoiceAssistant } from "@livekit/components-react";
 import { TranscriptionSync } from "./TranscriptionSync";
-import { Visualizer } from "./Visualizer";
-import { LiveKitRoom } from "@livekit/components-react";
+import type { VoicePhase } from "../App";
+import { WIDGET_VERSION } from "../App";
 
 const YAJUR_KNOWLEDGE = `
 # Yajur.ai — The Medical Data Infrastructure Company
@@ -105,211 +107,378 @@ Works with: hospitals, health systems, clinical AI companies, health insurers/TP
 
 interface UnifiedChatProps {
     isVoiceActive: boolean;
-    setIsVoiceActive: (active: boolean) => void;
-    token: string | null;
+    voicePhase: VoicePhase;
+    setVoicePhase: (phase: VoicePhase) => void;
     startVoice: () => Promise<void>;
     stopVoice: () => void;
-    audioData: Uint8Array;
-    pendingTranscript: string | null;
-    clearTranscript: () => void;
-    speakResponse: boolean;
-    onTtsComplete: () => void;
-    ttsLanguage: string;
+    livekitToken: string | null;
+    livekitUrl: string | null;
     backendBase: string;
     voiceError: string | null;
     clearVoiceError: () => void;
 }
 
-async function playBase64Audio(base64: string): Promise<void> {
-    const binary = atob(base64);
-    const bytes = new Uint8Array(binary.length);
-    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-    const ctx = new AudioContext();
-    const buffer = await ctx.decodeAudioData(bytes.buffer);
-    const source = ctx.createBufferSource();
-    source.buffer = buffer;
-    source.connect(ctx.destination);
-    return new Promise((resolve) => {
-        source.onended = () => { ctx.close(); resolve(); };
-        source.start(0);
-    });
+// ─── Voice Context ────────────────────────────────────────────────────────────
+
+interface VoiceContextType {
+    isVoiceActive: boolean;
+    voicePhase: VoicePhase;
+    startVoice: () => Promise<void>;
+    stopVoice: () => void;
+    voiceError: string | null;
+    clearVoiceError: () => void;
 }
 
-export const UnifiedChat: React.FC<UnifiedChatProps> = ({
-    isVoiceActive,
-    setIsVoiceActive,
-    token,
-    startVoice,
-    stopVoice,
-    audioData,
-    pendingTranscript,
-    clearTranscript,
-    speakResponse,
-    onTtsComplete,
-    ttsLanguage,
-    backendBase,
-    voiceError,
-    clearVoiceError,
+const VoiceContext = createContext<VoiceContextType | null>(null);
+
+// ─── Inject pulse keyframe once ──────────────────────────────────────────────
+(function injectPulseStyle() {
+    if (typeof document === "undefined") return;
+    const id = "yajur-pulse-keyframe";
+    if (document.getElementById(id)) return;
+    const style = document.createElement("style");
+    style.id = id;
+    style.textContent = `
+        @keyframes yajur-pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.35; transform: scale(0.8); }
+        }
+    `;
+    document.head.appendChild(style);
+})();
+
+// ─── VoiceStateTracker ───────────────────────────────────────────────────────
+// Rendered inside <LiveKitRoom> to map agent state → voicePhase.
+// Must be a child of LiveKitRoom so it can use LiveKit hooks.
+
+const VoiceStateTracker: React.FC<{ setVoicePhase: (p: VoicePhase) => void }> = ({
+    setVoicePhase,
 }) => {
-    const { visibleMessages, appendMessage } = useCopilotChat();
-    const lastSpokenIdRef = useRef<string | null>(null);
-
-    useCopilotReadable({
-        description: "Comprehensive knowledge base about Yajur Healthcare / Yajur.ai — the Medical Data Infrastructure Company",
-        value: YAJUR_KNOWLEDGE,
-    });
-
-    // Auto-submit STT transcript as a user message
+    const { state } = useVoiceAssistant();
     useEffect(() => {
-        if (!pendingTranscript) return;
-        appendMessage({ id: Date.now().toString(), role: "user", content: pendingTranscript });
-        clearTranscript();
-    }, [pendingTranscript]);
+        if (state === "listening") setVoicePhase("listening");
+        else if (state === "thinking") setVoicePhase("processing");
+        else if (state === "speaking") setVoicePhase("speaking");
+        else setVoicePhase("idle");
+    }, [state, setVoicePhase]);
+    return null;
+};
 
-    // Speak new assistant messages via Sarvam TTS
-    useEffect(() => {
-        if (!speakResponse) return;
-        const lastMsg = [...visibleMessages].reverse().find((m: any) => m.role === "assistant");
-        if (!lastMsg || lastMsg.id === lastSpokenIdRef.current) return;
-        const text = (lastMsg as any).content;
-        if (!text) return;
+// ─── CustomInput ─────────────────────────────────────────────────────────────
+// Defined at MODULE LEVEL so React never treats it as a new component type on re-renders.
 
-        lastSpokenIdRef.current = lastMsg.id;
-        (async () => {
-            try {
-                const res = await fetch(`${backendBase}/api/sarvam/tts`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ text, language: ttsLanguage }),
-                });
-                const { audio } = await res.json();
-                if (audio) await playBase64Audio(audio);
-            } catch (e) {
-                console.error("TTS failed", e);
-            } finally {
-                onTtsComplete();
-            }
-        })();
-    }, [visibleMessages, speakResponse]);
+const CustomInput = (props: any) => {
+    const voice = useContext(VoiceContext)!;
+    const [inputValue, setInputValue] = React.useState("");
 
-    // Custom Input component with mic button
-    const CustomInput = (props: any) => {
-        const [inputValue, setInputValue] = React.useState("");
-
-        const handleSend = () => {
-            if (inputValue.trim()) {
-                props.onSend(inputValue);
-                setInputValue("");
-            }
-        };
-
-        return (
-            <div className="yajur-custom-input-container" style={{
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '8px',
-                padding: '12px',
-                backgroundColor: 'var(--copilot-kit-background-color)',
-                borderTop: '1px solid var(--copilot-kit-separator-color)'
-            }}>
-                {isVoiceActive && (
-                    <div style={{ padding: '0 8px' }}>
-                        <Visualizer active={isVoiceActive} audioData={audioData} />
-                    </div>
-                )}
-                {voiceError && (
-                    <div style={{
-                        padding: '6px 10px',
-                        borderRadius: '8px',
-                        backgroundColor: '#fff3cd',
-                        color: '#856404',
-                        fontSize: '12px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        gap: '8px'
-                    }}>
-                        <span>{voiceError}</span>
-                        <button onClick={clearVoiceError} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px', color: '#856404', padding: '0 2px' }}>✕</button>
-                    </div>
-                )}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <input
-                        type="text"
-                        value={inputValue}
-                        onChange={(e) => setInputValue(e.target.value)}
-                        onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                        placeholder="Type a message..."
-                        style={{
-                            flex: 1,
-                            padding: '10px 16px',
-                            borderRadius: '20px',
-                            border: '1px solid var(--copilot-kit-separator-color)',
-                            backgroundColor: 'var(--copilot-kit-input-background-color)',
-                            color: 'var(--copilot-kit-contrast-color)',
-                            outline: 'none',
-                            fontFamily: 'inherit'
-                        }}
-                    />
-                    <button
-                        onClick={() => isVoiceActive ? stopVoice() : startVoice()}
-                        style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            width: '40px',
-                            height: '40px',
-                            borderRadius: '50%',
-                            backgroundColor: isVoiceActive ? '#dc3545' : 'var(--copilot-kit-primary-color)',
-                            color: '#fff',
-                            border: 'none',
-                            cursor: 'pointer',
-                            transition: 'all 0.2s ease'
-                        }}
-                    >
-                        {isVoiceActive ? (
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-                        ) : (
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
-                        )}
-                    </button>
-                    <button
-                        onClick={handleSend}
-                        style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            width: '40px',
-                            height: '40px',
-                            borderRadius: '50%',
-                            backgroundColor: 'transparent',
-                            color: 'var(--copilot-kit-primary-color)',
-                            border: 'none',
-                            cursor: 'pointer'
-                        }}
-                    >
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
-                    </button>
-                </div>
-            </div>
-        );
+    const handleSend = () => {
+        if (inputValue.trim()) {
+            props.onSend(inputValue);
+            setInputValue("");
+        }
     };
 
-    const handleTranscription = (text: string, role: 'user' | 'assistant') => {
-        appendMessage({ id: Date.now().toString(), role, content: text });
+    const phaseColor: Record<VoicePhase, string> = {
+        idle: "#6c757d",
+        listening: "#28a745",
+        processing: "#fd7e14",
+        speaking: "#6610f2",
+    };
+    const phaseLabel: Record<VoicePhase, string> = {
+        idle: "",
+        listening: "Listening…",
+        processing: "Processing…",
+        speaking: "Speaking…",
     };
 
     return (
-        <div style={{
-            '--copilot-kit-primary-color': '#d97757',
-            '--copilot-kit-background-color': '#faf9f5',
-            '--copilot-kit-contrast-color': '#010101',
-            '--copilot-kit-secondary-color': '#f0eee6',
-            '--copilot-kit-input-background-color': '#fff',
-            '--copilot-kit-separator-color': '#e0ded8',
-        } as any}>
-            <CopilotPopup
-                instructions={`You are "Yajur Assistant", the AI assistant for Yajur.ai — India's Medical Data Infrastructure Company.
+        <div
+            className="yajur-custom-input-container"
+            style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: "8px",
+                padding: "12px",
+                backgroundColor: "var(--copilot-kit-background-color)",
+                borderTop: "1px solid var(--copilot-kit-separator-color)",
+            }}
+        >
+            {/* Voice session phase indicator */}
+            {voice.isVoiceActive && voice.voicePhase !== "idle" && (
+                <div style={{ padding: "0 4px" }}>
+                    <div
+                        style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "6px",
+                            fontSize: "12px",
+                            fontWeight: 500,
+                            color: phaseColor[voice.voicePhase],
+                        }}
+                    >
+                        <span
+                            style={{
+                                display: "inline-block",
+                                width: "8px",
+                                height: "8px",
+                                borderRadius: "50%",
+                                backgroundColor: "currentColor",
+                                animation: "yajur-pulse 1s ease-in-out infinite",
+                            }}
+                        />
+                        {phaseLabel[voice.voicePhase]}
+                    </div>
+                </div>
+            )}
+
+            {/* Voice error banner */}
+            {voice.voiceError && (
+                <div
+                    style={{
+                        padding: "6px 10px",
+                        borderRadius: "8px",
+                        backgroundColor: "#fff3cd",
+                        color: "#856404",
+                        fontSize: "12px",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        gap: "8px",
+                    }}
+                >
+                    <span>{voice.voiceError}</span>
+                    <button
+                        onClick={voice.clearVoiceError}
+                        style={{
+                            background: "none",
+                            border: "none",
+                            cursor: "pointer",
+                            fontSize: "14px",
+                            color: "#856404",
+                            padding: "0 2px",
+                        }}
+                    >
+                        ✕
+                    </button>
+                </div>
+            )}
+
+            {/* Input row */}
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <input
+                    type="text"
+                    value={inputValue}
+                    onChange={(e) => setInputValue(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && handleSend()}
+                    placeholder={
+                        voice.isVoiceActive
+                            ? "Voice active — or type here…"
+                            : "Type a message or press the mic…"
+                    }
+                    style={{
+                        flex: 1,
+                        padding: "10px 16px",
+                        borderRadius: "20px",
+                        border: "1px solid var(--copilot-kit-separator-color)",
+                        backgroundColor: "var(--copilot-kit-input-background-color)",
+                        color: "var(--copilot-kit-contrast-color)",
+                        outline: "none",
+                        fontFamily: "inherit",
+                    }}
+                />
+
+                {/* Mic / Stop button */}
+                <button
+                    onClick={() =>
+                        voice.isVoiceActive ? voice.stopVoice() : voice.startVoice()
+                    }
+                    title={
+                        voice.isVoiceActive
+                            ? "Stop voice session"
+                            : "Start voice session"
+                    }
+                    style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        width: "40px",
+                        height: "40px",
+                        borderRadius: "50%",
+                        backgroundColor: voice.isVoiceActive
+                            ? "#dc3545"
+                            : "var(--copilot-kit-primary-color)",
+                        boxShadow: voice.isVoiceActive
+                            ? "0 0 0 3px rgba(220,53,69,0.35)"
+                            : "none",
+                        color: "#fff",
+                        border: "none",
+                        cursor: "pointer",
+                        transition: "all 0.2s ease",
+                        flexShrink: 0,
+                    }}
+                >
+                    {voice.isVoiceActive ? (
+                        /* Stop / X icon */
+                        <svg
+                            width="18"
+                            height="18"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2.5"
+                            strokeLinecap="round"
+                        >
+                            <line x1="18" y1="6" x2="6" y2="18" />
+                            <line x1="6" y1="6" x2="18" y2="18" />
+                        </svg>
+                    ) : (
+                        /* Mic icon */
+                        <svg
+                            width="18"
+                            height="18"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                        >
+                            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
+                            <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                            <line x1="12" y1="19" x2="12" y2="23" />
+                            <line x1="8" y1="23" x2="16" y2="23" />
+                        </svg>
+                    )}
+                </button>
+
+                {/* Send button */}
+                <button
+                    onClick={handleSend}
+                    style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        width: "40px",
+                        height: "40px",
+                        borderRadius: "50%",
+                        backgroundColor: "transparent",
+                        color: "var(--copilot-kit-primary-color)",
+                        border: "none",
+                        cursor: "pointer",
+                        flexShrink: 0,
+                    }}
+                >
+                    <svg
+                        width="18"
+                        height="18"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                    >
+                        <line x1="22" y1="2" x2="11" y2="13" />
+                        <polygon points="22 2 15 22 11 13 2 9 22 2" />
+                    </svg>
+                </button>
+            </div>
+
+            {/* Version badge */}
+            <div
+                style={{
+                    textAlign: "center",
+                    fontSize: "10px",
+                    color: "#aaa",
+                    paddingBottom: "4px",
+                    letterSpacing: "0.03em",
+                }}
+            >
+                v{WIDGET_VERSION}
+            </div>
+        </div>
+    );
+};
+
+// ─── UnifiedChat ──────────────────────────────────────────────────────────────
+
+export const UnifiedChat: React.FC<UnifiedChatProps> = ({
+    isVoiceActive,
+    voicePhase,
+    setVoicePhase,
+    startVoice,
+    stopVoice,
+    livekitToken,
+    livekitUrl,
+    voiceError,
+    clearVoiceError,
+}) => {
+    const { appendMessage } = useCopilotChat() as any;
+
+    useCopilotReadable({
+        description:
+            "Comprehensive knowledge base about Yajur Healthcare / Yajur.ai — the Medical Data Infrastructure Company",
+        value: YAJUR_KNOWLEDGE,
+    });
+
+    // Feed LiveKit transcriptions into CopilotKit chat (display only — no LLM trigger)
+    const handleTranscription = useCallback(
+        (text: string, role: "user" | "assistant") => {
+            if (!text.trim()) return;
+            appendMessage(
+                new TextMessage({
+                    role: role === "user" ? Role.User : Role.Assistant,
+                    content: text,
+                })
+            );
+        },
+        [appendMessage]
+    );
+
+    const voiceContextValue: VoiceContextType = {
+        isVoiceActive,
+        voicePhase,
+        startVoice,
+        stopVoice,
+        voiceError,
+        clearVoiceError,
+    };
+
+    return (
+        <VoiceContext.Provider value={voiceContextValue}>
+            <div
+                style={
+                    {
+                        "--copilot-kit-primary-color": "#d97757",
+                        "--copilot-kit-background-color": "#faf9f5",
+                        "--copilot-kit-contrast-color": "#010101",
+                        "--copilot-kit-secondary-color": "#f0eee6",
+                        "--copilot-kit-input-background-color": "#fff",
+                        "--copilot-kit-separator-color": "#e0ded8",
+                    } as React.CSSProperties
+                }
+            >
+                {/* LiveKit room — only mounted when voice is active */}
+                {isVoiceActive && livekitToken && livekitUrl && (
+                    <LiveKitRoom
+                        serverUrl={livekitUrl}
+                        token={livekitToken}
+                        audio={true}
+                        video={false}
+                        connect={true}
+                        style={{ display: "none" }}
+                    >
+                        {/* Plays the agent's audio output through the browser speaker */}
+                        <RoomAudioRenderer />
+                        {/* Feeds final transcripts (user + agent) into CopilotKit chat */}
+                        <TranscriptionSync onTranscription={handleTranscription} />
+                        {/* Maps LiveKit agent state → voicePhase for the UI indicator */}
+                        <VoiceStateTracker setVoicePhase={setVoicePhase} />
+                    </LiveKitRoom>
+                )}
+
+                <CopilotPopup
+                    instructions={`You are "Yajur Assistant", the AI assistant for Yajur.ai — India's Medical Data Infrastructure Company.
 
 You have detailed knowledge about Yajur Healthcare provided in your context. Use it to answer questions accurately.
 
@@ -321,30 +490,20 @@ Your role:
 - Guide users to connect@yajur.ai for partnerships and business inquiries
 - Be warm, professional, and concise — this is a business assistant, not a clinical decision support tool
 
+The user may be speaking to you via voice (microphone) or typing. Treat both equally.
 Automatically detect the user's language (English, Hindi, Tamil, etc.) and respond in the same language.
+Keep responses concise — 2-4 sentences — since they will be read aloud via text-to-speech.
 
 Do NOT provide clinical medical advice. Always recommend consulting a qualified healthcare professional for medical decisions.`}
-                labels={{
-                    title: "Yajur AI",
-                    initial: "Welcome to Yajur Healthcare. How can I help you today?",
-                    placeholder: "Type a message or use the mic...",
-                }}
-                clickOutsideToClose={false}
-                Input={CustomInput}
-            />
-
-            {isVoiceActive && token && (
-                <LiveKitRoom
-                    video={false}
-                    audio={true}
-                    token={token}
-                    serverUrl={import.meta.env.VITE_LIVEKIT_URL}
-                    onDisconnected={() => setIsVoiceActive(false)}
-                    style={{ display: 'none' }}
-                >
-                    <TranscriptionSync onTranscription={handleTranscription} />
-                </LiveKitRoom>
-            )}
-        </div>
+                    labels={{
+                        title: `Yajur AI  ·  v${WIDGET_VERSION}`,
+                        initial: "Welcome to Yajur Healthcare. How can I help you today?",
+                        placeholder: "Type a message or press the mic…",
+                    }}
+                    clickOutsideToClose={false}
+                    Input={CustomInput}
+                />
+            </div>
+        </VoiceContext.Provider>
     );
 };

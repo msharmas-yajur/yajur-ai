@@ -6,6 +6,24 @@ const CORS = {
     "Access-Control-Allow-Headers": "Content-Type",
 };
 
+function chunkTextForTts(text: string, maxChunkLen = 400): string[] {
+    if (text.length <= maxChunkLen) return [text];
+    // Split on sentence boundaries
+    const sentences = text.split(/(?<=[.!?])\s+/);
+    const chunks: string[] = [];
+    let current = "";
+    for (const sentence of sentences) {
+        if (current.length + sentence.length + 1 > maxChunkLen && current) {
+            chunks.push(current.trim());
+            current = sentence;
+        } else {
+            current = current ? current + " " + sentence : sentence;
+        }
+    }
+    if (current.trim()) chunks.push(current.trim());
+    return chunks.length > 0 ? chunks : [text];
+}
+
 export async function POST(req: NextRequest) {
     const apiKey = process.env.SARVAM_API_KEY;
     if (!apiKey) {
@@ -24,7 +42,7 @@ export async function POST(req: NextRequest) {
             "Content-Type": "application/json",
         },
         body: JSON.stringify({
-            inputs: [text],
+            inputs: chunkTextForTts(text),
             target_language_code: language || "en-IN",
             speaker: "anushka",
             model: "bulbul:v2",
@@ -38,7 +56,7 @@ export async function POST(req: NextRequest) {
     }
 
     const data = await response.json();
-    return NextResponse.json({ audio: data.audios?.[0] }, { headers: CORS });
+    return NextResponse.json({ audios: data.audios ?? [] }, { headers: CORS });
 }
 
 export async function OPTIONS() {
