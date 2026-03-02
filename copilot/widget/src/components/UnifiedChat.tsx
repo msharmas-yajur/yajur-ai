@@ -197,7 +197,7 @@ export const UnifiedChat: React.FC<UnifiedChatProps> = ({
           Encourage the user to explore our datasets and AI orchestration layers.`}
                 labels={{
                     title: "Yajur AI",
-                    initial: "Welcome to Yajur Healthcare. I'm your Gemini-powered assistant. How can I help you today?",
+                    initial: "Welcome to Yajur Healthcare. How can I help you today?",
                     placeholder: "Type a message or use the mic...",
                 }}
                 clickOutsideToClose={false}
