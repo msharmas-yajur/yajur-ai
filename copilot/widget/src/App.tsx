@@ -3,7 +3,7 @@ import { CopilotKit } from "@copilotkit/react-core";
 import "@copilotkit/react-ui/styles.css";
 import { UnifiedChat } from "./components/UnifiedChat";
 
-const BACKEND_BASE = "http://caladriusprod.tail5b7deb.ts.net:3330";
+const BACKEND_BASE = "https://caladriusprod.tail5b7deb.ts.net";
 const COPILOTKIT_PUBLIC_KEY = "ck_pub_3e7127dba63bdcd42c0eb65ba64c9289";
 const LIVEKIT_TOKEN_URL = `${BACKEND_BASE}/api/livekit`;
 
