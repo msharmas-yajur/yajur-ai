@@ -7,6 +7,7 @@ module.exports = {
             cwd: "/home/msharma/yajur_ai/copilot/backend",
             env: {
                 NODE_ENV: "production",
+                PORT: 3330,
             },
             log_date_format: "YYYY-MM-DD HH:mm:ss",
             error_file: "logs/err.log",

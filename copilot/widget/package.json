@@ -13,6 +13,7 @@
     "@copilotkit/react-core": "^1.52.1",
     "@copilotkit/react-ui": "^1.52.1",
     "@copilotkit/runtime-client-gql": "^1.52.1",
+    "@google/generative-ai": "^0.24.1",
     "@livekit/components-react": "^2.9.20",
     "livekit-client": "^2.17.2",
     "lucide-react": "^0.575.0",

@@ -1,11 +1,13 @@
 import {
     CopilotRuntime,
-    OpenAIAdapter,
+    GoogleGenerativeAIAdapter,
     copilotRuntimeNextJSAppRouterEndpoint,
 } from "@copilotkit/runtime";
 import { NextRequest, NextResponse } from "next/server";
 
-const openai = new OpenAIAdapter();
+const serviceAdapter = new GoogleGenerativeAIAdapter({
+    model: "gemini-2.0-flash-exp"
+});
 
 const runtime = new CopilotRuntime({
     actions: [
@@ -22,7 +24,7 @@ const runtime = new CopilotRuntime({
 export const POST = async (req: NextRequest) => {
     const { handleRequest } = copilotRuntimeNextJSAppRouterEndpoint({
         runtime,
-        serviceAdapter: openai,
+        serviceAdapter,
         endpoint: "/api/copilot",
     });
 
