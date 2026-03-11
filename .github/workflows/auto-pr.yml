@@ -21,16 +21,20 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           BRANCH: ${{ github.ref_name }}
         run: |
+          set -e
           echo "Branch: $BRANCH"
 
-          # Try to create PR — silently ignore error if it already exists
+          # Create PR if none exists; ignore error if it already exists
           gh pr create \
             --head "$BRANCH" \
             --base main \
             --title "Auto PR: $BRANCH" \
             --body "Automatically created from branch \`$BRANCH\`." \
-            || echo "PR already exists or could not be created — continuing to merge."
+            2>&1 || true
 
-          # Merge by branch name (finds the open PR automatically)
-          gh pr merge "$BRANCH" --merge --squash=false
+          # Show current PR state for debugging
+          gh pr view "$BRANCH" --json number,state,title
+
+          # Merge the open PR for this branch
+          gh pr merge "$BRANCH" --merge
           echo "Merged successfully."
