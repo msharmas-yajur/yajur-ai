@@ -26,23 +26,36 @@ jobs:
           set -e
           echo "Branch: $BRANCH"
 
-          # Create PR if none exists; ignore error if it already exists
-          gh pr create \
-            --head "$BRANCH" \
-            --base main \
-            --title "Auto PR: $BRANCH" \
-            --body "Automatically created from branch \`$BRANCH\`." \
-            2>&1 || true
+          # Check for an existing open PR
+          PR_NUMBER=$(gh pr list --repo "$REPO" --head "$BRANCH" --base main --state open --json number --jq '.[0].number // empty')
 
-          # Merge the open PR for this branch
-          gh pr merge "$BRANCH" --merge
-          echo "Merged successfully."
+          if [ -z "$PR_NUMBER" ]; then
+            echo "No open PR found — creating one..."
+            PR_URL=$(gh pr create \
+              --repo "$REPO" \
+              --head "$BRANCH" \
+              --base main \
+              --title "Auto PR: $BRANCH" \
+              --body "Automatically created from branch \`$BRANCH\`.")
+            echo "Created: $PR_URL"
+            PR_NUMBER=$(echo "$PR_URL" | grep -o '[0-9]*$')
+          fi
 
-      - name: Trigger deploy workflow
+          echo "PR number: $PR_NUMBER"
+
+          if [ -z "$PR_NUMBER" ]; then
+            echo "ERROR: Could not determine PR number."
+            exit 1
+          fi
+
+          # Merge by explicit PR number
+          gh pr merge "$PR_NUMBER" --repo "$REPO" --merge
+          echo "Merged PR #$PR_NUMBER successfully."
+
+      - name: Trigger deploy
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPO: ${{ github.repository }}
         run: |
-          echo "Triggering deploy workflow..."
           gh workflow run deploy.yml --repo "$REPO" --ref main
-          echo "Deploy workflow triggered."
+          echo "Deploy triggered."
