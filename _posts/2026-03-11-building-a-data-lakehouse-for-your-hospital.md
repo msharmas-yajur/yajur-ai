@@ -537,3 +537,41 @@ The Docker Compose approach is particularly valuable for healthcare teams becaus
 The tooling described in Alex's tutorial maps directly onto the architecture in this guide — replace Dremio with DuckDB for a lighter-weight query layer and swap in Metabase for dashboards, and you have the exact stack recommended for a 50-bed hospital. The concepts, the table format, and the object storage layer are identical. Starting on your laptop means you arrive at the hospital's server room with working knowledge, not just a diagram.
 
 *Credit: The laptop tutorial referenced above is authored by Alex Merced and published on [DEV Community](https://dev.to/alexmercedcoder). All code and architecture in that tutorial belong to the original author. We are grateful for the open sharing of practical data engineering knowledge that makes guides like this one possible.*
+
+---
+
+### References
+
+1. Anjana, R. M., et al. "Prevalence of diabetes and prediabetes in 15 states of India: results from the ICMR-INDIAB population-based cross-sectional study." *The Lancet Diabetes & Endocrinology*, 2017. [https://doi.org/10.1016/S2213-8587(17)30174-2](https://doi.org/10.1016/S2213-8587(17)30174-2)
+
+2. Ministry of Electronics and Information Technology, Government of India. *The Digital Personal Data Protection Act, 2023.* [https://www.meity.gov.in/data-protection-framework](https://www.meity.gov.in/data-protection-framework)
+
+3. National Health Authority. *Ayushman Bharat Digital Mission (ABDM) — Health Data Management Policy.* [https://abdm.gov.in](https://abdm.gov.in)
+
+4. Apache Software Foundation. *Apache Iceberg: An open table format for huge analytic tables.* [https://iceberg.apache.org](https://iceberg.apache.org)
+
+5. Databricks. *Delta Lake: Open source storage framework for the Lakehouse architecture.* [https://delta.io](https://delta.io)
+
+6. DuckDB Foundation. *DuckDB: An in-process SQL OLAP database management system.* [https://duckdb.org](https://duckdb.org)
+
+7. MinIO. *High-performance, S3-compatible object storage.* [https://min.io](https://min.io)
+
+8. Airbyte. *Open-source data integration platform.* [https://airbyte.com](https://airbyte.com)
+
+9. Metabase. *Open source business intelligence and analytics.* [https://www.metabase.com](https://www.metabase.com)
+
+10. HL7 International. *HAPI FHIR: Java-based reference implementation of the HL7 FHIR specification.* [https://hapifhir.io](https://hapifhir.io)
+
+11. dbt Labs. *dbt: Data build tool for transforming data in your warehouse.* [https://www.getdbt.com](https://www.getdbt.com)
+
+12. MLflow. *An open source platform for the machine learning lifecycle.* [https://mlflow.org](https://mlflow.org)
+
+13. Central Pollution Control Board, Government of India. *National Air Quality Index (AQI) data.* [https://app.cpcbccr.com/AQI_India/](https://app.cpcbccr.com/AQI_India/)
+
+14. Merced, Alex. "Data Engineering: Create an Apache Iceberg-based Data Lakehouse on Your Laptop." *DEV Community*, 2023. [https://dev.to/alexmercedcoder/data-engineering-create-a-apache-iceberg-based-data-lakehouse-on-your-laptop-41a8](https://dev.to/alexmercedcoder/data-engineering-create-a-apache-iceberg-based-data-lakehouse-on-your-laptop-41a8)
+
+15. Ministry of Health and Family Welfare, Government of India. *Janani Suraksha Yojana (JSY) Programme Guidelines.* [https://nhm.gov.in/index1.php?lang=1&level=3&sublinkid=841&lid=309](https://nhm.gov.in/index1.php?lang=1&level=3&sublinkid=841&lid=309)
+
+---
+
+*This article was developed with AI-assisted research and drafting.*
