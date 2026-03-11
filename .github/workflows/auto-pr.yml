@@ -23,20 +23,14 @@ jobs:
         run: |
           echo "Branch: $BRANCH"
 
-          # Check for existing open PR
-          EXISTING_PR=$(gh pr list --head "$BRANCH" --base main --state open --json number --jq '.[0].number' 2>/dev/null)
+          # Try to create PR — silently ignore error if it already exists
+          gh pr create \
+            --head "$BRANCH" \
+            --base main \
+            --title "Auto PR: $BRANCH" \
+            --body "Automatically created from branch \`$BRANCH\`." \
+            || echo "PR already exists or could not be created — continuing to merge."
 
-          if [ -n "$EXISTING_PR" ]; then
-            echo "PR #$EXISTING_PR already open — merging."
-          else
-            echo "Creating new PR..."
-            gh pr create \
-              --head "$BRANCH" \
-              --base main \
-              --title "Auto PR: $BRANCH" \
-              --body "Automatically created from branch \`$BRANCH\`."
-          fi
-
-          echo "Merging PR for branch $BRANCH..."
-          gh pr merge "$BRANCH" --merge --admin
+          # Merge by branch name (finds the open PR automatically)
+          gh pr merge "$BRANCH" --merge --squash=false
           echo "Merged successfully."
