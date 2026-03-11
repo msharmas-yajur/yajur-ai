@@ -7,7 +7,6 @@ on:
 
 permissions:
   contents: write
-  pull-requests: write
   actions: write
 
 jobs:
@@ -16,41 +15,24 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Create and merge Pull Request
+      - name: Merge branch into main
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           BRANCH: ${{ github.ref_name }}
-          REPO: ${{ github.repository }}
         run: |
           set -e
-          echo "Branch: $BRANCH"
+          git config user.email "actions@github.com"
+          git config user.name "GitHub Actions"
 
-          # Check for an existing open PR
-          PR_NUMBER=$(gh pr list --repo "$REPO" --head "$BRANCH" --base main --state open --json number --jq '.[0].number // empty')
-
-          if [ -z "$PR_NUMBER" ]; then
-            echo "No open PR found — creating one..."
-            PR_URL=$(gh pr create \
-              --repo "$REPO" \
-              --head "$BRANCH" \
-              --base main \
-              --title "Auto PR: $BRANCH" \
-              --body "Automatically created from branch \`$BRANCH\`.")
-            echo "Created: $PR_URL"
-            PR_NUMBER=$(echo "$PR_URL" | grep -o '[0-9]*$')
-          fi
-
-          echo "PR number: $PR_NUMBER"
-
-          if [ -z "$PR_NUMBER" ]; then
-            echo "ERROR: Could not determine PR number."
-            exit 1
-          fi
-
-          # Merge by explicit PR number
-          gh pr merge "$PR_NUMBER" --repo "$REPO" --merge
-          echo "Merged PR #$PR_NUMBER successfully."
+          echo "Merging $BRANCH into main..."
+          git fetch origin main
+          git checkout main
+          git merge --no-ff -X theirs "origin/$BRANCH" -m "Auto-merge: $BRANCH into main"
+          git push origin main
+          echo "Done."
 
       - name: Trigger deploy
         env:

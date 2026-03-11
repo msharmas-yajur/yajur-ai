@@ -2,6 +2,7 @@
 layout: post
 title: "Building a Data Lakehouse for Your Hospital: An Open Source Guide to Local Health Intelligence"
 date: 2026-03-11 10:00:00 +0530
+last_modified_at: 2026-03-11 10:00:00 +0530
 author: "Manish Sharma"
 description: "A practical guide for healthcare organisations of any size to build an open source data lakehouse on-premise — and use it to generate neighbourhood health intelligence that improves patient outcomes and enables community wellness programmes."
 keywords: "data lakehouse healthcare, open source healthcare data, hospital data infrastructure, MinIO healthcare, DuckDB healthcare, Apache Iceberg healthcare, Metabase hospital analytics, FHIR data lakehouse, ABDM data lakehouse India, population health intelligence, neighbourhood wellness hospital, healthcare data platform open source, hospital data engineering India, data warehouse vs data lake healthcare, HAPI FHIR open source, health data sovereignty India, DPDP Act healthcare data, community health analytics India, 50 bed hospital data, small hospital analytics, HIS data integration, hospital EMR data pipeline, readmission prediction open source, diabetes surveillance hospital, maternal health analytics, dengue early warning hospital, healthcare AI infrastructure India, clinical data platform, Yajur healthcare data"
@@ -24,7 +25,8 @@ og_title: "Building a Data Lakehouse for Your Hospital: An Open Source Guide to 
 og_description: "A practical guide for healthcare organisations of any size to build an open source data lakehouse on-premise — and use it to generate neighbourhood health intelligence that improves patient outcomes."
 og_type: article
 twitter_card: summary_large_image
-canonical_url: "https://yajur.ai/building-a-data-lakehouse-for-your-hospital"
+article_section: "Healthcare Data Engineering"
+word_count: 3800
 ---
 
 ### Every hospital is already a data organisation. Most just don't know it yet.
@@ -514,3 +516,24 @@ Begin with one server, one dashboard, and one question worth answering. Build fr
 ---
 
 *At Yajur, we work with healthcare organisations to design and implement data infrastructure that turns clinical data into population health intelligence. This guide reflects the architecture and approach we recommend for organisations at every stage of their data journey. If you are building your first data lakehouse or scaling an existing one, we are glad to help you navigate the choices.*
+
+---
+
+### One More Thing: Try It on Your Laptop First
+
+Before you provision a server or talk to your IT department, you can run the entire data lakehouse stack — Apache Iceberg, MinIO, a query engine, and a data catalog — on your own laptop in under an hour.
+
+Alex Merced, a developer advocate at Dremio, wrote an excellent hands-on tutorial that walks you through exactly this. Using a single Docker Compose file, you can spin up:
+
+- **Apache Iceberg** — the open table format that gives your data ACID transactions, time-travel, and schema evolution without lock-in
+- **Nessie** — a git-like data catalog that makes every table versioned and branchable, so you can experiment without breaking production data
+- **Dremio** — a query engine that lets analysts run SQL directly against Iceberg tables in MinIO, with a visual UI and built-in data documentation
+- **MinIO** — the same S3-compatible object storage described throughout this guide
+
+The Docker Compose approach is particularly valuable for healthcare teams because it lets a small technical team validate the architecture, understand the moving parts, and build confidence before deploying on-premise at the hospital. The patterns you practise on your laptop — ingesting a CSV, creating an Iceberg table, querying it with SQL — are exactly the same patterns you will use on the hospital's production stack.
+
+> **Try it yourself:** [Data Engineering: Create an Apache Iceberg-based Data Lakehouse on Your Laptop](https://dev.to/alexmercedcoder/data-engineering-create-a-apache-iceberg-based-data-lakehouse-on-your-laptop-41a8) by [Alex Merced](https://dev.to/alexmercedcoder) on DEV Community. Alex's broader collection of [Apache Iceberg hands-on exercises](https://dev.to/alexmercedcoder/collection-of-hands-on-exercises-to-get-started-with-apache-iceberg-1ajm) is also worth bookmarking.
+
+The tooling described in Alex's tutorial maps directly onto the architecture in this guide — replace Dremio with DuckDB for a lighter-weight query layer and swap in Metabase for dashboards, and you have the exact stack recommended for a 50-bed hospital. The concepts, the table format, and the object storage layer are identical. Starting on your laptop means you arrive at the hospital's server room with working knowledge, not just a diagram.
+
+*Credit: The laptop tutorial referenced above is authored by Alex Merced and published on [DEV Community](https://dev.to/alexmercedcoder). All code and architecture in that tutorial belong to the original author. We are grateful for the open sharing of practical data engineering knowledge that makes guides like this one possible.*
