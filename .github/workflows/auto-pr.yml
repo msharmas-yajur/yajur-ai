@@ -8,6 +8,7 @@ on:
 permissions:
   contents: write
   pull-requests: write
+  actions: write
 
 jobs:
   create-and-merge-pr:
@@ -20,6 +21,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           BRANCH: ${{ github.ref_name }}
+          REPO: ${{ github.repository }}
         run: |
           set -e
           echo "Branch: $BRANCH"
@@ -32,9 +34,15 @@ jobs:
             --body "Automatically created from branch \`$BRANCH\`." \
             2>&1 || true
 
-          # Show current PR state for debugging
-          gh pr view "$BRANCH" --json number,state,title
-
           # Merge the open PR for this branch
           gh pr merge "$BRANCH" --merge
           echo "Merged successfully."
+
+      - name: Trigger deploy workflow
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+        run: |
+          echo "Triggering deploy workflow..."
+          gh workflow run deploy.yml --repo "$REPO" --ref main
+          echo "Deploy workflow triggered."
