@@ -27,25 +27,16 @@ jobs:
           EXISTING_PR=$(gh pr list --head "$BRANCH" --base main --state open --json number --jq '.[0].number' 2>/dev/null)
 
           if [ -n "$EXISTING_PR" ]; then
-            echo "PR #$EXISTING_PR already exists."
-            PR_NUMBER=$EXISTING_PR
+            echo "PR #$EXISTING_PR already open — merging."
           else
             echo "Creating new PR..."
-            PR_NUMBER=$(gh pr create \
+            gh pr create \
               --head "$BRANCH" \
               --base main \
               --title "Auto PR: $BRANCH" \
-              --body "Automatically created from branch \`$BRANCH\`." \
-              --json number --jq '.number')
-            echo "Created PR #$PR_NUMBER"
+              --body "Automatically created from branch \`$BRANCH\`."
           fi
 
-          if [ -z "$PR_NUMBER" ]; then
-            echo "ERROR: Could not find or create PR."
-            exit 1
-          fi
-
-          # Merge the PR
-          echo "Merging PR #$PR_NUMBER..."
-          gh pr merge "$PR_NUMBER" --merge --admin
-          echo "PR #$PR_NUMBER merged successfully."
+          echo "Merging PR for branch $BRANCH..."
+          gh pr merge "$BRANCH" --merge --admin
+          echo "Merged successfully."
