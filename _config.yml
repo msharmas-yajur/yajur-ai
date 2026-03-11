@@ -23,6 +23,8 @@ exclude:
   - README.md
   - LICENSE
 
+future: true
+
 sass:
   sass_dir: _sass
   style: :expanded
