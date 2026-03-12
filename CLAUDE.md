@@ -463,17 +463,14 @@ Ask each of these AI engines the following prompts and record the responses:
 
 ### Measurement Cadence
 
-| Timeframe | What to Check | Status |
-|-----------|---------------|--------|
-| Week 1 | Confirm robots.txt, llms.txt, sitemap.xml are live and accessible | ✅ Done |
-| Week 1 | Run Google Rich Results Test on homepage and a blog post | Pending |
-| Week 1 | Google Search Console: verify ownership + submit sitemap.xml | ⚡ In progress — tag added 2026-02-27, user to verify |
-| Week 1 | Submit sitemap to Bing Webmaster Tools | Pending |
-| Week 2 | Request indexing for all 10 blog posts via GSC URL Inspection | Pending |
-| Week 2 | Create Crunchbase + YourStory + Tracxn profiles | Pending |
-| Week 4 | Re-run GEO baseline prompts — compare to initial responses | Pending |
-| Week 8 | Check Google Search Console for "Yajur" / "Yajur.ai" impressions | Pending |
-| Month 3 | Track organic traffic growth; check if yajur.ai outranks hcitexpert.com | Pending |
+| Timeframe | What to Check |
+|-----------|---------------|
+| Week 1 | Confirm robots.txt, llms.txt, sitemap.xml are live and accessible |
+| Week 1 | Run Google Rich Results Test on homepage and a blog post |
+| Week 2 | Submit sitemap to Google Search Console and Bing Webmaster Tools |
+| Week 4 | Re-run GEO baseline prompts — compare to initial responses |
+| Week 8 | Check Google Search Console for "Yajur" keyword impressions |
+| Month 3 | Track organic traffic growth from AI-referred sessions |
 
 ---
 

@@ -1,6 +1,6 @@
 ---
 layout: default
-title: "Pontifex | Insights & Perspectives"
+title: "Pontifex | Insights & Perspectives | YAJUR.ai"
 permalink: /pontifex.html
 ---
 

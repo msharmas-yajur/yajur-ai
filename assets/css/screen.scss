@@ -638,6 +638,45 @@ section {
     margin-top: 64px;
 }
 
+// ─── Blog Post ───────────────────────────────────────────────────────
+.post__content {
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        font-family: $font-sans;
+        font-size: 0.95rem;
+        margin: 2em 0;
+        display: block;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+
+        thead {
+            tr {
+                background-color: $clr-text;
+            }
+            th {
+                padding: 12px 16px;
+                text-align: left;
+                font-weight: 600;
+                color: #fff;
+                white-space: nowrap;
+            }
+        }
+
+        tbody {
+            tr {
+                border-bottom: 1px solid $clr-bg-alt;
+                &:nth-child(even) { background-color: $clr-bg-alt; }
+            }
+            td {
+                padding: 11px 16px;
+                vertical-align: top;
+                line-height: 1.5;
+            }
+        }
+    }
+}
+
 // ─── Responsive: Tablet (<=768px) ───────────────────────────────────
 @media (max-width: 768px) {
     .container {
