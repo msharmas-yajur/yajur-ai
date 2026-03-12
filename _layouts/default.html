@@ -14,7 +14,8 @@
 	<!-- Open Graph -->
 	<meta property="og:site_name" content="Yajur.ai">
 	<meta property="og:title" content="{{ page.og_title | default: page.title | default: site.title | escape }}">
-	<meta property="og:description" content="{{ page.og_description | default: page.description | default: site.description | escape }}">
+	<meta property="og:description"
+		content="{{ page.og_description | default: page.description | default: site.description | escape }}">
 	<meta property="og:url" content="{{ site.url }}{{ page.url }}">
 	<meta property="og:type" content="{{ page.og_type | default: 'website' }}">
 	<meta property="og:image" content="{{ site.url }}/assets/logo.png">
@@ -190,6 +191,8 @@
 		</div>
 	</footer>
 
+	<div id="copilot-widget-root"></div>
+	<script src="{{ site.baseurl }}/assets/js/copilot-widget.js"></script>
 	<script>
 		(function () {
 			var toggle = document.querySelector('.nav-toggle');

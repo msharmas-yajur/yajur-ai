@@ -540,6 +540,23 @@ The tooling described in Alex's tutorial maps directly onto the architecture in 
 
 ---
 
+### Explore the Full-Stack Reference Implementation
+
+The guide above is written for a 50-bed hospital starting from scratch. If you want to see what the architecture looks like at scale — with all nine open source components wired together — the **Yajur Healthcare Data Lakehouse Sandbox Navigator** is an interactive companion to everything described here.
+
+It covers the complete Tier 3 (300+ bed) stack:
+
+- **9 containerised open source components** — Apache Iceberg, MinIO, NiFi, Kafka, Spark, Trino, Superset, MLflow, HAPI FHIR
+- **5 clinical use cases** — readmission prediction, diabetes surveillance, maternal health gaps, seasonal respiratory clustering, vector-borne disease early warning
+- **6 implementation phases** — from a single-server minimal viable lakehouse to a full production deployment
+- **₹0 in licensing cost**
+
+The navigator walks through the architecture layer by layer, the Docker Compose boot sequence, the data sources, and the phased runbook — everything you need to understand the full production stack before you build it.
+
+> **[Open the Sandbox Navigator →](/sandbox/datalakehouse-navigator.html)**
+
+---
+
 ### References
 
 1. Anjana, R. M., et al. "Prevalence of diabetes and prediabetes in 15 states of India: results from the ICMR-INDIAB population-based cross-sectional study." *The Lancet Diabetes & Endocrinology*, 2017. [https://doi.org/10.1016/S2213-8587(17)30174-2](https://doi.org/10.1016/S2213-8587(17)30174-2)

@@ -5,6 +5,16 @@ img {
 	display: block;
 }
 
+// Hide CopilotKit Branding & Inspector
+cpk-web-inspector {
+	display: none !important;
+}
+
+.poweredBy,
+.poweredByContainer {
+	display: none !important;
+}
+
 .button {
 	display: inline-block;
 	padding: 14px 32px;
