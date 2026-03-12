@@ -29,6 +29,33 @@ article_section: "Healthcare Data Engineering"
 word_count: 3800
 ---
 
+<div id="sandbox-sticky" style="position:fixed;bottom:0;left:0;right:0;z-index:9999;background:#0d0d0b;border-top:1px solid #2a2a26;padding:14px 24px;display:none;align-items:center;justify-content:space-between;gap:16px;font-family:'Inter',system-ui,sans-serif;box-shadow:0 -4px 24px rgba(0,0,0,0.3);">
+  <div style="display:flex;align-items:center;gap:14px;flex:1;min-width:0;overflow:hidden;">
+    <span style="font-size:0.7rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#d97757;white-space:nowrap;">Interactive</span>
+    <span style="font-size:0.9rem;color:#f0ede6;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Explore the full Tier 3 reference stack — 9 components, 6 phases, ₹0 licensing</span>
+  </div>
+  <div style="display:flex;align-items:center;gap:12px;flex-shrink:0;">
+    <a href="/sandbox/datalakehouse-navigator.html" style="font-family:'Inter',system-ui,sans-serif;font-size:0.85rem;font-weight:700;padding:9px 20px;background:#d97757;color:#fff;border-radius:5px;text-decoration:none;white-space:nowrap;">Open Sandbox →</a>
+    <button id="sandbox-dismiss" style="background:transparent;border:none;color:#5e5d59;font-size:1.4rem;cursor:pointer;padding:2px 8px;line-height:1;">×</button>
+  </div>
+</div>
+<script>
+(function(){
+  if(localStorage.getItem('sandbox-bar-dismissed')==='1') return;
+  var bar=document.getElementById('sandbox-sticky');
+  var shown=false;
+  document.getElementById('sandbox-dismiss').addEventListener('click',function(){
+    bar.style.display='none';
+    localStorage.setItem('sandbox-bar-dismissed','1');
+  });
+  window.addEventListener('scroll',function(){
+    if(shown) return;
+    var pct=window.scrollY/(document.body.scrollHeight-window.innerHeight);
+    if(pct>0.28){ bar.style.display='flex'; shown=true; }
+  },{passive:true});
+})();
+</script>
+
 ### Every hospital is already a data organisation. Most just don't know it yet.
 
 Every admission form filled out at the front desk, every lab result printed and filed, every discharge summary dictated by a physician, every OPD card stamped and returned to a shelf — each is a data point. Over a year, a 50-bed hospital generates tens of thousands of them. Over a decade, it generates an irreplaceable record of the health of an entire neighbourhood.
@@ -134,6 +161,19 @@ The table below maps the lakehouse architecture to specific open source tools, o
 | **FHIR layer** | ABDM / FHIR data handling | HAPI FHIR | HAPI FHIR | HAPI FHIR |
 
 Every tool in this table is fully open source and production-ready. Every tool runs on-premise. None requires a cloud account, a vendor contract, or per-user licensing.
+
+<div style="margin:2.5em 0;background:#0d0d0b;border-radius:12px;padding:32px 36px;color:#f0ede6;">
+  <div style="font-family:'Inter',system-ui,sans-serif;font-size:0.7rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#d97757;margin-bottom:10px;">Interactive Companion</div>
+  <h3 style="font-family:'Inter',system-ui,sans-serif;font-size:1.35rem;font-weight:800;color:#f0ede6;margin:0 0 10px;line-height:1.25;">See the Full Tier 3 Stack in Action</h3>
+  <p style="font-family:'Inter',system-ui,sans-serif;font-size:0.9rem;color:#a8a49c;margin:0 0 20px;line-height:1.6;">The tools above assembled into a working reference implementation — architecture diagrams, Docker Compose boot sequence, five clinical use cases, and a step-by-step six-phase runbook.</p>
+  <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:22px;">
+    <span style="font-family:'Inter',system-ui,sans-serif;font-size:0.75rem;font-weight:600;padding:4px 11px;border-radius:4px;background:rgba(217,119,87,0.12);color:#d97757;border:1px solid rgba(217,119,87,0.3);">9 Open Source Components</span>
+    <span style="font-family:'Inter',system-ui,sans-serif;font-size:0.75rem;font-weight:600;padding:4px 11px;border-radius:4px;background:rgba(217,119,87,0.12);color:#d97757;border:1px solid rgba(217,119,87,0.3);">5 Clinical Use Cases</span>
+    <span style="font-family:'Inter',system-ui,sans-serif;font-size:0.75rem;font-weight:600;padding:4px 11px;border-radius:4px;background:rgba(217,119,87,0.12);color:#d97757;border:1px solid rgba(217,119,87,0.3);">6 Implementation Phases</span>
+    <span style="font-family:'Inter',system-ui,sans-serif;font-size:0.75rem;font-weight:600;padding:4px 11px;border-radius:4px;background:rgba(217,119,87,0.12);color:#d97757;border:1px solid rgba(217,119,87,0.3);">₹0 Licensing</span>
+  </div>
+  <a href="/sandbox/datalakehouse-navigator.html" style="display:inline-block;font-family:'Inter',system-ui,sans-serif;font-size:0.875rem;font-weight:700;letter-spacing:0.03em;padding:12px 26px;background:#d97757;color:#fff;border-radius:6px;text-decoration:none;" onmouseover="this.style.background='#c4633f'" onmouseout="this.style.background='#d97757'">Open the Sandbox Navigator →</a>
+</div>
 
 ---
 
@@ -540,20 +580,18 @@ The tooling described in Alex's tutorial maps directly onto the architecture in 
 
 ---
 
-### Explore the Full-Stack Reference Implementation
-
-The guide above is written for a 50-bed hospital starting from scratch. If you want to see what the architecture looks like at scale — with all nine open source components wired together — the **Yajur Healthcare Data Lakehouse Sandbox Navigator** is an interactive companion to everything described here.
-
-It covers the complete Tier 3 (300+ bed) stack:
-
-- **9 containerised open source components** — Apache Iceberg, MinIO, NiFi, Kafka, Spark, Trino, Superset, MLflow, HAPI FHIR
-- **5 clinical use cases** — readmission prediction, diabetes surveillance, maternal health gaps, seasonal respiratory clustering, vector-borne disease early warning
-- **6 implementation phases** — from a single-server minimal viable lakehouse to a full production deployment
-- **₹0 in licensing cost**
-
-The navigator walks through the architecture layer by layer, the Docker Compose boot sequence, the data sources, and the phased runbook — everything you need to understand the full production stack before you build it.
-
-> **[Open the Sandbox Navigator →](/sandbox/datalakehouse-navigator.html)**
+<div style="margin:2.5em 0;background:#0d0d0b;border-radius:12px;padding:36px 40px;color:#f0ede6;">
+  <div style="font-family:'Inter',system-ui,sans-serif;font-size:0.7rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#d97757;margin-bottom:12px;">Interactive Companion</div>
+  <h3 style="font-family:'Inter',system-ui,sans-serif;font-size:1.5rem;font-weight:800;color:#f0ede6;margin:0 0 12px;line-height:1.2;">The Sandbox Navigator — Full Tier 3 Reference Stack</h3>
+  <p style="font-family:'Inter',system-ui,sans-serif;font-size:0.95rem;color:#a8a49c;margin:0 0 24px;line-height:1.65;">This guide covers the 50-bed hospital starting point. The Sandbox Navigator shows where it goes at scale — all nine open source components assembled, wired, and documented as a production-ready reference implementation for a 300+ bed hospital.</p>
+  <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:28px;">
+    <span style="font-family:'Inter',system-ui,sans-serif;font-size:0.8rem;font-weight:600;padding:5px 13px;border-radius:4px;background:rgba(217,119,87,0.12);color:#d97757;border:1px solid rgba(217,119,87,0.3);">9 Open Source Components</span>
+    <span style="font-family:'Inter',system-ui,sans-serif;font-size:0.8rem;font-weight:600;padding:5px 13px;border-radius:4px;background:rgba(217,119,87,0.12);color:#d97757;border:1px solid rgba(217,119,87,0.3);">5 Clinical Use Cases</span>
+    <span style="font-family:'Inter',system-ui,sans-serif;font-size:0.8rem;font-weight:600;padding:5px 13px;border-radius:4px;background:rgba(217,119,87,0.12);color:#d97757;border:1px solid rgba(217,119,87,0.3);">6 Implementation Phases</span>
+    <span style="font-family:'Inter',system-ui,sans-serif;font-size:0.8rem;font-weight:600;padding:5px 13px;border-radius:4px;background:rgba(217,119,87,0.12);color:#d97757;border:1px solid rgba(217,119,87,0.3);">₹0 Licensing Cost</span>
+  </div>
+  <a href="/sandbox/datalakehouse-navigator.html" style="display:inline-block;font-family:'Inter',system-ui,sans-serif;font-size:0.9rem;font-weight:700;letter-spacing:0.03em;padding:14px 30px;background:#d97757;color:#fff;border-radius:6px;text-decoration:none;" onmouseover="this.style.background='#c4633f'" onmouseout="this.style.background='#d97757'">Open the Sandbox Navigator →</a>
+</div>
 
 ---
 
