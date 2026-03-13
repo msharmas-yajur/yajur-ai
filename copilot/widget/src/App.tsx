@@ -3,7 +3,7 @@ import { CopilotKit } from "@copilotkit/react-core";
 import "@copilotkit/react-ui/styles.css";
 import { UnifiedChat } from "./components/UnifiedChat";
 
-export const WIDGET_VERSION = "2.0.1"; // bump on every session: major.session.patch
+export const WIDGET_VERSION = "2.1.0"; // bump on every session: major.session.patch
 
 const BACKEND_BASE = "http://localhost:3330";
 const COPILOTKIT_PUBLIC_KEY = "ck_pub_3e7127dba63bdcd42c0eb65ba64c9289";
@@ -49,21 +49,46 @@ const App: React.FC = () => {
         setVoicePhase("idle");
     }, []);
 
-    // Hide CopilotKit dev inspector
+    // Hide CopilotKit dev inspector and announcements
     useEffect(() => {
+        const style = document.createElement("style");
+        style.textContent = `
+            cpk-web-inspector, 
+            .announcement-preview,
+            [class*="announcement"],
+            .copilot-kit-announcement,
+            div[class*="copilot-kit"][style*="background-color: rgb(255, 193, 7)"],
+            div[class*="copilot-kit"][style*="background-color: #ffc107"] { 
+                display: none !important; 
+                visibility: hidden !important; 
+                opacity: 0 !important; 
+                pointer-events: none !important;
+                height: 0 !important;
+                position: absolute !important;
+                z-index: -999 !important;
+            }
+        `;
+        document.head.appendChild(style);
+
         const interval = setInterval(() => {
             const inspector = document.querySelector("cpk-web-inspector");
-            if (inspector) {
-                (inspector as HTMLElement).style.display = "none";
-                if (inspector.shadowRoot) {
-                    const style = document.createElement("style");
-                    style.textContent =
-                        ".announcement-preview { display: none !important; }";
-                    inspector.shadowRoot.appendChild(style);
-                }
-                clearInterval(interval);
+            if (inspector && inspector.shadowRoot) {
+                const shadowStyle = document.createElement("style");
+                shadowStyle.textContent = `
+                    .announcement-preview, 
+                    [class*="announcement"],
+                    div[style*="background-color: rgb(255, 193, 7)"],
+                    div[style*="background-color: #ffc107"] { 
+                        display: none !important; 
+                    }
+                `;
+                inspector.shadowRoot.appendChild(shadowStyle);
             }
-        }, 500);
+            
+            // Also try to find it in the regular DOM (some SDK versions don't use shadow DOM for this)
+            const announcements = document.querySelectorAll('[class*="announcement"]');
+            announcements.forEach(el => (el as HTMLElement).style.display = 'none');
+        }, 1000);
         return () => clearInterval(interval);
     }, []);
 
@@ -72,7 +97,11 @@ const App: React.FC = () => {
     }, []);
 
     return (
-        <CopilotKit publicApiKey={COPILOTKIT_PUBLIC_KEY}>
+        <CopilotKit 
+            publicApiKey={COPILOTKIT_PUBLIC_KEY}
+            publicLicenseKey={COPILOTKIT_PUBLIC_KEY} 
+            showDevConsole={false}
+        >
             <div className="yajur-copilot-container" data-version={WIDGET_VERSION}>
                 <UnifiedChat
                     isVoiceActive={isVoiceActive}

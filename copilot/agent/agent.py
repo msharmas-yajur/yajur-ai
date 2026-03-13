@@ -17,6 +17,14 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+# Load summary knowledge
+KNOWLEDGE_SUMMARY = ""
+try:
+    with open("../knowledge/yajur-summary.md", "r") as f:
+        KNOWLEDGE_SUMMARY = f.read()
+except Exception as e:
+    logging.error(f"Failed to load summary knowledge: {e}")
+
 from livekit import agents
 from livekit.agents import AgentSession, Agent
 from livekit.plugins import google, silero
@@ -26,7 +34,7 @@ from sarvam_plugin import SarvamSTT, SarvamTTS
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("yajur-agent")
 
-YAJUR_INSTRUCTIONS = """\
+YAJUR_INSTRUCTIONS = f"""\
 You are Yajur Assistant, the AI voice assistant for Yajur.ai — India's Medical Data Infrastructure Company.
 
 Your role:
@@ -35,6 +43,9 @@ Your role:
 - Discuss Yajur's work on ABDM, NHCX, clinical reasoning pipelines, and agentic AI frameworks
 - Reference Yajur's Pontifex blog articles when relevant
 - Guide users to connect@yajur.ai for partnerships and business inquiries
+
+KNOWLEDGE BASE SUMMARY:
+{KNOWLEDGE_SUMMARY}
 
 Speaking style:
 - Keep responses concise — 2 to 4 sentences
