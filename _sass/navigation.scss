@@ -84,3 +84,65 @@ nav {
 	}
 
 }
+
+/* Yajur Labs dropdown */
+.nav-dropdown {
+	display: inline-block;
+	position: relative;
+
+	&__toggle {
+		margin: 0 3px;
+		padding: 20px 10px;
+		color: rgba(255,255,255,.8);
+		font-size: .8em;
+		text-transform: uppercase;
+		cursor: pointer;
+		border-bottom: 1px solid rgba(255,255,255,0);
+		transition: .2s ease-in-out;
+		display: none;
+
+		@media #{$mid-point} {
+			display: inline-block;
+			padding: 10px;
+		}
+
+		&:hover {
+			color: #fff;
+			border-bottom: 1px solid rgba(255,255,255,.3);
+		}
+	}
+
+	&__menu {
+		display: none;
+		position: absolute;
+		top: 100%;
+		right: 0;
+		background: #1a1a2e;
+		border: 1px solid rgba(255,255,255,.15);
+		border-radius: 6px;
+		min-width: 200px;
+		z-index: 100;
+		padding: 6px 0;
+
+		a {
+			display: block !important;
+			padding: 10px 16px !important;
+			color: rgba(255,255,255,.8);
+			font-size: .8em;
+			text-transform: uppercase;
+			white-space: nowrap;
+			border-bottom: none !important;
+			margin: 0;
+
+			&:hover {
+				color: #fff;
+				background: rgba(255,255,255,.08);
+				border-bottom: none !important;
+			}
+		}
+	}
+
+	&:hover &__menu {
+		display: block;
+	}
+}
