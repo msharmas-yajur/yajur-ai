@@ -78,6 +78,24 @@ Not building at the model layer or compute layer. Building at the **clinical con
 ## Who We Work With
 Hospitals, health systems, clinical AI companies, health insurers/TPAs, HealthTech startups building on ABDM/NHCX, oncology and specialty care organizations, and Caladrius Health AI (CaladriusHealth.AI).
 
+## Yajur Labs — Live Interactive Tools
+
+Yajur Labs is a set of live, browser-based applications on yajur.ai that demonstrate Yajur's clinical AI and data capabilities. These are working products visitors can explore right now — not slides or mockups. Accessible via the **Yajur Labs** menu at yajur.ai.
+
+**To discuss, request a demo, or explore a partnership: connect@yajur.ai**
+
+### 1. Onco-CoE: Patient OncoCare Intelligence Platform
+https://yajur.ai/gcoe-patient-oncocare-v7.html
+An AI-powered precision patient navigation operating system for oncology — the "air traffic control" model for cancer care. Orchestrates every touchpoint from diagnosis to last follow-up across a hub-and-spoke care network. Features a real-time Command Center with live patient boards, AI-generated adaptive care plans, hub-and-spoke network management, 20 AI-powered innovations, FHIR/ABDM interoperability, a Citizen Longevity Index for early detection, and alignment with India's National Cancer Mission. For oncology hospitals, cancer centres of excellence, and health systems building cancer care networks.
+
+### 2. Nursing Clinical Rotation Roster (PSNL)
+https://yajur.ai/nursing-roster-v5.html
+A browser-based scheduling tool for nursing staff rotation management. Automates multi-ward, multi-shift roster planning with PSNL (Patient-Staff-Nurse-Load) balancing and Excel export. Built with React 18, fully client-side. For hospital nursing departments and staffing coordinators.
+
+### 3. Healthcare Data Lakehouse Sandbox Navigator
+https://yajur.ai/sandbox/datalakehouse-navigator.html
+An interactive reference architecture explorer showing how a 300+ bed hospital can build a unified clinical data lakehouse using open-source tools (Apache NiFi, Kafka, Spark, Iceberg, Trino, Superset, MLflow, HAPI FHIR, dbt) — zero vendor lock-in. Includes five complete clinical data pipeline use cases with working Trino SQL. For hospital CIOs, health system architects, and analytics teams.
+
 ## Blog / Pontifex (Key Articles)
 1. Health Record Formats: Essential for Fine-Tuning a Citizen's Healthcare Journey (Nov 2024)
 2. Fine-Tuning LLMs for Oncology: 13 Key Recommendations (Dec 2024)

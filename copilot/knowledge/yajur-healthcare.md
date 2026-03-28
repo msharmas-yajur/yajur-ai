@@ -399,7 +399,86 @@ Yajur Healthcare works with:
 
 ---
 
-## 17. Key Vocabulary
+## 17. Yajur Labs — Live Interactive Tools
+
+Yajur Labs is a collection of live, browser-based applications that demonstrate Yajur's clinical AI and healthcare data capabilities. Each lab is a working product — not a slide deck or mockup — that visitors can explore directly on yajur.ai. They are designed to show what is possible when AI-first thinking meets real healthcare workflows.
+
+**Access all labs at:** https://yajur.ai (Yajur Labs menu)
+
+**To discuss any lab, request a demo, or explore a partnership:** connect@yajur.ai
+
+---
+
+### Lab 1 — Onco-CoE: Patient OncoCare Intelligence Platform
+**URL:** https://yajur.ai/gcoe-patient-oncocare-v7.html
+
+A precision patient navigation operating system that orchestrates every touchpoint of a cancer patient's journey — from first diagnosis to last follow-up — across a hub-and-spoke care network reaching every pin code.
+
+**What it demonstrates:**
+- **Air Traffic Control model for oncology** — patient navigators manage the full active patient population simultaneously, with zero dropped handoffs and zero scheduling conflicts
+- **Onco-CoE Command Center** — a real-time hospital operations dashboard with a live active patient care board, live alerts, and weekly treatment schedules
+- **Orchestrated Patient Flight Plan** — every patient's care mapped as a living, adaptive AI-generated journey, continuously monitored and shifted between hub and spoke as clinical situations evolve
+- **Hub & Spoke Care Network** — a central hospital hub connected digitally to partner clinics, nursing centers, diagnostic labs, and pharmacies extending reach to every regional pin code
+- **20 Signature AI Innovations** — AI-powered flagship capabilities across clinical, operational, and patient-facing domains
+- **Intelligence Fabric** — standards-based interoperability layer (FHIR, ABDM) enabling real-time data flow across the entire network
+- **Citizen Longevity Index & Early Detection** — population-health layer with community-led early detection and a Longevity Quotient (LQ) derived from multi-ring biomarkers
+- **India's National Cancer Mission alignment** — purpose-built to operationalise GoI health vision into hospital-level digital workflows
+- **Three-Tier Oncology Ecosystem** — Apex Cancer Center (national CoE) → Regional Hub → Community Spokes
+
+**Target audience:** Oncology hospitals, cancer centres of excellence, health systems building hub-and-spoke cancer care networks, government health departments.
+
+**Why it matters:** Cancer is India's fastest-growing disease burden. Most hospitals manage cancer patients reactively and in silos. Onco-CoE turns patient navigation into a proactive, AI-orchestrated operation — the same way air traffic control turns individual flights into a coordinated, safe system.
+
+---
+
+### Lab 2 — Nursing Clinical Rotation Roster (PSNL)
+**URL:** https://yajur.ai/nursing-roster-v5.html
+
+A browser-based clinical rotation scheduling tool for nursing staff — built for nurse managers and hospital administrators who need to build, manage, and export complex multi-ward rotation rosters without spreadsheet chaos.
+
+**What it demonstrates:**
+- Automated nursing rotation scheduling across wards and shifts
+- PSNL (Patient-Staff-Nurse-Load) balancing logic
+- Excel export for operational use
+- Built with React 18 + SheetJS — fully client-side, no backend required
+
+**Target audience:** Hospital nursing departments, staffing coordinators, nursing education institutions managing clinical postings.
+
+---
+
+### Lab 3 — Healthcare Data Lakehouse Sandbox Navigator
+**URL:** https://yajur.ai/sandbox/datalakehouse-navigator.html
+
+An interactive reference architecture explorer for hospital-grade data lakehouses — visualising how a Tier 3 (300+ bed) hospital can unify clinical, operational, and population health data into a single queryable platform using open-source components.
+
+**What it demonstrates:**
+- **Three-layer architecture** — Ingest → Process → Serve, built entirely on open source
+- **Nine components, zero vendor lock-in** — Apache NiFi, Kafka, Spark, Apache Iceberg, Trino, Apache Superset, MLflow, HAPI FHIR, dbt — each containerised and pre-configured
+- **Five clinical use cases with full SQL** — Disease burden geo-mapping, maternal & child health gap tracking, AQI-respiratory admission correlation, readmission risk scoring, and a fifth pipeline — each shown as a complete NiFi → Kafka → Spark → Iceberg → Trino → Superset flow
+- **FHIR R4 integration** — HAPI FHIR server as the interoperability gateway for ABDM-compliant data exchange
+- **CPCB AQI enrichment** — environmental data layered onto clinical data for population health signals
+
+**Target audience:** Hospital CIOs and CTOs evaluating data infrastructure, health system architects, HealthTech companies building on ABDM, hospital analytics and BI teams.
+
+**Why it matters:** Most hospitals in India have data scattered across 5–15 disconnected systems. This sandbox shows exactly how to unify it — with working SQL, real architecture, and zero proprietary vendor dependency.
+
+---
+
+### How to Engage with Yajur Labs
+
+If you are exploring any of the labs and want to:
+- **Understand how it could be implemented** at your hospital or health system
+- **Request a live walkthrough** with the Yajur team
+- **Discuss a pilot** or proof-of-concept
+- **Partner with Yajur** to build a custom version for your organisation
+
+**Reach out directly:** connect@yajur.ai
+
+The Yajur team responds to all inquiries. These labs are not just demos — they represent Yajur's active implementation capabilities and can be deployed as production systems.
+
+---
+
+## 18. Key Vocabulary
 
 | Term | Definition |
 |------|-----------|
