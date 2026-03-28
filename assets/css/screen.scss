@@ -155,12 +155,64 @@ section {
     font-family: $font-sans;
     font-size: 15px;
     font-weight: 500;
+    display: flex;
+    align-items: center;
 }
 
-.site-nav a {
+.site-nav > a {
     margin-left: 32px;
     text-decoration: none;
     color: inherit;
+}
+
+// ─── Yajur Labs Dropdown ──────────────────────────────────────────────
+.nav-dropdown {
+    position: relative;
+    display: inline-block;
+    margin-left: 32px;
+}
+
+.nav-dropdown__toggle {
+    text-decoration: none;
+    color: inherit;
+    cursor: default;
+    font-family: $font-sans;
+    font-size: 15px;
+    font-weight: 500;
+}
+
+.nav-dropdown__menu {
+    display: none;
+    position: absolute;
+    top: calc(100% + 12px);
+    right: 0;
+    background-color: #fff;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 12px;
+    min-width: 220px;
+    z-index: 200;
+    padding: 8px 0;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.nav-dropdown__menu a {
+    display: block;
+    margin-left: 0;
+    padding: 11px 20px;
+    font-size: 14px;
+    color: $clr-text;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: background 0.15s;
+}
+
+.nav-dropdown__menu a:hover {
+    background-color: $clr-bg-alt;
+    opacity: 1;
+}
+
+.nav-dropdown:hover .nav-dropdown__menu {
+    display: block;
 }
 
 .nav-toggle {
@@ -713,7 +765,12 @@ section {
         display: block;
     }
 
-    .site-nav a {
+    .site-nav {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .site-nav > a {
         display: block;
         margin: 0;
         padding: 16px 0;
@@ -721,8 +778,41 @@ section {
         font-size: 17px;
     }
 
-    .site-nav a:last-child {
+    .site-nav > a:last-child {
         border-bottom: none;
+    }
+
+    // Dropdown becomes flat list on mobile
+    .nav-dropdown {
+        display: block;
+        margin-left: 0;
+    }
+
+    .nav-dropdown__toggle {
+        display: block;
+        padding: 16px 0;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        font-size: 17px;
+        font-weight: 600;
+    }
+
+    .nav-dropdown__menu {
+        display: block;
+        position: static;
+        box-shadow: none;
+        border: none;
+        border-radius: 0;
+        padding: 0;
+        background: transparent;
+        min-width: 0;
+    }
+
+    .nav-dropdown__menu a {
+        padding: 12px 0 12px 16px;
+        font-size: 15px;
+        color: $clr-text-muted;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        white-space: normal;
     }
 
     // Hero
