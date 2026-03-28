@@ -184,14 +184,14 @@ section {
 .nav-dropdown__menu {
     display: none;
     position: absolute;
-    top: calc(100% + 12px);
+    top: 100%;
     right: 0;
     background-color: #fff;
     border: 1px solid rgba(0, 0, 0, 0.08);
     border-radius: 12px;
     min-width: 220px;
     z-index: 200;
-    padding: 8px 0;
+    padding: 12px 0 8px; /* 12px top padding bridges the visual gap — keeps hover active */
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
 }
 
@@ -211,7 +211,8 @@ section {
     opacity: 1;
 }
 
-.nav-dropdown:hover .nav-dropdown__menu {
+.nav-dropdown:hover .nav-dropdown__menu,
+.nav-dropdown.is-open .nav-dropdown__menu {
     display: block;
 }
 

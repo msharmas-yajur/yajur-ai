@@ -221,6 +221,21 @@
 					toggle.setAttribute('aria-expanded', 'false');
 				});
 			}
+
+			// Yajur Labs dropdown — click toggle (reliable on touch + fast mouse movement)
+			var dropdownToggle = document.querySelector('.nav-dropdown__toggle');
+			var dropdown = document.querySelector('.nav-dropdown');
+			if (dropdownToggle && dropdown) {
+				dropdownToggle.addEventListener('click', function (e) {
+					e.preventDefault();
+					dropdown.classList.toggle('is-open');
+				});
+				document.addEventListener('click', function (e) {
+					if (!dropdown.contains(e.target)) {
+						dropdown.classList.remove('is-open');
+					}
+				});
+			}
 		})();
 	</script>
 </body>
