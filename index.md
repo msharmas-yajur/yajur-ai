@@ -143,7 +143,7 @@ security_compliance:
   subtitle: "YAJUR.ai: The Medical Data Infrastructure Company."
   cta_primary: "Get Early Access"
   cta_secondary: "Tech Stack"
-  certifications_title: "Certified Globally"
+  certifications_title: "Global Standards and Certifications"
   certifications_subtitle: "Adhering to international medical data standards."
   certifications:
     - name: "HIPAA"
