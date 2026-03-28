@@ -496,6 +496,21 @@ Do NOT provide clinical medical advice. Always recommend consulting a qualified 
                         initial: "Welcome to Yajur Healthcare. How can I help you today?",
                         placeholder: "Type a message or press the mic…",
                     }}
+                    icons={{
+                        openIcon: (
+                            <img
+                                src="/assets/logo.png"
+                                alt="Yajur AI"
+                                style={{
+                                    width: "36px",
+                                    height: "36px",
+                                    borderRadius: "50%",
+                                    objectFit: "cover",
+                                    display: "block",
+                                }}
+                            />
+                        ),
+                    }}
                     clickOutsideToClose={false}
                     Input={CustomInput}
                 />
