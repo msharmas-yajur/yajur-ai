@@ -82,7 +82,7 @@ Hospitals, health systems, clinical AI companies, health insurers/TPAs, HealthTe
 
 Yajur Labs is a set of live, browser-based applications on yajur.ai that demonstrate Yajur's clinical AI and data capabilities. These are working products visitors can explore right now — not slides or mockups. Accessible via the **Yajur Labs** menu at yajur.ai.
 
-**To discuss, request a demo, or explore a partnership: connect@yajur.ai**
+**To discuss, request a demo, or explore a partnership: connect@yajur.ai or WhatsApp: https://wa.me/message/E7VVRHRTVZIYC1**
 
 ### 1. Onco-CoE: Patient OncoCare Intelligence Platform
 https://yajur.ai/gcoe-patient-oncocare-v7.html

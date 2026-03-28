@@ -376,6 +376,7 @@ India's National Health Authority invited domain experts to build on NHCX APIs:
 ## 16. Contact & Partnership
 
 - **Email:** connect@yajur.ai
+- **WhatsApp:** https://wa.me/message/E7VVRHRTVZIYC1
 - **Website:** https://yajur.ai
 - **Grievance Officer:** Manish Sharma
 
@@ -405,7 +406,7 @@ Yajur Labs is a collection of live, browser-based applications that demonstrate 
 
 **Access all labs at:** https://yajur.ai (Yajur Labs menu)
 
-**To discuss any lab, request a demo, or explore a partnership:** connect@yajur.ai
+**To discuss any lab, request a demo, or explore a partnership:** connect@yajur.ai or WhatsApp: https://wa.me/message/E7VVRHRTVZIYC1
 
 ---
 
@@ -472,7 +473,9 @@ If you are exploring any of the labs and want to:
 - **Discuss a pilot** or proof-of-concept
 - **Partner with Yajur** to build a custom version for your organisation
 
-**Reach out directly:** connect@yajur.ai
+**Reach out directly:**
+- Email: connect@yajur.ai
+- WhatsApp: https://wa.me/message/E7VVRHRTVZIYC1
 
 The Yajur team responds to all inquiries. These labs are not just demos — they represent Yajur's active implementation capabilities and can be deployed as production systems.
 
