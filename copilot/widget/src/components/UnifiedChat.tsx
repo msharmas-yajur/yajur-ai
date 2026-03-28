@@ -13,7 +13,8 @@ const YAJUR_KNOWLEDGE = `
 ## Company Overview
 Yajur.ai (Yajur Healthcare) is a Medical Data Infrastructure Company based in India. We build disease-specific datasets, AI-driven healthcare applications, and compliance-driven interoperability pipelines (ABDM/FHIR).
 - Website: https://yajur.ai
-- Contact: connect@yajur.ai
+- Email: connect@yajur.ai
+- WhatsApp: https://wa.me/message/E7VVRHRTVZIYC1
 - Founder: Manish Sharma
 
 ## Mission & Vision
@@ -79,6 +80,20 @@ Not building models or compute. Building the CLINICAL CONTEXT LAYER: structured 
 8. ABDM: Cancer Care Without Walls (Feb 2026)
 9. From Vibe Coding to Agentic Engineering (Feb 2026)
 10. The Convergence (Feb 2026)
+
+## Yajur Labs — Live Interactive Tools
+Yajur Labs are live, browser-based applications on yajur.ai showcasing Yajur's clinical AI capabilities. Accessible via the Yajur Labs menu.
+
+1. Onco-CoE: Patient OncoCare Intelligence Platform (https://yajur.ai/gcoe-patient-oncocare-v7.html) — AI-powered precision patient navigation for oncology. "Air traffic control" model for cancer care across a hub-and-spoke network. Features real-time Command Center, adaptive AI care plans, 20 AI innovations, FHIR/ABDM interoperability.
+
+2. Nursing Clinical Rotation Roster PSNL (https://yajur.ai/nursing-roster-v5.html) — Browser-based nursing rotation scheduling with PSNL balancing and Excel export. Built with React 18, fully client-side.
+
+3. Healthcare Data Lakehouse Sandbox Navigator (https://yajur.ai/sandbox/datalakehouse-navigator.html) — Interactive reference architecture for hospital data lakehouses using open-source tools (NiFi, Kafka, Spark, Iceberg, Trino, Superset, MLflow, HAPI FHIR, dbt). Zero vendor lock-in. Includes 5 clinical use cases with full SQL.
+
+## Contact
+To connect with the Yajur team for demos, partnerships, or business inquiries:
+- Email: connect@yajur.ai
+- WhatsApp: https://wa.me/message/E7VVRHRTVZIYC1
 `;
 
 interface UnifiedChatProps {
@@ -463,7 +478,7 @@ Your role:
 - Explain what Yajur builds: disease-specific datasets, AI-driven healthcare applications, and ABDM/FHIR interoperability pipelines
 - Discuss Yajur's work on ABDM, NHCX, clinical reasoning pipelines, and agentic AI frameworks
 - Reference Yajur's Pontifex blog articles when relevant
-- Guide users to connect@yajur.ai for partnerships and business inquiries
+- Guide users to connect@yajur.ai or WhatsApp (https://wa.me/message/E7VVRHRTVZIYC1) for partnerships, demos, and business inquiries — always offer both options when a user expresses interest in connecting
 - Be warm, professional, and concise — this is a business assistant, not a clinical decision support tool
 
 The user may be speaking to you via voice (microphone) or typing. Treat both equally.
