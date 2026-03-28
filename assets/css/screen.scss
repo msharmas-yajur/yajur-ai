@@ -692,6 +692,18 @@ section {
     margin-top: 64px;
 }
 
+// ─── Copilot Button Override ──────────────────────────────────────────
+.copilotKitButton {
+    background-color: #ffffff !important;
+    border: 2px solid #0a1f44 !important;
+    box-shadow: 0 4px 16px rgba(10, 31, 68, 0.2) !important;
+
+    &:hover {
+        background-color: #f5f7fc !important;
+        box-shadow: 0 6px 20px rgba(10, 31, 68, 0.3) !important;
+    }
+}
+
 // ─── Blog Post ───────────────────────────────────────────────────────
 .post__content {
     table {
