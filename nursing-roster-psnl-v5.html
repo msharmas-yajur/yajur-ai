@@ -1,0 +1,1928 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nursing Clinical Rotation Roster — PSNL</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
+<style>
+/* ═══════════════════════════════════════════════════════════
+   NHS UK DESIGN SYSTEM — TOKEN DEFINITIONS
+   Source: service-manual.nhs.uk/design-system/styles
+═══════════════════════════════════════════════════════════ */
+:root {
+  --font: 'Montserrat', Arial, sans-serif;
+
+  /* NHS Colour Palette — Light Mode */
+  --nhs-blue:        #005EB8;
+  --nhs-dark-blue:   #003087;
+  --nhs-bright-blue: #0072CE;
+  --nhs-light-blue:  #41B6E6;
+  --nhs-aqua:        #00A9CE;
+  --nhs-green:       #007F3B;
+  --nhs-lt-green:    #78BE20;
+  --nhs-yellow:      #FFB81C;
+  --nhs-red:         #DA291C;
+  --nhs-dark-pink:   #7C2855;
+  --nhs-black:       #212B32;
+  --nhs-dark-grey:   #425563;
+  --nhs-mid-grey:    #768692;
+  --nhs-pale-grey:   #E8EDEE;
+  --nhs-white:       #FFFFFF;
+
+  /* Semantic tokens — Light */
+  --color-bg:          #F0F4F5;   /* BDA recommended off-white */
+  --color-surface:     #FFFFFF;
+  --color-surface-alt: #F0F4F5;
+  --color-border:      #D8DDE0;
+  --color-border-form: #4C6272;   /* NHS form input border */
+  --color-text:        #212B32;
+  --color-text-secondary: #425563;
+  --color-text-hint:   #6E7A84;
+  --color-link:        #005EB8;
+  --color-focus:       #FFB81C;
+  --color-error:       #DA291C;
+  --color-error-bg:    #FDF0EF;
+  --color-success:     #007F3B;
+  --color-success-bg:  #E8F4E8;
+  --color-warn-bg:     #FFF9E6;
+  --color-warn-text:   #594200;
+
+  /* NHS Typography scale */
+  --text-xs:    14px;   /* nhsuk-body-s */
+  --text-base:  16px;   /* nhsuk-body-m — minimum body */
+  --text-lead:  19px;   /* nhsuk-body-l */
+  --text-h4:    22px;
+  --text-h3:    26px;
+  --text-h2:    32px;
+  --text-h1:    48px;
+
+  /* NHS Spacing (8px grid) */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 16px;
+  --sp-4: 24px;
+  --sp-5: 32px;
+  --sp-6: 40px;
+  --sp-7: 48px;
+
+  /* NHS uses minimal border-radius */
+  --radius: 4px;
+}
+
+/* Dark mode — NHS doesn't define one officially;
+   we follow the same colour logic with dark surfaces */
+[data-theme="dark"] {
+  --color-bg:          #1A1F25;
+  --color-surface:     #232B34;
+  --color-surface-alt: #1E252E;
+  --color-border:      #354050;
+  --color-border-form: #7A9BB5;
+  --color-text:        #E8EDEE;
+  --color-text-secondary: #9DAEBF;
+  --color-text-hint:   #768692;
+  --color-link:        #41B6E6;
+  --color-focus:       #FFB81C;
+  --color-error:       #FF7070;
+  --color-error-bg:    #3D1212;
+  --color-success:     #78BE20;
+  --color-success-bg:  #122A10;
+  --color-warn-bg:     #2A2000;
+  --color-warn-text:   #FFD96A;
+
+  --nhs-blue:      #41B6E6;
+  --nhs-dark-blue: #7DD3F7;
+  --nhs-green:     #78BE20;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   BASE RESET & BODY
+═══════════════════════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; font-size: 16px; }
+
+body {
+  font-family: var(--font);
+  font-size: var(--text-base);
+  font-weight: 400;
+  line-height: 1.5;
+  color: var(--color-text);
+  background: var(--color-bg);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* NHS Focus style — WCAG 2.2 compliant */
+*:focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 0;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   NHS HEADER
+═══════════════════════════════════════════════════════════ */
+.nhs-header {
+  background: var(--nhs-blue);
+  border-bottom: 4px solid var(--nhs-dark-blue);
+  padding: 0 var(--sp-4);
+  min-height: 64px;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+[data-theme="dark"] .nhs-header {
+  background: #0B2035;
+  border-bottom-color: #41B6E6;
+}
+.nhs-header-logo {
+  background: var(--nhs-white);
+  color: var(--nhs-blue);
+  font-size: 14px;
+  font-weight: 700;
+  padding: 5px 10px;
+  border-radius: 3px;
+  letter-spacing: .04em;
+  flex-shrink: 0;
+  line-height: 1;
+  white-space: nowrap;
+}
+.nhs-header-service {
+  color: var(--nhs-white);
+  flex: 1;
+}
+.nhs-header-service-name {
+  font-size: var(--text-lead);
+  font-weight: 700;
+  line-height: 1.3;
+  display: block;
+}
+.nhs-header-service-sub {
+  font-size: var(--text-xs);
+  opacity: .82;
+  display: block;
+  margin-top: 2px;
+}
+.nhs-header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+.nhs-header-badge {
+  background: rgba(255,255,255,.15);
+  border: 1px solid rgba(255,255,255,.3);
+  color: #fff;
+  font-size: var(--text-xs);
+  font-weight: 700;
+  padding: 5px 12px;
+  border-radius: 3px;
+  white-space: nowrap;
+}
+.theme-toggle {
+  background: rgba(255,255,255,.12);
+  border: 1px solid rgba(255,255,255,.28);
+  border-radius: 3px;
+  width: 40px; height: 40px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+  cursor: pointer;
+  color: #fff;
+  transition: background .15s;
+}
+.theme-toggle:hover { background: rgba(255,255,255,.25); }
+
+/* ═══════════════════════════════════════════════════════════
+   PAGE CONTAINER
+═══════════════════════════════════════════════════════════ */
+.nhs-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: var(--sp-5) var(--sp-4);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   NHS SECTION PANELS
+═══════════════════════════════════════════════════════════ */
+.nhs-panel {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  margin-bottom: var(--sp-5);
+}
+.nhs-panel-header {
+  background: var(--color-surface-alt);
+  border-bottom: 1px solid var(--color-border);
+  padding: var(--sp-3) var(--sp-4);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+}
+.nhs-panel-title {
+  font-size: var(--text-h4);
+  font-weight: 700;
+  color: var(--nhs-blue);
+  line-height: 1.3;
+}
+[data-theme="dark"] .nhs-panel-title { color: var(--nhs-light-blue); }
+.nhs-panel-subtitle {
+  font-size: var(--text-base);
+  color: var(--color-text-secondary);
+  margin-top: var(--sp-1);
+}
+
+/* ── NHS TABS ── */
+.nhs-tabs {
+  display: flex;
+  border-bottom: 4px solid var(--nhs-blue);
+  background: var(--color-surface-alt);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.nhs-tabs::-webkit-scrollbar { display: none; }
+[data-theme="dark"] .nhs-tabs { border-bottom-color: var(--nhs-light-blue); }
+
+.nhs-tab {
+  padding: var(--sp-3) var(--sp-4);
+  border: none; border-top: 4px solid transparent;
+  background: transparent;
+  font-family: var(--font);
+  font-size: var(--text-base);
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  white-space: nowrap;
+  display: flex; align-items: center; gap: var(--sp-2);
+  transition: background .12s, color .12s;
+  margin-bottom: -4px;
+}
+.nhs-tab:hover {
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+.nhs-tab.active {
+  background: var(--color-surface);
+  color: var(--nhs-blue);
+  border-top-color: var(--nhs-blue);
+  border-bottom: 4px solid var(--color-surface);
+}
+[data-theme="dark"] .nhs-tab.active {
+  color: var(--nhs-light-blue);
+  border-top-color: var(--nhs-light-blue);
+}
+
+.nhs-tab-body {
+  padding: var(--sp-5) var(--sp-4);
+}
+
+/* ── NHS GRID ── */
+.nhs-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: var(--sp-5);
+}
+.nhs-col { display: flex; flex-direction: column; gap: var(--sp-3); }
+
+/* ═══════════════════════════════════════════════════════════
+   NHS FORM ELEMENTS
+═══════════════════════════════════════════════════════════ */
+
+/* Field group */
+.nhsuk-form-group {
+  margin-bottom: var(--sp-4);
+}
+.nhsuk-form-group:last-child { margin-bottom: 0; }
+
+/* Label */
+.nhsuk-label {
+  display: block;
+  font-size: var(--text-base);
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: var(--sp-2);
+  line-height: 1.5;
+}
+
+/* Hint */
+.nhsuk-hint {
+  display: block;
+  font-size: var(--text-xs);
+  color: var(--color-text-hint);
+  margin-bottom: var(--sp-2);
+  line-height: 1.5;
+}
+
+/* Input */
+.nhsuk-input {
+  width: 100%;
+  padding: var(--sp-2) var(--sp-2);
+  border: 2px solid var(--color-border-form);
+  border-radius: 0;
+  font-family: var(--font);
+  font-size: var(--text-base);
+  font-weight: 400;
+  color: var(--color-text);
+  background: var(--color-surface);
+  outline: none;
+  line-height: 1.5;
+  appearance: none;
+  -webkit-appearance: none;
+  transition: border-color .12s;
+}
+.nhsuk-input:focus {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 0;
+  border-color: var(--color-text);
+}
+[data-theme="dark"] .nhsuk-input {
+  background: var(--color-surface-alt);
+  color: var(--color-text);
+  border-color: var(--color-border-form);
+}
+
+/* Textarea */
+.nhsuk-textarea {
+  width: 100%;
+  padding: var(--sp-2);
+  border: 2px solid var(--color-border-form);
+  border-radius: 0;
+  font-family: var(--font);
+  font-size: var(--text-base);
+  font-weight: 400;
+  color: var(--color-text);
+  background: var(--color-surface);
+  outline: none;
+  line-height: 1.6;
+  resize: vertical;
+  min-height: 120px;
+  appearance: none;
+}
+.nhsuk-textarea:focus {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 0;
+  border-color: var(--color-text);
+}
+[data-theme="dark"] .nhsuk-textarea {
+  background: var(--color-surface-alt);
+  color: var(--color-text);
+  border-color: var(--color-border-form);
+}
+
+/* Two-column row */
+.nhsuk-grid-row { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-3); }
+
+/* Inset info box */
+.nhsuk-inset-text {
+  border-left: 4px solid var(--nhs-blue);
+  padding: var(--sp-3);
+  background: var(--color-surface-alt);
+  font-size: var(--text-base);
+  color: var(--color-text-secondary);
+  line-height: 1.7;
+}
+[data-theme="dark"] .nhsuk-inset-text { border-left-color: var(--nhs-light-blue); }
+
+/* Tag / pill */
+.nhsuk-tag {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--nhs-blue); color: #fff;
+  font-size: var(--text-xs); font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 3px;
+  letter-spacing: .01em;
+}
+[data-theme="dark"] .nhsuk-tag { background: #0B2035; color: var(--nhs-light-blue); border: 1px solid var(--nhs-light-blue); }
+
+/* Area code badge */
+.area-code-badge {
+  display: flex; align-items: center; justify-content: center;
+  font-size: var(--text-base); font-weight: 700;
+  border: 2px solid;
+  padding: var(--sp-2) 0;
+  width: 56px;
+  flex-shrink: 0;
+}
+.area-grid-row {
+  display: grid; grid-template-columns: 56px 1fr;
+  gap: var(--sp-2); align-items: center;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   NHS ACTION BAR
+═══════════════════════════════════════════════════════════ */
+.nhs-action-bar {
+  display: flex; flex-wrap: wrap; gap: var(--sp-2);
+  padding: var(--sp-3) var(--sp-4);
+  border-top: 1px solid var(--color-border);
+  background: var(--color-surface-alt);
+  align-items: center;
+}
+.nhs-action-bar-right {
+  margin-left: auto;
+  display: flex; gap: var(--sp-2); flex-wrap: wrap;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   NHS BUTTONS
+═══════════════════════════════════════════════════════════ */
+.nhsuk-button {
+  display: inline-flex; align-items: center; justify-content: center;
+  gap: var(--sp-2);
+  padding: 12px 20px;
+  border: 2px solid transparent;
+  border-radius: var(--radius);
+  font-family: var(--font);
+  font-size: var(--text-base);
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background .12s, filter .12s;
+  text-decoration: none;
+  line-height: 1.5;
+}
+.nhsuk-button:focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 0;
+}
+.nhsuk-button:disabled { opacity: .5; pointer-events: none; cursor: not-allowed; }
+
+/* Primary — NHS Green */
+.nhsuk-button--primary {
+  background: var(--nhs-green);
+  color: #fff;
+  box-shadow: 0 4px 0 #00401E;
+}
+.nhsuk-button--primary:hover {
+  background: #00672F;
+  filter: none;
+}
+.nhsuk-button--primary:active { box-shadow: none; transform: translateY(4px); }
+[data-theme="dark"] .nhsuk-button--primary {
+  background: var(--nhs-lt-green);
+  color: #0A1800;
+  box-shadow: 0 4px 0 #4B7C00;
+}
+
+/* Secondary — NHS outlined */
+.nhsuk-button--secondary {
+  background: var(--color-surface);
+  color: var(--nhs-blue);
+  border-color: var(--nhs-blue);
+  box-shadow: none;
+}
+.nhsuk-button--secondary:hover {
+  background: var(--color-bg);
+  color: var(--nhs-dark-blue);
+  border-color: var(--nhs-dark-blue);
+}
+[data-theme="dark"] .nhsuk-button--secondary {
+  color: var(--nhs-light-blue);
+  border-color: var(--nhs-light-blue);
+  background: transparent;
+}
+
+/* Warning — for print/export */
+.nhsuk-button--reverse {
+  background: #fff;
+  color: var(--nhs-blue);
+  border-color: #fff;
+  box-shadow: 0 4px 0 #9BA4AA;
+}
+.nhsuk-button--reverse:hover { background: #f0f0f0; }
+
+/* Large modifier */
+.nhsuk-button--large {
+  padding: 14px 24px;
+  font-size: var(--text-lead);
+}
+
+/* Small modifier */
+.nhsuk-button--small {
+  padding: 8px 14px;
+  font-size: var(--text-xs);
+}
+
+.nhsuk-button--full { width: 100%; justify-content: center; }
+
+/* ═══════════════════════════════════════════════════════════
+   NHS ALERT / CALLOUT PANELS
+═══════════════════════════════════════════════════════════ */
+.nhsuk-warning-callout {
+  background: var(--color-warn-bg);
+  border: 2px solid var(--nhs-yellow);
+  padding: var(--sp-3) var(--sp-4);
+  margin-bottom: var(--sp-3);
+}
+.nhsuk-error-callout {
+  background: var(--color-error-bg);
+  border: 2px solid var(--color-error);
+  padding: var(--sp-3) var(--sp-4);
+  margin-bottom: var(--sp-3);
+}
+.nhsuk-success-callout {
+  background: var(--color-success-bg);
+  border: 2px solid var(--color-success);
+  padding: var(--sp-3) var(--sp-4);
+  margin-bottom: var(--sp-3);
+}
+.callout-title {
+  font-size: var(--text-base);
+  font-weight: 700;
+  margin-bottom: var(--sp-1);
+  display: flex; align-items: center; gap: var(--sp-2);
+}
+.callout-body {
+  font-size: var(--text-base);
+  line-height: 1.5;
+}
+.nhsuk-error-callout .callout-title { color: var(--color-error); }
+.nhsuk-success-callout .callout-title { color: var(--color-success); }
+.nhsuk-warning-callout .callout-title { color: var(--color-warn-text); }
+
+.alerts-stack { display: flex; flex-direction: column; margin-bottom: var(--sp-4); }
+
+/* ═══════════════════════════════════════════════════════════
+   OUTPUT — INSTITUTION HEADER (printed)
+═══════════════════════════════════════════════════════════ */
+.nhs-inst-header {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-top: 5px solid var(--nhs-blue);
+  padding: var(--sp-4) var(--sp-5);
+  text-align: center;
+  margin-bottom: var(--sp-4);
+}
+.nhs-inst-name {
+  font-size: var(--text-h4);
+  font-weight: 700;
+  color: var(--nhs-blue);
+  margin-bottom: var(--sp-2);
+  line-height: 1.3;
+}
+.nhs-inst-sub {
+  font-size: var(--text-lead);
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: var(--sp-1);
+}
+.nhs-inst-meta {
+  font-size: var(--text-base);
+  color: var(--color-text-secondary);
+}
+.nhs-inst-period {
+  display: inline-flex; align-items: center; gap: var(--sp-2);
+  background: var(--nhs-blue);
+  color: #fff;
+  font-size: var(--text-base);
+  font-weight: 700;
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--radius);
+  margin-top: var(--sp-3);
+}
+[data-theme="dark"] .nhs-inst-period { background: #0B2035; color: var(--nhs-light-blue); border: 1px solid var(--nhs-light-blue); }
+
+/* ═══════════════════════════════════════════════════════════
+   STAT SUMMARY CARDS
+═══════════════════════════════════════════════════════════ */
+.nhs-stats-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-4);
+}
+.nhs-stat {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-top: 4px solid var(--nhs-blue);
+  padding: var(--sp-3);
+  text-align: center;
+}
+[data-theme="dark"] .nhs-stat { border-top-color: var(--nhs-light-blue); }
+.nhs-stat-val {
+  font-size: var(--text-h2);
+  font-weight: 700;
+  color: var(--nhs-blue);
+  line-height: 1;
+  margin-bottom: var(--sp-1);
+}
+[data-theme="dark"] .nhs-stat-val { color: var(--nhs-light-blue); }
+.nhs-stat-lbl {
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   GROUP CARDS
+═══════════════════════════════════════════════════════════ */
+.nhs-group-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-4);
+}
+.nhs-group-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  padding: var(--sp-3);
+}
+.nhs-group-card-title {
+  font-size: var(--text-base);
+  font-weight: 700;
+  margin-bottom: var(--sp-1);
+}
+.nhs-group-card-sub {
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
+  margin-bottom: var(--sp-2);
+  line-height: 1.5;
+}
+.nhs-group-card-names {
+  font-size: var(--text-xs);
+  color: var(--color-text);
+  line-height: 1.9;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   LEGEND
+═══════════════════════════════════════════════════════════ */
+.nhs-legend {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  padding: var(--sp-3) var(--sp-4);
+  margin-bottom: var(--sp-4);
+  display: flex; flex-wrap: wrap; gap: var(--sp-3);
+}
+.nhs-legend-title {
+  width: 100%;
+  font-size: var(--text-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--color-text-secondary);
+  margin-bottom: var(--sp-1);
+}
+.nhs-legend-item {
+  display: flex; align-items: center; gap: var(--sp-2);
+  font-size: var(--text-base);
+  color: var(--color-text);
+}
+.nhs-legend-swatch {
+  width: 28px; height: 18px;
+  border: 1px solid rgba(0,0,0,.15);
+  flex-shrink: 0;
+}
+[data-theme="dark"] .nhs-legend-swatch { border-color: rgba(255,255,255,.1); }
+
+/* ═══════════════════════════════════════════════════════════
+   SECTION HEADING
+═══════════════════════════════════════════════════════════ */
+.nhs-section-heading {
+  font-size: var(--text-h4);
+  font-weight: 700;
+  color: var(--color-text);
+  padding-bottom: var(--sp-2);
+  border-bottom: 2px solid var(--nhs-blue);
+  margin-bottom: var(--sp-3);
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: var(--sp-2);
+}
+[data-theme="dark"] .nhs-section-heading { border-bottom-color: var(--nhs-light-blue); }
+
+/* ═══════════════════════════════════════════════════════════
+   ROSTER TABLE
+═══════════════════════════════════════════════════════════ */
+.nhs-table-wrap {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  overflow: hidden;
+  margin-bottom: var(--sp-4);
+}
+.nhs-table-scroll {
+  overflow-x: auto;
+  max-height: 70vh;
+}
+.nhs-table-scroll::-webkit-scrollbar { height: 6px; width: 6px; }
+.nhs-table-scroll::-webkit-scrollbar-track { background: var(--color-surface-alt); }
+.nhs-table-scroll::-webkit-scrollbar-thumb { background: var(--color-border-form); }
+
+table.rt {
+  border-collapse: collapse;
+  white-space: nowrap;
+  font-family: var(--font);
+  font-size: var(--text-xs);
+}
+table.rt th {
+  background: var(--nhs-blue);
+  color: #fff;
+  padding: 10px 6px;
+  text-align: center;
+  font-size: 11px; font-weight: 700;
+  letter-spacing: .03em;
+  border-right: 1px solid rgba(255,255,255,.15);
+  position: sticky; top: 0; z-index: 10;
+}
+[data-theme="dark"] table.rt th { background: #0B2035; }
+table.rt th.th-sl {
+  min-width: 32px;
+  position: sticky; left: 0; z-index: 20;
+}
+table.rt th.th-name {
+  min-width: 180px; text-align: left; padding-left: 12px;
+  position: sticky; left: 32px; z-index: 20;
+  border-right: 3px solid rgba(255,255,255,.3);
+}
+table.rt th.th-sun {
+  background: #5A1EA0;
+}
+[data-theme="dark"] table.rt th.th-sun { background: #2D0F58; }
+table.rt th.th-sum {
+  background: var(--nhs-dark-blue);
+  min-width: 38px;
+  border-left: 2px solid rgba(255,255,255,.25);
+}
+[data-theme="dark"] table.rt th.th-sum { background: #071830; }
+
+table.rt td {
+  padding: 6px 4px; text-align: center;
+  border-right: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+  font-size: 11px; font-weight: 700;
+  min-width: 44px;
+}
+table.rt td.td-sl {
+  color: var(--color-text-hint); font-weight: 400;
+  background: var(--color-surface-alt);
+  position: sticky; left: 0; z-index: 5;
+  border-right: 1px solid var(--color-border);
+}
+table.rt td.td-name {
+  text-align: left; font-size: 13px; font-weight: 700;
+  padding-left: 10px; background: var(--color-surface);
+  position: sticky; left: 32px; z-index: 5;
+  border-right: 3px solid var(--color-border);
+  min-width: 180px;
+}
+table.rt tr:nth-child(even) td.td-sl,
+table.rt tr:nth-child(even) td.td-name { background: var(--color-surface-alt); }
+
+table.rt tr.grp-hdr td {
+  background: var(--color-bg);
+  color: var(--nhs-dark-blue);
+  font-size: 10px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .07em;
+  padding: 5px 12px;
+  border-top: 2px solid var(--nhs-blue);
+}
+[data-theme="dark"] table.rt tr.grp-hdr td { background: #0B2035; color: var(--nhs-light-blue); border-top-color: var(--nhs-light-blue); }
+table.rt tr.grp-hdr td.td-sl { background: var(--color-bg); }
+[data-theme="dark"] table.rt tr.grp-hdr td.td-sl { background: #0B2035; }
+
+table.rt td.td-sum {
+  border-left: 1px solid var(--color-border);
+  font-weight: 700; font-size: 11px;
+}
+table.rt td.td-sum-total {
+  background: var(--nhs-blue); color: #fff;
+  font-weight: 700;
+}
+[data-theme="dark"] table.rt td.td-sum-total { background: #0B2035; color: var(--nhs-light-blue); }
+
+table.rt tr.sum-row td {
+  background: var(--color-surface-alt);
+  font-size: 10px; font-weight: 700; color: var(--color-text-secondary);
+  border-top: 2px solid var(--color-border);
+}
+table.rt tr.sum-row td.td-lbl {
+  text-align: left; padding-left: 10px;
+  font-size: 11px; font-weight: 700; color: var(--color-text);
+  background: var(--color-surface-alt);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   STUDENT SUMMARY TABLE
+═══════════════════════════════════════════════════════════ */
+.nhs-stbl-wrap {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  overflow: hidden;
+  margin-bottom: var(--sp-4);
+}
+.nhs-stbl-scroll { overflow-x: auto; }
+.nhs-stbl {
+  width: 100%; border-collapse: collapse;
+  font-family: var(--font);
+  font-size: var(--text-base);
+}
+.nhs-stbl th {
+  background: var(--nhs-blue); color: #fff;
+  padding: 10px 12px; text-align: center;
+  font-size: var(--text-xs); font-weight: 700;
+  white-space: nowrap;
+}
+[data-theme="dark"] .nhs-stbl th { background: #0B2035; }
+.nhs-stbl th:first-child, .nhs-stbl th:nth-child(2) { text-align: left; }
+.nhs-stbl td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text); text-align: center;
+  font-size: var(--text-base);
+}
+.nhs-stbl td:first-child, .nhs-stbl td:nth-child(2) { text-align: left; }
+.nhs-stbl tr:nth-child(even) { background: var(--color-surface-alt); }
+.nhs-stbl tr:hover td { background: #EBF5FB; }
+[data-theme="dark"] .nhs-stbl tr:hover td { background: #0B2035; }
+.pass { color: var(--color-success); font-weight: 700; }
+.fail { color: var(--color-error); font-weight: 700; }
+
+/* ═══════════════════════════════════════════════════════════
+   EMPTY STATE
+═══════════════════════════════════════════════════════════ */
+.nhs-empty {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  padding: var(--sp-7) var(--sp-4);
+  text-align: center;
+}
+.nhs-empty-icon { font-size: 52px; margin-bottom: var(--sp-3); opacity: .4; }
+.nhs-empty-title { font-size: var(--text-h3); font-weight: 700; color: var(--color-text); margin-bottom: var(--sp-2); }
+.nhs-empty-sub { font-size: var(--text-lead); color: var(--color-text-secondary); max-width: 480px; margin: 0 auto var(--sp-4); line-height: 1.6; }
+
+.nhs-steps {
+  display: inline-flex; flex-direction: column; gap: var(--sp-3);
+  text-align: left;
+  background: var(--color-surface-alt);
+  border: 1px solid var(--color-border);
+  padding: var(--sp-4);
+  max-width: 440px;
+  width: 100%;
+}
+.nhs-step {
+  display: flex; align-items: flex-start; gap: var(--sp-3);
+  font-size: var(--text-base);
+  color: var(--color-text);
+  line-height: 1.5;
+}
+.nhs-step-num {
+  width: 28px; height: 28px; flex-shrink: 0;
+  background: var(--nhs-blue); color: #fff;
+  border-radius: 50%;
+  font-size: var(--text-xs); font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  margin-top: 2px;
+}
+[data-theme="dark"] .nhs-step-num { background: #0B2035; color: var(--nhs-light-blue); border: 1px solid var(--nhs-light-blue); }
+
+/* Print footer */
+.nhs-print-footer { display: none; }
+
+/* ═══════════════════════════════════════════════════════════
+   RESPONSIVE — 5-TIER DEVICE SYSTEM
+   XS  Mobile portrait   ≤ 480px
+   SM  Mobile landscape  481–767px
+   MD  Tablet portrait   768–1023px
+   LG  Tablet landscape / small desktop  1024–1279px
+   XL  Desktop           ≥ 1280px
+═══════════════════════════════════════════════════════════ */
+
+/* ── XL: Large desktop ≥ 1280px ── */
+@media (min-width: 1280px) {
+  .nhs-page { max-width: 1400px; padding: var(--sp-6) var(--sp-5); }
+  .nhs-grid { grid-template-columns: repeat(3, 1fr); }
+  .nhs-group-grid { grid-template-columns: repeat(3, 1fr); }
+  .nhs-stats-row { grid-template-columns: repeat(6, 1fr); }
+  .nhs-tab-body { padding: var(--sp-6) var(--sp-5); }
+  .nhs-action-bar { padding: var(--sp-4) var(--sp-5); }
+  .nhs-panel-header { padding: var(--sp-4) var(--sp-5); }
+}
+
+/* ── LG: Tablet landscape / small desktop 1024–1279px ── */
+@media (min-width: 1024px) and (max-width: 1279px) {
+  .nhs-page { padding: var(--sp-5) var(--sp-4); }
+  .nhs-grid { grid-template-columns: repeat(2, 1fr); }
+  .nhs-group-grid { grid-template-columns: repeat(3, 1fr); }
+  .nhs-stats-row { grid-template-columns: repeat(6, 1fr); }
+  .nhs-table-scroll { max-height: 65vh; }
+}
+
+/* ── MD: Tablet portrait 768–1023px ── */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .nhs-page { padding: var(--sp-4) var(--sp-3); }
+  .nhs-header { padding: 0 var(--sp-3); }
+  .nhs-grid { grid-template-columns: repeat(2, 1fr); }
+  .nhs-group-grid { grid-template-columns: repeat(2, 1fr); }
+  .nhs-stats-row { grid-template-columns: repeat(3, 1fr); }
+  .nhs-tab { padding: var(--sp-2) var(--sp-3); font-size: 14px; }
+  .nhs-tab-body { padding: var(--sp-4) var(--sp-3); }
+  .nhs-action-bar { padding: var(--sp-3) var(--sp-3); }
+  .nhs-table-scroll { max-height: 60vh; }
+  /* Two-column form rows stay 2-col on tablet */
+  .nhsuk-grid-row { grid-template-columns: 1fr 1fr; }
+}
+
+/* ── SM: Mobile landscape 481–767px ── */
+@media (min-width: 481px) and (max-width: 767px) {
+  .nhs-page { padding: var(--sp-3) var(--sp-3); }
+  .nhs-header { padding: 0 var(--sp-3); min-height: 56px; }
+  .nhs-header-service-sub { display: none; }
+  .nhs-header-badge { display: none; }
+  .nhs-grid { grid-template-columns: 1fr; }
+  .nhs-group-grid { grid-template-columns: repeat(2, 1fr); }
+  .nhs-stats-row { grid-template-columns: repeat(3, 1fr); }
+  .nhsuk-grid-row { grid-template-columns: 1fr 1fr; }
+  .nhs-tab { padding: var(--sp-2) var(--sp-2); font-size: 13px; }
+  .nhs-tab-body { padding: var(--sp-3) var(--sp-3); }
+  .nhs-action-bar { flex-direction: column; align-items: stretch; gap: var(--sp-2); }
+  .nhs-action-bar-right { margin-left: 0; flex-direction: row; }
+  .nhsuk-button--large { width: 100%; }
+  .nhs-section-heading { flex-direction: column; align-items: flex-start; gap: var(--sp-2); }
+  .nhs-table-scroll { max-height: 55vh; }
+  /* Roster table — tighter on landscape mobile */
+  table.rt th, table.rt td { font-size: 9px; padding: 4px 2px; min-width: 36px; }
+  table.rt td.td-name, table.rt th.th-name { min-width: 130px; font-size: 11px; }
+}
+
+/* ── XS: Mobile portrait ≤ 480px ── */
+@media (max-width: 480px) {
+  :root {
+    --text-base: 16px;
+    --text-lead: 18px;
+    --text-h4:   20px;
+    --text-h3:   22px;
+    --text-h2:   26px;
+    --sp-4: 20px;
+    --sp-5: 28px;
+  }
+
+  /* Header */
+  .nhs-header { padding: 0 var(--sp-2); min-height: 56px; gap: var(--sp-2); }
+  .nhs-header-logo { font-size: 11px; padding: 4px 7px; letter-spacing: .02em; }
+  .nhs-header-service-name { font-size: 14px; }
+  .nhs-header-service-sub { display: none; }
+  .nhs-header-badge { display: none; }
+  .theme-toggle { width: 36px; height: 36px; font-size: 16px; }
+
+  /* Page */
+  .nhs-page { padding: var(--sp-2) var(--sp-2); }
+
+  /* Panel */
+  .nhs-panel-header { padding: var(--sp-2) var(--sp-2); flex-direction: column; align-items: flex-start; gap: var(--sp-1); }
+  .nhs-panel-title { font-size: 18px; }
+  .nhs-panel-subtitle { font-size: var(--text-xs); }
+
+  /* Tabs — full width, scrollable */
+  .nhs-tabs { border-bottom-width: 3px; }
+  .nhs-tab { padding: 10px var(--sp-2); font-size: 13px; flex: 1; justify-content: center; min-width: 80px; }
+  .nhs-tab-body { padding: var(--sp-3) var(--sp-2); }
+
+  /* Grid — single column always */
+  .nhs-grid { grid-template-columns: 1fr; gap: var(--sp-3); }
+  .nhs-group-grid { grid-template-columns: 1fr; }
+  .nhs-stats-row { grid-template-columns: repeat(2, 1fr); gap: var(--sp-2); }
+  .nhsuk-grid-row { grid-template-columns: 1fr; gap: var(--sp-2); }
+
+  /* Forms */
+  .nhsuk-label { font-size: 15px; }
+  .nhsuk-hint { font-size: 13px; }
+  .nhsuk-input { font-size: 16px; padding: 10px var(--sp-2); } /* 16px prevents iOS zoom */
+  .nhsuk-textarea { font-size: 16px; min-height: 140px; }
+  .area-grid-row { grid-template-columns: 48px 1fr; gap: var(--sp-2); }
+  .area-code-badge { font-size: 13px; padding: var(--sp-1) 0; width: 48px; }
+  .nhsuk-inset-text { font-size: 14px; padding: var(--sp-2); }
+
+  /* Buttons */
+  .nhsuk-button { padding: 12px var(--sp-3); font-size: 15px; }
+  .nhsuk-button--large { padding: 14px var(--sp-3); font-size: 16px; width: 100%; }
+  .nhsuk-button--small { padding: 8px 12px; font-size: 13px; }
+
+  /* Action bar */
+  .nhs-action-bar { flex-direction: column; align-items: stretch; padding: var(--sp-2); gap: var(--sp-2); }
+  .nhs-action-bar-right { margin-left: 0; flex-direction: column; gap: var(--sp-2); }
+
+  /* Output — institution header */
+  .nhs-inst-header { padding: var(--sp-3) var(--sp-2); }
+  .nhs-inst-name { font-size: 15px; }
+  .nhs-inst-sub { font-size: 14px; }
+  .nhs-inst-meta { font-size: 13px; }
+  .nhs-inst-period { font-size: 13px; padding: var(--sp-1) var(--sp-2); }
+
+  /* Stats */
+  .nhs-stat-val { font-size: 26px; }
+  .nhs-stat-lbl { font-size: 11px; }
+  .nhs-stat { padding: var(--sp-2); }
+
+  /* Group cards */
+  .nhs-group-card { padding: var(--sp-2); }
+  .nhs-group-card-title { font-size: 14px; }
+  .nhs-group-card-sub { font-size: 12px; }
+  .nhs-group-card-names { font-size: 12px; }
+
+  /* Legend */
+  .nhs-legend { padding: var(--sp-2); gap: var(--sp-2); }
+  .nhs-legend-item { font-size: 13px; }
+
+  /* Section heading */
+  .nhs-section-heading { font-size: 18px; flex-direction: column; align-items: flex-start; gap: var(--sp-2); }
+
+  /* Roster table — compact on mobile */
+  .nhs-table-scroll { max-height: 50vh; }
+  table.rt th, table.rt td { font-size: 8.5px; padding: 4px 2px; min-width: 34px; }
+  table.rt td.td-name, table.rt th.th-name { min-width: 110px; font-size: 10px; padding-left: 6px; }
+  table.rt td.td-sl, table.rt th.th-sl { min-width: 24px; }
+
+  /* Student summary table */
+  .nhs-stbl { font-size: 13px; }
+  .nhs-stbl th { font-size: 11px; padding: 8px 8px; }
+  .nhs-stbl td { padding: 8px 8px; font-size: 13px; }
+
+  /* Alerts */
+  .callout-title { font-size: 15px; }
+  .callout-body { font-size: 14px; }
+
+  /* Empty state */
+  .nhs-empty { padding: var(--sp-5) var(--sp-2); }
+  .nhs-empty-icon { font-size: 40px; }
+  .nhs-empty-title { font-size: 20px; }
+  .nhs-empty-sub { font-size: 15px; }
+  .nhs-steps { padding: var(--sp-3); }
+  .nhs-step { font-size: 14px; gap: var(--sp-2); }
+  .nhs-step-num { width: 24px; height: 24px; font-size: 12px; }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   PRINT
+═══════════════════════════════════════════════════════════ */
+@media print {
+  .nhs-header, .nhs-panel, .alerts-stack,
+  .nhs-stats-row, .nhs-group-grid, .nhs-legend,
+  .nhs-stbl-wrap, .no-print { display: none !important; }
+
+  body { background: #fff; color: #212B32; }
+  .nhs-page { padding: 0; max-width: none; }
+
+  .nhs-inst-header {
+    border: none; border-top: 5px solid #005EB8;
+    padding: 10px 0 8px; margin-bottom: 8px;
+  }
+  .nhs-inst-name { font-size: 12px; color: #005EB8; }
+  .nhs-inst-sub  { font-size: 10px; }
+  .nhs-inst-meta { font-size: 9px; }
+  .nhs-inst-period { display: none; }
+
+  .nhs-section-heading { font-size: 11px; border-bottom-width: 1px; margin-bottom: 6px; }
+  .nhs-section-heading .nhs-header-actions { display: none; }
+
+  .nhs-table-wrap { border: none; }
+  .nhs-table-scroll { overflow: visible; max-height: none; }
+  table.rt th, table.rt td { font-size: 7.5px; padding: 3px 2px; min-width: 34px; }
+  table.rt td.td-name, table.rt th.th-name { min-width: 120px; font-size: 8.5px; }
+
+  .nhs-print-footer {
+    display: flex !important;
+    justify-content: space-between;
+    padding-top: 28px; font-size: 10px; color: #212B32;
+  }
+
+  @page { size: A3 landscape; margin: .8cm 1cm; }
+}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useCallback, useEffect } = React;
+
+/* ════════════════════ DEVICE DETECTION ════════════════════ */
+function getDevice() {
+  const w = window.innerWidth;
+  if (w <= 480)  return 'xs';   // mobile portrait
+  if (w <= 767)  return 'sm';   // mobile landscape
+  if (w <= 1023) return 'md';   // tablet portrait
+  if (w <= 1279) return 'lg';   // tablet landscape / small desktop
+  return 'xl';                   // desktop
+}
+
+function useDevice() {
+  const [device, setDevice] = useState(getDevice);
+  useEffect(() => {
+    const handler = () => {
+      const d = getDevice();
+      setDevice(d);
+      document.documentElement.setAttribute('data-device', d);
+    };
+    handler();
+    window.addEventListener('resize', handler);
+    return () => window.removeEventListener('resize', handler);
+  }, []);
+  return device;
+}
+
+const isMobile = d => d === 'xs' || d === 'sm';
+const isTablet = d => d === 'md' || d === 'lg';
+const isDesktop = d => d === 'xl';
+
+/* ════════════════════ CONSTANTS ════════════════════ */
+const POSTING = ['M1','M1','M2','M2','E1','E1','E2','E2','G3','G3','G4','G4'];
+
+// Cell colours — light mode (NHS-aligned pastels)
+const CS_LIGHT = {
+  M1:{bg:'#FFF3B0',tx:'#594200'}, M2:{bg:'#FFE066',tx:'#4A3600'},
+  E1:{bg:'#FFD5AA',tx:'#5C2200'}, E2:{bg:'#FFC07A',tx:'#5C2200'},
+  G3:{bg:'#C2DDF7',tx:'#0D3970'}, G4:{bg:'#8EC6F5',tx:'#0A2B5C'},
+  N1:{bg:'#D9C9F7',tx:'#2D0070'}, N2:{bg:'#BCA8F0',tx:'#250060'},
+  'N/O':{bg:'#FFBDD8',tx:'#6B0033'},
+  OFF:{bg:'#DDE2E7',tx:'#354050'},
+  PH: {bg:'#B8EDD0',tx:'#0A3D22'},
+};
+// Cell colours — dark mode
+const CS_DARK = {
+  M1:{bg:'#3D2F00',tx:'#FFE57A'}, M2:{bg:'#4A3800',tx:'#FFD93D'},
+  E1:{bg:'#3D1800',tx:'#FFB86A'}, E2:{bg:'#341200',tx:'#FFA040'},
+  G3:{bg:'#0A1D45',tx:'#93C5FD'}, G4:{bg:'#071535',tx:'#BFDBFE'},
+  N1:{bg:'#1C0B3F',tx:'#C4B5FD'}, N2:{bg:'#150830',tx:'#DDD6FE'},
+  'N/O':{bg:'#3D0B22',tx:'#FDB7D0'},
+  OFF:{bg:'#1E2D3D',tx:'#8899AB'},
+  PH: {bg:'#052E16',tx:'#86EFAC'},
+};
+
+// Group accent colours
+const GC = [
+  {light:{bdr:'#005EB8',bg:'#D4E8FF',tx:'#003087'},
+   dark: {bdr:'#41B6E6',bg:'#0B2035',tx:'#41B6E6'}},
+  {light:{bdr:'#007F3B',bg:'#D4F0E0',tx:'#004F25'},
+   dark: {bdr:'#78BE20',bg:'#122A10',tx:'#78BE20'}},
+  {light:{bdr:'#7C2855',bg:'#F2D4E5',tx:'#5A1A3D'},
+   dark: {bdr:'#E07DB5',bg:'#2A0A1E',tx:'#E07DB5'}},
+];
+
+const DEFAULT_NAMES = `Adithya Krishnan
+Aleena Biju
+Anusha S
+Anushree K N
+Aswani S
+Gouri Murali
+Gumpu Gayatri
+Harshitha R V
+Krishnapuram Bhargavi
+Nandana Biju
+Nandhana Prasath
+Nithya Kalyani K N
+Pooja P V
+Preetha J
+Priya Das
+Remya R
+Sneha K
+Sumathi P
+Swathi R
+Vandana B`;
+
+const DEFAULTS = {
+  institutionName:'Sri Sathya Sai Institute of Higher Medical Sciences — College of Nursing',
+  rotationTitle:'Midwifery / Obstetrical & Gynaecological Nursing Clinical Rotation',
+  batchInfo:'VII Semester B.Sc. Nursing (XV Batch)',
+  hospitalName:'SSSGH Prashanthi Nilayam',
+  academicYear:'2026',
+  startDate:'2026-03-22',
+  endDate:'2026-04-12',
+  studentNames:DEFAULT_NAMES,
+  m1Area:'Labour Room',m2Area:'MS Ward',
+  e1Area:'Labour Room',e2Area:'Female Ward',
+  g3Area:'OPD',g4Area:'OT',
+  n1Area:'Labour Room',n2Area:'MS Ward',
+  publicHolidays:'',
+};
+
+/* ════════════════════ HELPERS ════════════════════ */
+const fmtISO = dt => `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;
+const fmtDate = dt => `${dt.getDate()}/${dt.getMonth()+1}`;
+const fmtLong = dt => {
+  const M=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  return `${dt.getDate()} ${M[dt.getMonth()]} ${dt.getFullYear()}`;
+};
+const DAY = ['Su','Mo','Tu','We','Th','Fr','Sa'];
+
+/* ════════════════════ ALGORITHM ════════════════════ */
+function generateRoster(cfg) {
+  const students = cfg.studentNames.split('\n').map(s=>s.trim()).filter(Boolean);
+  if (students.length < 6) throw new Error('Please enter at least 6 student names.');
+  const start = new Date(cfg.startDate+'T00:00:00');
+  const end   = new Date(cfg.endDate  +'T00:00:00');
+  if (isNaN(start)||isNaN(end)) throw new Error('Please enter valid start and end dates.');
+  if (end <= start) throw new Error('End date must be after start date.');
+  const totalDays = Math.round((end-start)/86400000)+1;
+  if (totalDays < 21) throw new Error(`Minimum 21 days required. Selected: ${totalDays} days.`);
+
+  const dates = [];
+  for (let d=0;d<totalDays;d++){
+    const dt=new Date(start); dt.setDate(dt.getDate()+d); dates.push(dt);
+  }
+  const phSet = new Set((cfg.publicHolidays||'').split('\n').map(s=>s.trim()).filter(s=>/^\d{4}-\d{2}-\d{2}$/.test(s)));
+
+  const n=students.length, g0=Math.ceil(n/3), g1=Math.ceil((n-g0)/2), g2=n-g0-g1;
+  const groupStudents=[students.slice(0,g0),students.slice(g0,g0+g1),students.slice(g0+g1)];
+  const NIGHT_PATS=[['N1','N1','N1','N2','N2','N2'],['N2','N2','N2','N1','N1','N1'],['N1','N1','N1','N2','N2','N2']];
+  const PHASES=[{nightRange:[0,5],noDay:6,fixedOff:new Set([7])},{nightRange:[7,12],noDay:13,fixedOff:new Set([6])},{nightRange:[14,19],noDay:20,fixedOff:new Set([6,13])}];
+
+  const schedule={};
+  students.forEach(s=>{schedule[s]=[];});
+
+  groupStudents.forEach((grp,gi)=>{
+    const {nightRange,noDay,fixedOff}=PHASES[gi];
+    const [ns]=nightRange;
+    const nightDays=new Set(); for(let d=nightRange[0];d<=nightRange[1];d++) nightDays.add(d);
+    const lastDay=totalDays-1;
+    const dayShiftDays=[];
+    for(let d=0;d<totalDays;d++){
+      if(!nightDays.has(d)&&d!==noDay&&!fixedOff.has(d)&&d!==lastDay) dayShiftDays.push(d);
+    }
+    grp.forEach((student,si)=>{
+      const offset=(si%6)*2;
+      for(let d=0;d<totalDays;d++){
+        const dtStr=fmtISO(dates[d]);
+        let cell;
+        if(phSet.has(dtStr)){cell='PH';}
+        else if(nightDays.has(d)){cell=NIGHT_PATS[gi][d-ns];}
+        else if(d===noDay){cell='N/O';}
+        else if(fixedOff.has(d)){cell='OFF';}
+        else if(d===lastDay){cell='OFF';}
+        else{
+          const dsIdx=dayShiftDays.indexOf(d);
+          cell=dsIdx>=0?POSTING[(dsIdx+offset)%12]:'—';
+        }
+        schedule[student].push(cell);
+      }
+    });
+  });
+
+  const dailySummary=dates.map((_,d)=>{
+    const c={M:0,E:0,G:0,N:0,NO:0,OFF:0,PH:0};
+    students.forEach(nm=>{
+      const v=schedule[nm][d];
+      if(v==='M1'||v==='M2')c.M++; else if(v==='E1'||v==='E2')c.E++;
+      else if(v==='G3'||v==='G4')c.G++; else if(v==='N1'||v==='N2')c.N++;
+      else if(v==='N/O')c.NO++; else if(v==='OFF')c.OFF++; else if(v==='PH')c.PH++;
+    });
+    return {...c,date:dates[d],isSun:dates[d].getDay()===0};
+  });
+
+  const studentSummaries=students.map((nm,idx)=>{
+    const c={M:0,E:0,G:0,N:0,NO:0,OFF:0,PH:0};
+    schedule[nm].forEach(v=>{
+      if(v==='M1'||v==='M2')c.M++; else if(v==='E1'||v==='E2')c.E++;
+      else if(v==='G3'||v==='G4')c.G++; else if(v==='N1'||v==='N2')c.N++;
+      else if(v==='N/O')c.NO++; else if(v==='OFF')c.OFF++; else if(v==='PH')c.PH++;
+    });
+    const gi=idx<g0?0:idx<g0+g1?1:2;
+    return{name:nm,...c,work:c.M+c.E+c.G+c.N,rest:c.OFF+c.NO+c.PH,gi,nightOk:c.N>=6,offOk:(c.OFF+c.NO+c.PH)>=2};
+  });
+
+  return{schedule,dates,students,groupStudents,groupSizes:[g0,g1,g2],dailySummary,studentSummaries,totalDays,config:cfg};
+}
+
+/* ════════════════════ EXCEL EXPORT ════════════════════ */
+function exportExcel(roster){
+  const{schedule,dates,students,dailySummary,studentSummaries,config:cfg}=roster;
+  const rows=[];
+  rows.push([cfg.institutionName]);
+  rows.push([cfg.rotationTitle]);
+  rows.push([`${cfg.batchInfo} — A.Y. ${cfg.academicYear} — ${cfg.hospitalName}`]);
+  rows.push([`Clinical Rotation Period: ${fmtDate(dates[0])} to ${fmtDate(dates[dates.length-1])}`]);
+  rows.push([]);
+  const hdr=['Sl No','Name of the Student'];
+  dates.forEach(d=>hdr.push(fmtDate(d)+(d.getDay()===0?'*':'')));
+  hdr.push('M','E','G','N','N/O','OFF','Working');
+  rows.push(hdr);
+  students.forEach((nm,i)=>{
+    const row=[i+1,nm];
+    dates.forEach((_,d)=>row.push(schedule[nm][d]||''));
+    const s=studentSummaries[i];
+    row.push(s.M,s.E,s.G,s.N,s.NO,s.OFF,s.work);
+    rows.push(row);
+  });
+  rows.push([]);
+  rows.push(['DAILY COVERAGE SUMMARY']);
+  const sh=['',''];
+  dates.forEach(d=>sh.push(fmtDate(d)+(d.getDay()===0?'*':'')));
+  sh.push('TOTAL'); rows.push(sh);
+  [['Morning (M)','M'],['Evening (E)','E'],['General (G)','G'],['Night (N)','N'],['Night Off (N/O)','NO'],['Day Off','OFF']].forEach(([lbl,key])=>{
+    const row=[lbl,'']; let tot=0;
+    dailySummary.forEach(ds=>{row.push(ds[key]||0);tot+=ds[key]||0;});
+    row.push(tot); rows.push(row);
+  });
+  rows.push([]);
+  rows.push([[`Areas: M1=${cfg.m1Area} | M2=${cfg.m2Area} | E1=${cfg.e1Area} | E2=${cfg.e2Area} | G3=${cfg.g3Area} | G4=${cfg.g4Area} | N1=${cfg.n1Area} | N2=${cfg.n2Area}`].join('')]);
+  rows.push(['M=Morning 7:30-15:30 | E=Evening 11:30-19:30 | G=General 8:00-16:00 | N=Night 19:30-07:30']);
+  rows.push(['* = Sunday  |  N/O = Mandatory Night Off']);
+  rows.push([]);
+  rows.push(['','','','Signature of Subject Co-ordinator:','','','','Signature of the Principal:']);
+  const ws=XLSX.utils.aoa_to_sheet(rows);
+  ws['!cols']=[{wch:6},{wch:26},...dates.map(()=>({wch:5.5})),{wch:5},{wch:5},{wch:5},{wch:5},{wch:6},{wch:6},{wch:10}];
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'Rotation Roster');
+  XLSX.writeFile(wb,`Nursing_Roster_PSNL_${cfg.academicYear}.xlsx`);
+}
+
+/* ════════════════════ CELL ════════════════════ */
+function Cell({v,dark}){
+  const m=dark?CS_DARK:CS_LIGHT;
+  const s=m[v]||{bg:dark?'#1E2D3D':'#F0F4F5',tx:dark?'#768692':'#6E7A84'};
+  return(
+    <td style={{background:s.bg,color:s.tx,fontWeight:700,fontSize:'10.5px',padding:'5px 3px',
+      textAlign:'center',borderRight:'1px solid var(--color-border)',
+      borderBottom:'1px solid var(--color-border)',minWidth:'44px'}}>
+      {v||'—'}
+    </td>
+  );
+}
+
+/* ════════════════════ LEGEND ════════════════════ */
+function Legend({cfg}){
+  const items=[
+    {code:'M1',lbl:`Morning — ${cfg.m1Area}`},{code:'M2',lbl:`Morning — ${cfg.m2Area}`},
+    {code:'E1',lbl:`Evening — ${cfg.e1Area}`},{code:'E2',lbl:`Evening — ${cfg.e2Area}`},
+    {code:'G3',lbl:`General — ${cfg.g3Area}`},{code:'G4',lbl:`General — ${cfg.g4Area}`},
+    {code:'N1',lbl:`Night — ${cfg.n1Area}`},{code:'N2',lbl:`Night — ${cfg.n2Area}`},
+    {code:'N/O',lbl:'Night Off (Mandatory Rest)'},{code:'OFF',lbl:'Weekly Off'},{code:'PH',lbl:'Public Holiday'},
+  ];
+  return(
+    <div className="nhs-legend no-print">
+      <div className="nhs-legend-title">Shift Key</div>
+      {items.map(({code,lbl})=>{
+        const s=CS_LIGHT[code]||{};
+        return(
+          <div key={code} className="nhs-legend-item">
+            <div className="nhs-legend-swatch" style={{background:s.bg}}/>
+            <span><strong>{code}</strong> — {lbl}</span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+/* ════════════════════ ROSTER TABLE ════════════════════ */
+function RosterTable({roster,dark,device}){
+  const{schedule,dates,students,dailySummary,studentSummaries,groupSizes}=roster;
+  const[g0,g1]=groupSizes;
+  const getGI=i=>i<g0?0:i<g0+g1?1:2;
+  const mobile = isMobile(device);
+  const sumRows=[{k:'M',l:'Morning'},{k:'E',l:'Evening'},{k:'G',l:'General'},{k:'N',l:'Night'},{k:'NO',l:'N/O'},{k:'OFF',l:'OFF'}];
+  // On mobile hide N/O and OFF summary cols to save space
+  const summaryColKeys = mobile
+    ? [{k:'M',l:'M'},{k:'N',l:'N'},{k:'work',l:'Wk'}]
+    : [{k:'M',l:'M'},{k:'E',l:'E'},{k:'G',l:'G'},{k:'N',l:'N'},{k:'NO',l:'N/O'},{k:'OFF',l:'OFF'},{k:'work',l:'Wk'}];
+  return(
+    <div className="nhs-table-wrap">
+      <div className="nhs-table-scroll">
+        <table className="rt">
+          <thead>
+            <tr>
+              <th className="th-sl">#</th>
+              <th className="th-name">Student Name</th>
+              {dates.map((dt,i)=>(
+                <th key={i} className={dt.getDay()===0?'th-sun':''}>
+                  <div>{fmtDate(dt)}</div>
+                  <div style={{fontSize:'7.5px',opacity:.7,fontWeight:400}}>{DAY[dt.getDay()]}</div>
+                </th>
+              ))}
+              {summaryColKeys.map(({k,l})=>(
+                <th key={k} className="th-sum">{l}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {students.map((nm,idx)=>{
+              const gi=getGI(idx);
+              const gc=GC[gi];
+              const gcs=dark?gc.dark:gc.light;
+              const isFirst=idx===0||idx===g0||idx===g0+g1;
+              const ss=studentSummaries[idx];
+              return(
+                <React.Fragment key={nm}>
+                  {isFirst&&(
+                    <tr className="grp-hdr">
+                      <td className="td-sl"/>
+                      <td colSpan={dates.length+8} style={{paddingLeft:12}}>
+                        <span style={{
+                          display:'inline-flex',alignItems:'center',gap:6,
+                          background:gcs.bg,color:gcs.tx,border:`2px solid ${gcs.bdr}`,
+                          padding:'2px 10px',fontSize:'10px',fontWeight:700,
+                          textTransform:'uppercase',letterSpacing:'.07em',
+                        }}>
+                          Group {'ABC'[gi]} — Night Duty Week {gi+1}
+                          {[' (Days 1–6)',' (Days 8–13)',' (Days 15–20)'][gi]}
+                        </span>
+                      </td>
+                    </tr>
+                  )}
+                  <tr>
+                    <td className="td-sl">{idx+1}</td>
+                    <td className="td-name" style={{borderLeft:`4px solid ${gcs.bdr}`}}>{nm}</td>
+                    {schedule[nm].map((v,d)=><Cell key={d} v={v} dark={dark}/>)}
+                    {summaryColKeys.map(({k},i)=>{
+                      const val = k==='work' ? ss.work : ss[k];
+                      const isLast = k==='work';
+                      return(
+                        <td key={k} className={`td-sum${isLast?' td-sum-total':''}`}
+                          style={{fontSize:'10.5px',fontWeight:700,color:isLast?'#fff':'var(--color-text-secondary)'}}>
+                          {val}
+                        </td>
+                      );
+                    })}
+                  </tr>
+                </React.Fragment>
+              );
+            })}
+            <tr><td colSpan={dates.length+9} style={{height:6,background:'var(--color-surface-alt)'}}></td></tr>
+            {sumRows.map(({k,l})=>(
+              <tr key={k} className="sum-row">
+                <td className="td-sl"/>
+                <td className="td-lbl">{l}</td>
+                {dailySummary.map((ds,d)=>(
+                  <td key={d} style={{fontSize:'10px',fontWeight:600,
+                    background:ds.isSun?(dark?'#1A0A35':'#F0E8FF'):'',
+                    color:ds[k]===0?'var(--color-text-hint)':'var(--color-text)'}}>
+                    {ds[k]||0}
+                  </td>
+                ))}
+                <td colSpan={summaryColKeys.length} className="td-sum-total" style={{textAlign:'center',fontSize:'10px',fontWeight:700}}>
+                  Σ {dailySummary.reduce((a,ds)=>a+(ds[k]||0),0)}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+/* ════════════════════ STUDENT SUMMARY ════════════════════ */
+function StudentSummary({roster,dark,device}){
+  const{studentSummaries}=roster;
+  const mobile = isMobile(device);
+  return(
+    <div className="nhs-stbl-wrap">
+      <div className="nhs-stbl-scroll">
+        <table className="nhs-stbl">
+          <thead>
+            <tr>
+              <th>#</th><th>Student Name</th><th>Grp</th>
+              <th>M</th>
+              {!mobile && <th>E</th>}
+              {!mobile && <th>G</th>}
+              <th>N</th>
+              {!mobile && <th>N/O</th>}
+              {!mobile && <th>OFF</th>}
+              <th>Work</th>
+              {!mobile && <th>Rest</th>}
+              <th>Night ✓</th>
+              {!mobile && <th>Rest ✓</th>}
+            </tr>
+          </thead>
+          <tbody>
+            {studentSummaries.map((ss,i)=>{
+              const gc=GC[ss.gi]; const gcs=dark?gc.dark:gc.light;
+              return(
+                <tr key={ss.name}>
+                  <td style={{color:'var(--color-text-hint)',fontWeight:400}}>{i+1}</td>
+                  <td style={{fontWeight:700}}>{ss.name}</td>
+                  <td>
+                    <span style={{
+                      background:gcs.bg,color:gcs.tx,border:`2px solid ${gcs.bdr}`,
+                      padding:'2px 6px',fontSize:'11px',fontWeight:700,
+                    }}>{'ABC'[ss.gi]}</span>
+                  </td>
+                  <td style={{fontWeight:600}}>{ss.M}</td>
+                  {!mobile && <td style={{fontWeight:600}}>{ss.E}</td>}
+                  {!mobile && <td style={{fontWeight:600}}>{ss.G}</td>}
+                  <td style={{fontWeight:600}}>{ss.N}</td>
+                  {!mobile && <td style={{fontWeight:600}}>{ss.NO}</td>}
+                  {!mobile && <td style={{fontWeight:600}}>{ss.OFF}</td>}
+                  <td style={{fontWeight:700,color:'var(--nhs-blue)'}}>{ss.work}</td>
+                  {!mobile && <td>{ss.rest}</td>}
+                  <td><span className={ss.nightOk?'pass':'fail'}>{ss.nightOk?'✓':'✗'}</span></td>
+                  {!mobile && <td><span className={ss.offOk?'pass':'fail'}>{ss.offOk?'✓':'✗'}</span></td>}
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+/* ════════════════════ GROUP CARDS ════════════════════ */
+function GroupCards({roster,dark}){
+  const{groupStudents,config:cfg}=roster;
+  const nightInfo=[
+    {week:'Week 1 · Days 1–6',pat:`${cfg.n1Area} (3 nights) → ${cfg.n2Area} (3 nights)`,no:'Day 7'},
+    {week:'Week 2 · Days 8–13',pat:`${cfg.n2Area} (3 nights) → ${cfg.n1Area} (3 nights)`,no:'Day 14'},
+    {week:'Week 3 · Days 15–20',pat:`${cfg.n1Area} (3 nights) → ${cfg.n2Area} (3 nights)`,no:'Day 21'},
+  ];
+  return(
+    <div className="nhs-group-grid no-print">
+      {groupStudents.map((grp,gi)=>{
+        const gc=GC[gi]; const gcs=dark?gc.dark:gc.light;
+        return(
+          <div key={gi} className="nhs-group-card"
+            style={{borderTop:`5px solid ${gcs.bdr}`,background:dark?gcs.bg:'var(--color-surface)'}}>
+            <div className="nhs-group-card-title" style={{color:gcs.tx}}>
+              Group {'ABC'[gi]} — {grp.length} students
+            </div>
+            <div className="nhs-group-card-sub">
+              🌙 Night duty: {nightInfo[gi].week}<br/>
+              ↺ {nightInfo[gi].pat}<br/>
+              ✓ N/O on {nightInfo[gi].no}
+            </div>
+            <div className="nhs-group-card-names">
+              {grp.map((nm,i)=><div key={i}>· {nm}</div>)}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+/* ════════════════════ SETUP TAB ════════════════════ */
+function SetupTab({cfg,setCfg}){
+  const set=k=>e=>setCfg(p=>({...p,[k]:e.target.value}));
+  const students=cfg.studentNames.split('\n').map(s=>s.trim()).filter(Boolean);
+  const n=students.length,g0=Math.ceil(n/3),g1=Math.ceil((n-g0)/2),g2=n-g0-g1;
+  const startDt=cfg.startDate?new Date(cfg.startDate+'T00:00:00'):null;
+  const endDt=cfg.endDate?new Date(cfg.endDate+'T00:00:00'):null;
+  const days=(startDt&&endDt&&endDt>startDt)?Math.round((endDt-startDt)/86400000)+1:null;
+  return(
+    <div className="nhs-grid">
+      <div className="nhs-col">
+        <div>
+          <div style={{fontSize:'var(--text-h4)',fontWeight:700,color:'var(--nhs-blue)',marginBottom:'var(--sp-3)'}}>Institution Details</div>
+          <div className="nhsuk-form-group">
+            <label className="nhsuk-label">Institution Name</label>
+            <input className="nhsuk-input" type="text" value={cfg.institutionName} onChange={set('institutionName')}/>
+          </div>
+          <div className="nhsuk-form-group">
+            <label className="nhsuk-label">Rotation Title</label>
+            <input className="nhsuk-input" type="text" value={cfg.rotationTitle} onChange={set('rotationTitle')}/>
+          </div>
+          <div className="nhsuk-form-group">
+            <label className="nhsuk-label">Batch / Programme</label>
+            <input className="nhsuk-input" type="text" value={cfg.batchInfo} onChange={set('batchInfo')}/>
+          </div>
+          <div className="nhsuk-grid-row">
+            <div className="nhsuk-form-group">
+              <label className="nhsuk-label">Hospital</label>
+              <input className="nhsuk-input" type="text" value={cfg.hospitalName} onChange={set('hospitalName')}/>
+            </div>
+            <div className="nhsuk-form-group">
+              <label className="nhsuk-label">Academic Year</label>
+              <input className="nhsuk-input" type="text" value={cfg.academicYear} onChange={set('academicYear')}/>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div style={{fontSize:'var(--text-h4)',fontWeight:700,color:'var(--nhs-blue)',marginBottom:'var(--sp-3)'}}>Rotation Period</div>
+          <div className="nhsuk-grid-row">
+            <div className="nhsuk-form-group">
+              <label className="nhsuk-label">Start Date</label>
+              <input className="nhsuk-input" type="date" value={cfg.startDate} onChange={set('startDate')}/>
+            </div>
+            <div className="nhsuk-form-group">
+              <label className="nhsuk-label">End Date</label>
+              <input className="nhsuk-input" type="date" value={cfg.endDate} onChange={set('endDate')}/>
+            </div>
+          </div>
+          {days&&(
+            <div className="nhsuk-tag" style={{marginTop:'var(--sp-1)'}}>
+              📅 {days} days total {days<21&&'— minimum 21 required'}
+            </div>
+          )}
+        </div>
+      </div>
+      <div className="nhs-col">
+        <div style={{fontSize:'var(--text-h4)',fontWeight:700,color:'var(--nhs-blue)',marginBottom:'var(--sp-3)'}}>Students</div>
+        <div className="nhsuk-form-group">
+          <label className="nhsuk-label">Student Names</label>
+          <span className="nhsuk-hint">Enter one name per line</span>
+          <textarea className="nhsuk-textarea" value={cfg.studentNames}
+            onChange={set('studentNames')} style={{minHeight:220}}
+            placeholder="One name per line..."/>
+          <span className="nhsuk-hint" style={{marginTop:'var(--sp-1)'}}>{n} student{n!==1?'s':''} detected</span>
+        </div>
+        {n>=6&&(
+          <div className="nhsuk-inset-text">
+            <strong>Auto group split (balanced thirds):</strong><br/>
+            Group A: {g0} students · Group B: {g1} students · Group C: {g2} students
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ════════════════════ AREAS TAB ════════════════════ */
+function AreasTab({cfg,setCfg}){
+  const set=k=>e=>setCfg(p=>({...p,[k]:e.target.value}));
+  const shiftGroups=[
+    {label:'Morning Shift',color:'#594200',bg:'#FFF3B0',items:[
+      {code:'M1',key:'m1Area',desc:'Area 1'},{code:'M2',key:'m2Area',desc:'Area 2'}]},
+    {label:'Evening Shift',color:'#5C2200',bg:'#FFD5AA',items:[
+      {code:'E1',key:'e1Area',desc:'Area 1'},{code:'E2',key:'e2Area',desc:'Area 2'}]},
+    {label:'General Shift (Day only)',color:'#0D3970',bg:'#C2DDF7',items:[
+      {code:'G3',key:'g3Area',desc:'Area 3'},{code:'G4',key:'g4Area',desc:'Area 4 (OT / day-time only)'}]},
+    {label:'Night Shift',color:'#2D0070',bg:'#D9C9F7',items:[
+      {code:'N1',key:'n1Area',desc:'First 3 nights (continuous exposure)'},{code:'N2',key:'n2Area',desc:'Last 3 nights (continuous exposure)'}]},
+  ];
+  return(
+    <div className="nhs-grid">
+      {shiftGroups.map(({label,color,bg,items})=>(
+        <div key={label} className="nhs-col">
+          <div style={{fontSize:'var(--text-h4)',fontWeight:700,color,marginBottom:'var(--sp-3)'}}>{label}</div>
+          {items.map(({code,key,desc})=>(
+            <div key={code} className="nhsuk-form-group">
+              <label className="nhsuk-label">{desc}</label>
+              <div className="area-grid-row">
+                <div className="area-code-badge" style={{background:bg,borderColor:color,color}}>{code}</div>
+                <input className="nhsuk-input" type="text" value={cfg[key]} onChange={set(key)}/>
+              </div>
+            </div>
+          ))}
+        </div>
+      ))}
+      <div className="nhs-col">
+        <div style={{fontSize:'var(--text-h4)',fontWeight:700,color:'var(--nhs-blue)',marginBottom:'var(--sp-3)'}}>Shift Timings</div>
+        <div className="nhsuk-inset-text">
+          <div>🌅 <strong>Morning:</strong> 7:30 AM – 3:30 PM</div>
+          <div>🌄 <strong>Evening:</strong> 11:30 AM – 7:30 PM</div>
+          <div>☀️ <strong>General:</strong> 8:00 AM – 4:00 PM</div>
+          <div>🌙 <strong>Night:</strong> 7:30 PM – 7:30 AM (12 hrs)</div>
+        </div>
+        <div className="nhsuk-inset-text" style={{borderLeftColor:'var(--nhs-green)',marginTop:'var(--sp-3)'}}>
+          <strong>Night rotation pattern:</strong> Students spend 3 consecutive nights in their first
+          area (N1), then 3 nights in the second area (N2), ensuring continuous clinical exposure.
+          Groups alternate N1→N2 and N2→N1 to ensure both areas are always staffed.
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ════════════════════ HOLIDAYS TAB ════════════════════ */
+function HolidaysTab({cfg,setCfg}){
+  const set=k=>e=>setCfg(p=>({...p,[k]:e.target.value}));
+  const dates=(cfg.publicHolidays||'').split('\n').map(s=>s.trim()).filter(s=>/^\d{4}-\d{2}-\d{2}$/.test(s));
+  return(
+    <div className="nhs-grid">
+      <div className="nhs-col">
+        <div style={{fontSize:'var(--text-h4)',fontWeight:700,color:'var(--nhs-blue)',marginBottom:'var(--sp-3)'}}>Public Holidays</div>
+        <div className="nhsuk-form-group">
+          <label className="nhsuk-label">Holiday Dates</label>
+          <span className="nhsuk-hint">Use YYYY-MM-DD format, one date per line</span>
+          <textarea className="nhsuk-textarea" value={cfg.publicHolidays} onChange={set('publicHolidays')}
+            placeholder={'2026-03-25\n2026-04-02'} style={{minHeight:130}}/>
+          <span className="nhsuk-hint" style={{marginTop:'var(--sp-1)'}}>
+            {dates.length} holiday{dates.length!==1?'s':''} added. Students will be marked PH.
+          </span>
+        </div>
+        {dates.length>0&&(
+          <div style={{display:'flex',flexDirection:'column',gap:'var(--sp-2)'}}>
+            {dates.map(d=>(
+              <div key={d} style={{
+                display:'flex',alignItems:'center',gap:'var(--sp-2)',
+                padding:'var(--sp-2) var(--sp-3)',background:'var(--color-success-bg)',
+                border:'2px solid var(--color-success)',
+                fontSize:'var(--text-base)',color:'var(--color-text)',fontWeight:500,
+              }}>🌿 {d}</div>
+            ))}
+          </div>
+        )}
+      </div>
+      <div className="nhs-col">
+        <div style={{fontSize:'var(--text-h4)',fontWeight:700,color:'var(--nhs-blue)',marginBottom:'var(--sp-3)'}}>How Public Holidays Work</div>
+        <div className="nhsuk-inset-text">
+          <div>· All students marked <strong>PH</strong> on holiday dates</div>
+          <div>· Night cycle counter does <strong>not</strong> advance on PH</div>
+          <div>· Night duty students resume on next working day</div>
+          <div>· Day shift postings automatically adjust forward</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ════════════════════ MAIN APP ════════════════════ */
+function App(){
+  const[cfg,setCfg]=useState({...DEFAULTS});
+  const[roster,setRoster]=useState(null);
+  const[tab,setTab]=useState('setup');
+  const[error,setError]=useState('');
+  const[dark,setDark]=useState(()=>{try{return localStorage.getItem('nrs-theme')==='dark';}catch{return false;}});
+  const device = useDevice();
+  const mobile = isMobile(device);
+  const tablet = isTablet(device);
+  const desktop = isDesktop(device);
+
+  useEffect(()=>{
+    document.documentElement.setAttribute('data-theme',dark?'dark':'light');
+    try{localStorage.setItem('nrs-theme',dark?'dark':'light');}catch{}
+  },[dark]);
+
+  const handleGenerate=useCallback(()=>{
+    setError(''); setRoster(null);
+    try{
+      const result=generateRoster(cfg);
+      setRoster(result);
+      setTimeout(()=>document.getElementById('output-anchor')?.scrollIntoView({behavior:'smooth',block:'start'}),120);
+    }catch(e){setError(e.message);}
+  },[cfg]);
+
+  const tabs=[{id:'setup',label:'Setup'},{id:'areas',label:'Clinical Areas'},{id:'holidays',label:'Holidays'}];
+
+  return(
+    <>
+      {/* NHS HEADER */}
+      <header className="nhs-header no-print">
+        <div className="nhs-header-logo">SSSIHMS</div>
+        <div className="nhs-header-service">
+          <span className="nhs-header-service-name">
+            {mobile ? 'Rotation Roster' : 'Nursing Rotation Roster'}
+          </span>
+          {!mobile && (
+            <span className="nhs-header-service-sub">PSNL Clinical Scheduler · SSSIHL College of Nursing</span>
+          )}
+        </div>
+        <div className="nhs-header-actions">
+          {roster && !mobile && (
+            <span className="nhs-header-badge no-print">
+              {roster.students.length} students · {roster.totalDays} days
+            </span>
+          )}
+          <button className="theme-toggle no-print" onClick={()=>setDark(d=>!d)} title="Toggle theme">
+            {dark?'☀️':'🌙'}
+          </button>
+        </div>
+      </header>
+
+      <main className="nhs-page">
+
+        {/* ── INPUT PANEL ── */}
+        <div className="nhs-panel no-print">
+          <div className="nhs-panel-header">
+            <div>
+              <div className="nhs-panel-title">Rotation Configuration</div>
+              <div className="nhs-panel-subtitle">Complete all sections below, then click Generate to produce the roster.</div>
+            </div>
+          </div>
+
+          <nav className="nhs-tabs" aria-label="Configuration tabs">
+            {tabs.map(t=>(
+              <button key={t.id} className={`nhs-tab${tab===t.id?' active':''}`}
+                onClick={()=>setTab(t.id)} role="tab" aria-selected={tab===t.id}>
+                {t.label}
+              </button>
+            ))}
+          </nav>
+
+          <div className="nhs-tab-body">
+            {tab==='setup'    &&<SetupTab    cfg={cfg} setCfg={setCfg}/>}
+            {tab==='areas'    &&<AreasTab    cfg={cfg} setCfg={setCfg}/>}
+            {tab==='holidays' &&<HolidaysTab cfg={cfg} setCfg={setCfg}/>}
+          </div>
+
+          <div className="nhs-action-bar">
+            <button className="nhsuk-button nhsuk-button--primary nhsuk-button--large" onClick={handleGenerate}>
+              {mobile ? '⚡ Generate Roster' : 'Generate Rotation Roster'}
+            </button>
+            <div className="nhs-action-bar-right">
+              <button className="nhsuk-button nhsuk-button--secondary" onClick={()=>window.print()} disabled={!roster}>
+                {mobile ? '🖨️ Print' : '🖨️ Print (A3 Landscape)'}
+              </button>
+              <button className="nhsuk-button nhsuk-button--secondary" onClick={()=>roster&&exportExcel(roster)} disabled={!roster}>
+                {mobile ? '📊 Excel' : '📊 Export to Excel'}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* ── ALERTS ── */}
+        <div className="alerts-stack no-print" id="output-anchor">
+          {error&&(
+            <div className="nhsuk-error-callout">
+              <div className="callout-title">⚠ There is a problem</div>
+              <div className="callout-body">{error}</div>
+            </div>
+          )}
+          {roster&&!error&&(
+            <div className="nhsuk-success-callout">
+              <div className="callout-title">✓ Roster generated successfully</div>
+              <div className="callout-body">
+                Roster created for <strong>{roster.students.length} students</strong> over <strong>{roster.totalDays} days</strong>.
+                Review the roster below, then print or export to Excel.
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* ── OUTPUT ── */}
+        {!roster?(
+          <div className="nhs-empty no-print">
+            <div className="nhs-empty-icon">📅</div>
+            <div className="nhs-empty-title">Ready to generate</div>
+            <div className="nhs-empty-sub">
+              Fill in the configuration above and click <strong>Generate Rotation Roster</strong> to produce the automated schedule.
+            </div>
+            <div className="nhs-steps">
+              {[
+                'Set institution details, dates and student names in Setup',
+                'Configure clinical area names in Clinical Areas',
+                'Add any public holidays in Holidays',
+                'Click Generate — the full roster appears here',
+                'Print to A3 landscape or download as Excel',
+              ].map((s,i)=>(
+                <div key={i} className="nhs-step">
+                  <div className="nhs-step-num">{i+1}</div>
+                  <span>{s}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        ):(
+          <>
+            {/* Institution header — appears on print */}
+            <div className="nhs-inst-header">
+              <div className="nhs-inst-name">{roster.config.institutionName}</div>
+              <div className="nhs-inst-sub">{roster.config.rotationTitle}</div>
+              <div className="nhs-inst-meta">
+                {roster.config.batchInfo} &nbsp;·&nbsp; A.Y. {roster.config.academicYear} &nbsp;·&nbsp; {roster.config.hospitalName}
+              </div>
+              <div>
+                <span className="nhs-inst-period">
+                  📅 {fmtLong(roster.dates[0])} to {fmtLong(roster.dates[roster.dates.length-1])} ({roster.totalDays} days)
+                </span>
+              </div>
+            </div>
+
+            {/* Stats row */}
+            <div className="nhs-stats-row no-print">
+              {[{v:roster.students.length,l:'Students'},{v:roster.totalDays,l:'Total Days'},
+                {v:roster.groupSizes[0],l:'Group A'},{v:roster.groupSizes[1],l:'Group B'},
+                {v:roster.groupSizes[2],l:'Group C'},{v:6,l:'Night Nights'},
+              ].map(({v,l})=>(
+                <div key={l} className="nhs-stat">
+                  <div className="nhs-stat-val">{v}</div>
+                  <div className="nhs-stat-lbl">{l}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Group cards */}
+            <GroupCards roster={roster} dark={dark}/>
+
+            {/* Legend */}
+            <Legend cfg={roster.config}/>
+
+            {/* Roster table */}
+            <div className="nhs-section-heading">
+              {mobile ? 'Roster' : 'Clinical Rotation Roster'}
+              <div className="no-print" style={{display:'flex',gap:'var(--sp-2)'}}>
+                {!mobile && (
+                  <button className="nhsuk-button nhsuk-button--secondary nhsuk-button--small" onClick={()=>window.print()}>🖨️ Print</button>
+                )}
+                <button className="nhsuk-button nhsuk-button--secondary nhsuk-button--small" onClick={()=>exportExcel(roster)}>📊 Excel</button>
+              </div>
+            </div>
+            <RosterTable roster={roster} dark={dark} device={device}/>
+
+            {/* Student summary */}
+            <div className="nhs-section-heading no-print">
+              {mobile ? 'Summary' : 'Student Compliance Summary'}
+            </div>
+            <StudentSummary roster={roster} dark={dark} device={device}/>
+
+            {/* Print footer */}
+            <div className="nhs-print-footer">
+              <div><div style={{marginBottom:32}}>________________________________</div>Signature of Subject Co-ordinator</div>
+              <div style={{textAlign:'right'}}><div style={{marginBottom:32}}>________________________________</div>Signature of the Principal</div>
+            </div>
+          </>
+        )}
+      </main>
+    </>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
