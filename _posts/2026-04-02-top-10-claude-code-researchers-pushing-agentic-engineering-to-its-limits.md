@@ -39,6 +39,8 @@ mentions:
     name: "Seth Hobson"
   - type: "Person"
     name: "Florian Bruniaux"
+  - type: "Person"
+    name: "hesreallyhim"
   - type: "Organization"
     name: "Anthropic"
 ---
@@ -276,6 +278,31 @@ Deep Interview mode, before a clinical AI system produces any output, creates a 
 The work of these ten researchers was not done with healthcare in mind. Most of them are building general-purpose software. But the problems they have solved — reliability, safety, auditability, context management, collaborative configuration — are the same problems that make deploying AI in high-stakes domains genuinely hard.
 
 The toolkit exists. The question is how it gets used.
+
+---
+
+## Frequently Asked Questions
+
+**Who created Claude Code?**
+Claude Code was created by Boris Cherny, then a Principal Engineer at Anthropic, who started it as a side project in September 2024. He is now Head of Claude Code at Anthropic. Approximately 80% of Claude Code was written by Claude Code itself during development.
+
+**What is everything-claude-code?**
+everything-claude-code is an open-source GitHub repository built by Affaan Mustafa that extends Claude Code with 28 specialized subagents, 119 reusable skills, 60 slash commands, 34 rulesets, 20+ hooks, and 14 MCP server configurations. It has over 120,000 GitHub stars and is the most widely used community extension of the Claude Code ecosystem.
+
+**What is a CLAUDE.md file and why does it matter?**
+CLAUDE.md is a configuration file that Claude Code reads at the start of every session in a given repository. Practitioners treat it as institutional memory — a living document that accumulates the rules, patterns, and hard-won lessons specific to a codebase. Boris Cherny's team at Anthropic keeps it current by tagging pull requests with `@.claude` so code review feedback is folded back in automatically.
+
+**What are Claude Code hooks?**
+Hooks are PreToolUse and PostToolUse callbacks that intercept Claude Code's actions before or after they execute. Dan Disler's damage-control system uses PreToolUse hooks to block dangerous shell commands and protect sensitive file paths. Shrivu Shankar's "block-at-submit" approach uses PostToolUse hooks as quality gates before commits. Practitioners who treat hooks as a primary engineering surface — rather than a logging add-on — consistently report more reliable and production-safe agentic systems.
+
+**What is the difference between Claude Code skills and instincts?**
+The distinction was made by Affaan Mustafa. A *skill* is task-specific: it tells an agent how to perform a particular type of work when that task is relevant. An *instinct* is behavioral: a persistent pattern burned into agent memory that shapes how the agent reasons across all tasks, including tasks that don't look related. Teams that have shifted their CLAUDE.md from skill-oriented to instinct-oriented configurations report fewer edge-case failures and less need for supervision.
+
+**What is agentic engineering?**
+Agentic engineering is the practice of building software systems where AI agents autonomously plan, reason, take actions, and delegate to other agents — rather than responding to individual prompts. The term, popularized by researchers like Simon Willison and Dan Disler, describes the discipline of designing, orchestrating, and governing these multi-step autonomous systems in production environments.
+
+**Is Claude Code suitable for use in healthcare or regulated industries?**
+The Claude Code research community has produced tools that address the core requirements of regulated domains: parallel agents with isolated contexts for data separation, hooks for audit-grade interception of agent actions, instinct-based configuration for encoding clinical or compliance judgment, and Florian Bruniaux's vulnerability catalogue as a starting point for threat modelling. These tools were built for general-purpose software but directly address the reliability, auditability, and safety requirements that healthcare and finance deployments require.
 
 ---
 
