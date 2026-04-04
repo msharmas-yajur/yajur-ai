@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>YAJUR.ai — The Medical Data Infrastructure Company</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700;800&family=Source+Sans+3:opsz,wght@9..46,300;9..46,400;9..46,600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:        #0A0F1E;
+  --bg-card:   rgba(11, 18, 34, 0.72);
+  --teal:      #00D4B8;
+  --teal-dim:  rgba(0,212,184,0.10);
+  --teal-glow: rgba(0,212,184,0.30);
+  --gold:      #F5A623;
+  --gold-dim:  rgba(245,166,35,0.12);
+  --white:     #E8EDF5;
+  --muted:     #5D6C88;
+  --faint:     rgba(232,237,245,0.35);
+  --border:    rgba(0,212,184,0.09);
+  --border-h:  rgba(0,212,184,0.28);
+  --disp:      'Sora', system-ui, sans-serif;
+  --body:      'Source Sans 3', system-ui, sans-serif;
+}
+
+*,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
+html { scroll-behavior:smooth; }
+body {
+  background: var(--bg);
+  color: var(--white);
+  font-family: var(--body);
+  line-height: 1.6;
+  overflow-x: hidden;
+  min-height: 100vh;
+}
+
+/* ── BACKGROUND ── */
+.bg-grid {
+  position:fixed; inset:0; z-index:0; pointer-events:none;
+  background-image:
+    linear-gradient(rgba(0,212,184,0.022) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,212,184,0.022) 1px, transparent 1px);
+  background-size: 64px 64px;
+}
+.bg-radial {
+  position:fixed; inset:0; z-index:0; pointer-events:none;
+  background:
+    radial-gradient(ellipse 70% 55% at 72% 38%, rgba(0,212,184,0.055) 0%, transparent 70%),
+    radial-gradient(ellipse 50% 45% at 15% 85%, rgba(245,166,35,0.04) 0%, transparent 60%);
+}
+
+/* ── NAV ── */
+.nav {
+  position:fixed; top:0; left:0; right:0; z-index:200;
+  height:68px;
+  display:flex; align-items:center; justify-content:space-between;
+  padding: 0 56px;
+  background: rgba(10,15,30,0.78);
+  backdrop-filter: blur(24px) saturate(1.4);
+  border-bottom: 1px solid var(--border);
+}
+.nav-logo {
+  display:flex; align-items:center; gap:10px;
+  font-family: var(--disp); font-weight:800; font-size:17px;
+  color:var(--white); text-decoration:none; letter-spacing:-0.03em;
+}
+.logo-mark {
+  width:30px; height:30px;
+  background: var(--teal-dim);
+  border: 1px solid rgba(0,212,184,0.22);
+  border-radius:8px;
+  display:flex; align-items:center; justify-content:center;
+}
+.logo-mark svg { width:15px; height:15px; }
+.nav-links { display:flex; gap:36px; list-style:none; }
+.nav-links a {
+  font-family:var(--body); font-size:14px; font-weight:400;
+  color:var(--muted); text-decoration:none; transition:color 0.2s;
+}
+.nav-links a:hover { color:var(--white); }
+.nav-actions { display:flex; align-items:center; gap:12px; }
+.nav-outline {
+  font-family:var(--disp); font-size:13px; font-weight:600;
+  color:var(--muted); text-decoration:none;
+  padding:7px 18px; border:1px solid rgba(255,255,255,0.09);
+  border-radius:6px; transition:all 0.2s;
+}
+.nav-outline:hover { color:var(--white); border-color:rgba(255,255,255,0.22); }
+.nav-cta {
+  font-family:var(--disp); font-size:13px; font-weight:700;
+  color:#031410; background:var(--teal);
+  text-decoration:none; padding:8px 22px;
+  border-radius:6px; transition:all 0.25s; letter-spacing:0.01em;
+}
+.nav-cta:hover { box-shadow:0 0 28px rgba(0,212,184,0.5); transform:translateY(-1px); }
+
+/* ── HERO ── */
+.hero {
+  position:relative; z-index:1;
+  min-height:100vh;
+  display:grid; grid-template-columns:56fr 44fr;
+  padding-top:68px;
+}
+.hero-left {
+  display:flex; flex-direction:column; justify-content:center;
+  padding: 72px 44px 80px 56px;
+}
+
+/* Eyebrow */
+.eyebrow {
+  display:inline-flex; align-items:center; gap:12px;
+  margin-bottom:36px;
+  font-family:var(--disp); font-size:11px; font-weight:700;
+  letter-spacing:0.18em; text-transform:uppercase; color:var(--teal);
+  opacity:0; transform:translateY(10px);
+  animation: rise 0.6s ease 0.1s forwards;
+}
+.eyebrow-bar { width:28px; height:1px; background:var(--teal); }
+
+/* Headline */
+.headline {
+  font-family:var(--disp); font-weight:800;
+  font-size: clamp(36px,4.2vw,62px);
+  line-height:1.07; letter-spacing:-0.04em;
+  margin-bottom:28px;
+  opacity:0; transform:translateY(16px);
+  animation: rise 0.75s ease 0.2s forwards;
+}
+.hl-block { display:block; }
+.hl-dim   { color:rgba(232,237,245,0.38); font-weight:300; }
+.hl-teal  { color:var(--teal); }
+.hl-gold  { color:var(--gold); }
+
+/* Sub */
+.sub {
+  font-family:var(--body); font-weight:300;
+  font-size: clamp(15px,1.35vw,18px);
+  line-height:1.78; color:var(--muted);
+  max-width:490px; margin-bottom:52px;
+  opacity:0; transform:translateY(12px);
+  animation: rise 0.7s ease 0.35s forwards;
+}
+.sub em { font-style:normal; color:rgba(232,237,245,0.6); }
+
+/* CTAs */
+.cta-row {
+  display:flex; gap:14px; align-items:center;
+  margin-bottom:56px; flex-wrap:wrap;
+  opacity:0; transform:translateY(10px);
+  animation: rise 0.7s ease 0.45s forwards;
+}
+.btn-p {
+  display:inline-flex; align-items:center; gap:10px;
+  padding:13px 30px;
+  background:var(--teal); color:#031410;
+  font-family:var(--disp); font-size:14px; font-weight:700;
+  text-decoration:none; border-radius:8px;
+  letter-spacing:0.01em; transition:all 0.25s;
+  position:relative; overflow:hidden;
+}
+.btn-p::before {
+  content:''; position:absolute; inset:0;
+  background:linear-gradient(135deg,rgba(255,255,255,0.18) 0%,transparent 55%);
+  opacity:0; transition:opacity 0.2s;
+}
+.btn-p:hover { transform:translateY(-2px); box-shadow:0 8px 30px rgba(0,212,184,0.42); }
+.btn-p:hover::before { opacity:1; }
+.btn-p svg { width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round; }
+.btn-g {
+  display:inline-flex; align-items:center; gap:8px;
+  padding:13px 28px; background:transparent; color:var(--muted);
+  font-family:var(--disp); font-size:14px; font-weight:600;
+  text-decoration:none; border:1px solid rgba(255,255,255,0.10);
+  border-radius:8px; letter-spacing:0.01em; transition:all 0.25s;
+}
+.btn-g:hover { color:var(--white); border-color:rgba(255,255,255,0.24); background:rgba(255,255,255,0.04); }
+.btn-g svg { width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round; }
+
+/* Compliance */
+.compliance {
+  display:flex; align-items:center; gap:8px; flex-wrap:wrap;
+  opacity:0; transform:translateY(8px);
+  animation: rise 0.7s ease 0.55s forwards;
+}
+.comp-label {
+  font-size:10px;font-weight:700;letter-spacing:0.14em;
+  text-transform:uppercase;color:var(--muted);margin-right:4px;
+}
+.badge {
+  display:inline-flex;align-items:center;gap:5px;
+  padding:4px 11px;
+  background:rgba(255,255,255,0.03);
+  border:1px solid rgba(255,255,255,0.07);
+  border-radius:4px;
+  font-family:var(--disp);font-size:10px;font-weight:700;
+  letter-spacing:0.07em;color:var(--muted);
+  transition:all 0.2s;cursor:default;
+}
+.badge:hover { border-color:var(--teal);color:var(--teal);background:var(--teal-dim); }
+.pip { width:4px;height:4px;border-radius:50%;background:var(--teal);opacity:0.8; }
+
+/* ── HERO RIGHT ── */
+.hero-right {
+  position:relative;overflow:hidden;
+  display:flex;align-items:center;justify-content:center;
+}
+.hero-right::before {
+  content:'';position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(ellipse 75% 60% at 50% 50%,rgba(0,212,184,0.06) 0%,transparent 72%);
+}
+#globe { width:100%;height:100%;display:block; }
+
+/* Floating stat pills */
+.pill {
+  position:absolute;
+  background:rgba(11,18,34,0.85);
+  backdrop-filter:blur(20px);
+  border:1px solid var(--border);
+  border-radius:12px;padding:14px 18px;
+  pointer-events:none;
+  opacity:0;animation:riseFloat 0.8s ease forwards;
+}
+.pill-1 { top:22%;left:3%;  animation-delay:0.9s; }
+.pill-2 { top:28%;right:5%; animation-delay:1.1s; }
+.pill-3 { bottom:20%;right:7%;animation-delay:1.3s; }
+.pill-val {
+  font-family:var(--disp);font-size:22px;font-weight:800;
+  color:var(--teal);letter-spacing:-0.04em;line-height:1;
+}
+.pill-lbl { font-size:11px;color:var(--muted);margin-top:3px;white-space:nowrap; }
+@keyframes riseFloat {
+  from { opacity:0;transform:translateY(12px); }
+  to   { opacity:1;transform:translateY(0); }
+}
+
+/* ── PILLARS ── */
+.pillars {
+  position:relative;z-index:1;
+  padding:0 56px 88px;
+}
+.pillars-grid {
+  display:grid;grid-template-columns:repeat(3,1fr);gap:16px;
+}
+.pillar {
+  background:var(--bg-card);
+  border:1px solid var(--border);
+  border-radius:14px;padding:32px 28px 26px;
+  backdrop-filter:blur(24px);
+  transition:all 0.35s cubic-bezier(0.23,1,0.32,1);
+  position:relative;overflow:hidden;cursor:default;
+}
+.pillar::after {
+  content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent 5%,var(--teal) 50%,transparent 95%);
+  opacity:0;transition:opacity 0.35s;
+}
+.pillar:hover { border-color:var(--border-h);transform:translateY(-5px);box-shadow:0 24px 64px rgba(0,0,0,0.4),0 0 40px rgba(0,212,184,0.07); }
+.pillar:hover::after { opacity:1; }
+.p-num {
+  font-family:var(--disp);font-size:10px;font-weight:700;
+  letter-spacing:0.16em;color:var(--teal);opacity:0.45;margin-bottom:20px;
+}
+.p-icon {
+  width:46px;height:46px;
+  background:var(--teal-dim);
+  border:1px solid rgba(0,212,184,0.16);
+  border-radius:11px;
+  display:flex;align-items:center;justify-content:center;
+  margin-bottom:20px;transition:all 0.3s;
+}
+.pillar:hover .p-icon { background:rgba(0,212,184,0.18);box-shadow:0 0 22px rgba(0,212,184,0.2); }
+.p-icon svg { width:22px;height:22px;stroke:var(--teal);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round; }
+.p-name { font-family:var(--disp);font-size:18px;font-weight:700;letter-spacing:-0.03em;color:var(--white);margin-bottom:10px; }
+.p-desc { font-size:14px;line-height:1.68;color:var(--muted);font-weight:300;margin-bottom:22px; }
+.chips { display:flex;gap:6px;flex-wrap:wrap; }
+.chip {
+  font-family:var(--disp);font-size:10px;font-weight:600;
+  padding:3px 9px;border-radius:100px;
+  background:rgba(255,255,255,0.04);
+  border:1px solid rgba(255,255,255,0.07);
+  color:var(--muted);letter-spacing:0.04em;transition:all 0.2s;
+}
+.pillar:hover .chip { border-color:rgba(0,212,184,0.15);color:rgba(0,212,184,0.65); }
+
+/* ── ANIMATIONS ── */
+@keyframes rise {
+  to { opacity:1;transform:translateY(0); }
+}
+
+/* ── RESPONSIVE ── */
+@media(max-width:1100px){
+  .nav{padding:0 28px;}
+  .nav-links{display:none;}
+  .hero{grid-template-columns:1fr;}
+  .hero-left{padding:80px 28px 40px;}
+  .hero-right{height:56vw;min-height:280px;}
+  .pillars{padding:0 28px 60px;}
+  .pillars-grid{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<div class="bg-grid"></div>
+<div class="bg-radial"></div>
+
+<!-- NAV -->
+<nav class="nav">
+  <a href="/" class="nav-logo">
+    <span class="logo-mark">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#00D4B8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+      </svg>
+    </span>
+    YAJUR<span style="color:var(--teal)">.</span>ai
+  </a>
+  <ul class="nav-links">
+    <li><a href="#mission">Mission</a></li>
+    <li><a href="#solutions">Solutions</a></li>
+    <li><a href="/pontifex.html">Pontifex</a></li>
+    <li><a href="#contact">Contact</a></li>
+  </ul>
+  <div class="nav-actions">
+    <a href="#solutions" class="nav-outline">Explore work</a>
+    <a href="mailto:connect@yajur.ai" class="nav-cta">Get access →</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-left">
+
+    <div class="eyebrow">
+      <span class="eyebrow-bar"></span>
+      Medical Data Infrastructure
+    </div>
+
+    <h1 class="headline">
+      <span class="hl-block hl-dim">The</span>
+      <span class="hl-block hl-teal">Medical Data</span>
+      <span class="hl-block">Infrastructure</span>
+      <span class="hl-block hl-gold">Company<span style="color:rgba(232,237,245,0.12)">.</span></span>
+    </h1>
+
+    <p class="sub">
+      Bridging fragmented clinical records and actionable AI —<br>
+      built for the era of <em>ABDM</em>, <em>FHIR</em>, and AI-first medicine.<br>
+      Serving hospitals, researchers &amp; healthtech across<br>
+      <em>India · UAE · USA</em>.
+    </p>
+
+    <div class="cta-row">
+      <a href="#contact" class="btn-p">
+        Build with us
+        <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </a>
+      <a href="#solutions" class="btn-g">
+        Explore our work
+        <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </a>
+    </div>
+
+    <div class="compliance">
+      <span class="comp-label">Certified</span>
+      <span class="badge"><span class="pip"></span>HIPAA</span>
+      <span class="badge"><span class="pip"></span>SOC 2</span>
+      <span class="badge"><span class="pip"></span>ABDM</span>
+      <span class="badge"><span class="pip"></span>DHA UAE</span>
+    </div>
+
+  </div>
+
+  <div class="hero-right">
+    <canvas id="globe"></canvas>
+    <div class="pill pill-1">
+      <div class="pill-val">3</div>
+      <div class="pill-lbl">Geographies served</div>
+    </div>
+    <div class="pill pill-2">
+      <div class="pill-val">FHIR R4</div>
+      <div class="pill-lbl">Standards-native</div>
+    </div>
+    <div class="pill pill-3">
+      <div class="pill-val">ABDM</div>
+      <div class="pill-lbl">Health Stack Ready</div>
+    </div>
+  </div>
+</section>
+
+<!-- PILLARS -->
+<section class="pillars">
+  <div class="pillars-grid">
+
+    <div class="pillar">
+      <div class="p-num">01 / DATA</div>
+      <div class="p-icon">
+        <svg viewBox="0 0 24 24">
+          <ellipse cx="12" cy="5" rx="9" ry="3"/>
+          <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/>
+          <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
+        </svg>
+      </div>
+      <h3 class="p-name">Disease-Specific Datasets</h3>
+      <p class="p-desc">High-fidelity, curated datasets engineered for clinical pathways. AI-training-ready with built-in governance, provenance tracking, and compliance profiling.</p>
+      <div class="chips">
+        <span class="chip">Oncology</span>
+        <span class="chip">Cardiology</span>
+        <span class="chip">Radiology</span>
+        <span class="chip">Lab Reports</span>
+      </div>
+    </div>
+
+    <div class="pillar">
+      <div class="p-num">02 / AI</div>
+      <div class="p-icon">
+        <svg viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/>
+        </svg>
+      </div>
+      <h3 class="p-name">AI-Driven Applications</h3>
+      <p class="p-desc">Intelligent co-pilot agents and orchestration layers that surface the right clinical context for every care decision — built on composable, persona-aware frameworks.</p>
+      <div class="chips">
+        <span class="chip">Co-Pilot</span>
+        <span class="chip">Agents</span>
+        <span class="chip">Dashboards</span>
+      </div>
+    </div>
+
+    <div class="pillar">
+      <div class="p-num">03 / INTEGRATION</div>
+      <div class="p-icon">
+        <svg viewBox="0 0 24 24">
+          <path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92c0-1.61-1.31-2.92-2.92-2.92z"/>
+        </svg>
+      </div>
+      <h3 class="p-name">Interoperability</h3>
+      <p class="p-desc">ABDM, FHIR R4, and HL7-aligned pipelines connecting legacy systems to modern AI infrastructure. Real-time data flows with privacy-first, compliance-native architecture.</p>
+      <div class="chips">
+        <span class="chip">FHIR R4</span>
+        <span class="chip">HL7</span>
+        <span class="chip">NHCX</span>
+        <span class="chip">ABDM</span>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<script>
+(function(){
+  const canvas = document.getElementById('globe');
+  const ctx    = canvas.getContext('2d');
+  const DPR    = window.devicePixelRatio || 1;
+
+  const C_TEAL = '#00D4B8';
+  const C_GOLD = '#F5A623';
+  const teal = a => `rgba(0,212,184,${a})`;
+  const gold  = a => `rgba(245,166,35,${a})`;
+
+  let W,H,CX,CY,R,rot=0,raf;
+
+  // ── 3D helpers ──────────────────────────────────────────────────────
+  function ll2xyz(lat,lng,r){
+    const phi   = (90-lat)*Math.PI/180;
+    const theta = (lng+180)*Math.PI/180;
+    return {
+      x: -r*Math.sin(phi)*Math.cos(theta),
+      y:  r*Math.cos(phi),
+      z:  r*Math.sin(phi)*Math.sin(theta)
+    };
+  }
+  function proj(x,y,z){
+    const cR=Math.cos(rot),sR=Math.sin(rot);
+    const rx= x*cR+z*sR, rz=-x*sR+z*cR;
+    const d = rz+R*2.6;
+    const s = R*2.2/d;
+    return {
+      sx:CX+rx*s, sy:CY-y*s,
+      depth:rz, scale:s,
+      vis:rz>-R*0.45,
+      alpha:Math.max(0,Math.min(1,(rz+R*0.45)/(R*0.9)))
+    };
+  }
+
+  // ── Node data ────────────────────────────────────────────────────────
+  const GEO = [
+    {id:'IND', label:'India',   lat:20.5937, lng: 78.9629},
+    {id:'UAE', label:'UAE',     lat:23.4241, lng: 53.8478},
+    {id:'USA', label:'USA',     lat:37.0902, lng:-95.7129},
+  ];
+  const SAT_LL = [
+    {lat:51.5,lng:0.1},{lat:35.6,lng:139.6},{lat:-23.5,lng:-46.6},
+    {lat:1.3,lng:103.8},{lat:55.7,lng:37.6},{lat:-33.8,lng:151.2},
+    {lat:48.8,lng:2.3},{lat:31.2,lng:121.4},{lat:19.0,lng:72.8},
+    {lat:13.0,lng:80.2},{lat:25.2,lng:55.3},{lat:40.7,lng:-74.0},
+    {lat:37.7,lng:-122.4},{lat:28.6,lng:77.2},{lat:59.9,lng:30.3},
+    {lat:-1.3,lng:36.8}
+  ];
+
+  let nodes=[], edges=[], packets=[];
+
+  function init(){
+    W=canvas.offsetWidth; H=canvas.offsetHeight;
+    canvas.width=W*DPR; canvas.height=H*DPR;
+    ctx.scale(DPR,DPR);
+    CX=W*0.5; CY=H*0.47; R=Math.min(W,H)*0.33;
+
+    nodes=[];
+    GEO.forEach(g=>{
+      const v=ll2xyz(g.lat,g.lng,R);
+      nodes.push({...g,...v,type:'geo',size:5,ph:Math.random()*Math.PI*2});
+    });
+    SAT_LL.forEach((c,i)=>{
+      const v=ll2xyz(c.lat,c.lng,R);
+      nodes.push({id:`s${i}`,...v,type:'sat',size:2+Math.random()*1.5,ph:Math.random()*Math.PI*2});
+    });
+
+    // edges
+    edges=[];
+    const geo=nodes.filter(n=>n.type==='geo');
+    for(let i=0;i<geo.length;i++)
+      for(let j=i+1;j<geo.length;j++)
+        edges.push({a:geo[i].id,b:geo[j].id,main:true});
+    nodes.filter(n=>n.type==='sat').forEach(s=>{
+      const near=geo.slice().sort((a,b)=>{
+        const da=(a.x-s.x)**2+(a.y-s.y)**2+(a.z-s.z)**2;
+        const db=(b.x-s.x)**2+(b.y-s.y)**2+(b.z-s.z)**2;
+        return da-db;
+      })[0];
+      edges.push({a:s.id,b:near.id,main:false});
+    });
+
+    packets=[];
+    for(let i=0;i<16;i++) spawnPacket(true);
+  }
+
+  function getNode(id){ return nodes.find(n=>n.id===id); }
+
+  function spawnPacket(randomT){
+    const e=edges[Math.floor(Math.random()*edges.length)];
+    const flip=Math.random()>0.5;
+    packets.push({
+      from:flip?e.a:e.b, to:flip?e.b:e.a,
+      t:randomT?Math.random():0,
+      spd:0.0025+Math.random()*0.0045,
+      sz:1.6+Math.random()*1.4,
+      isGold:Math.random()>0.68
+    });
+  }
+
+  function bzPt(ax,ay,bx,by,t){
+    const mx=(ax+bx)/2, my=(ay+by)/2-R*0.18;
+    const u=1-t;
+    return{x:u*u*ax+2*u*t*mx+t*t*bx, y:u*u*ay+2*u*t*my+t*t*by};
+  }
+
+  // ── Draw ─────────────────────────────────────────────────────────────
+  function drawGlobe(){
+    // atmosphere halo
+    const halo=ctx.createRadialGradient(CX,CY,R*0.92,CX,CY,R*1.18);
+    halo.addColorStop(0,teal(0));
+    halo.addColorStop(0.7,teal(0.04));
+    halo.addColorStop(1,teal(0));
+    ctx.fillStyle=halo;
+    ctx.beginPath();ctx.arc(CX,CY,R*1.18,0,Math.PI*2);ctx.fill();
+
+    // lat lines
+    for(let lat=-80;lat<=80;lat+=20){
+      const phi=(90-lat)*Math.PI/180;
+      const yr=R*Math.cos(phi), xr=R*Math.sin(phi);
+      ctx.beginPath();let go=false;
+      for(let a=0;a<=Math.PI*2+0.05;a+=0.04){
+        const p=proj(xr*Math.cos(a),yr,xr*Math.sin(a));
+        if(!p.vis){go=false;continue;}
+        go?ctx.lineTo(p.sx,p.sy):(ctx.moveTo(p.sx,p.sy),go=true);
+      }
+      ctx.strokeStyle=teal(0.08);ctx.lineWidth=0.6;ctx.stroke();
+    }
+    // lng lines
+    for(let lng=0;lng<360;lng+=30){
+      ctx.beginPath();let go=false;
+      for(let lat=-90;lat<=90;lat+=3){
+        const v=ll2xyz(lat,lng,R),p=proj(v.x,v.y,v.z);
+        if(!p.vis){go=false;continue;}
+        go?ctx.lineTo(p.sx,p.sy):(ctx.moveTo(p.sx,p.sy),go=true);
+      }
+      ctx.strokeStyle=teal(0.05);ctx.lineWidth=0.6;ctx.stroke();
+    }
+  }
+
+  function drawEdges(){
+    edges.forEach(e=>{
+      const a=getNode(e.a),b=getNode(e.b);
+      if(!a||!b) return;
+      const pa=proj(a.x,a.y,a.z),pb=proj(b.x,b.y,b.z);
+      if(!pa.vis&&!pb.vis) return;
+      const mx=(pa.sx+pb.sx)/2, my=(pa.sy+pb.sy)/2-R*0.18;
+      ctx.beginPath();
+      ctx.moveTo(pa.sx,pa.sy);
+      ctx.quadraticCurveTo(mx,my,pb.sx,pb.sy);
+      ctx.strokeStyle=e.main?gold(0.18):teal(0.11);
+      ctx.lineWidth=e.main?1:0.6;
+      ctx.stroke();
+    });
+  }
+
+  function drawPackets(){
+    packets.forEach((p,i)=>{
+      const fn=getNode(p.from),tn=getNode(p.to);
+      if(!fn||!tn) return;
+      p.t+=p.spd;
+      if(p.t>1){
+        const e=edges[Math.floor(Math.random()*edges.length)];
+        const flip=Math.random()>0.5;
+        packets[i]={
+          from:flip?e.a:e.b,to:flip?e.b:e.a,
+          t:0,spd:0.0025+Math.random()*0.0045,
+          sz:1.6+Math.random()*1.4,isGold:Math.random()>0.68
+        };
+        return;
+      }
+      const pa=proj(fn.x,fn.y,fn.z),pb=proj(tn.x,tn.y,tn.z);
+      if(!pa.vis&&!pb.vis) return;
+      const pt =bzPt(pa.sx,pa.sy,pb.sx,pb.sy,p.t);
+      const pt0=bzPt(pa.sx,pa.sy,pb.sx,pb.sy,Math.max(0,p.t-0.07));
+      const color=p.isGold?C_GOLD:C_TEAL;
+      const colorA=p.isGold?gold:teal;
+
+      // trail
+      const grd=ctx.createLinearGradient(pt0.x,pt0.y,pt.x,pt.y);
+      grd.addColorStop(0,colorA(0));grd.addColorStop(1,colorA(0.7));
+      ctx.beginPath();ctx.moveTo(pt0.x,pt0.y);ctx.lineTo(pt.x,pt.y);
+      ctx.strokeStyle=grd;ctx.lineWidth=p.sz*0.55;ctx.stroke();
+
+      // glow
+      const g2=ctx.createRadialGradient(pt.x,pt.y,0,pt.x,pt.y,p.sz*5.5);
+      g2.addColorStop(0,colorA(0.5));g2.addColorStop(1,'transparent');
+      ctx.fillStyle=g2;
+      ctx.beginPath();ctx.arc(pt.x,pt.y,p.sz*5.5,0,Math.PI*2);ctx.fill();
+
+      // dot
+      ctx.fillStyle=color;
+      ctx.beginPath();ctx.arc(pt.x,pt.y,p.sz,0,Math.PI*2);ctx.fill();
+    });
+  }
+
+  function drawNodes(){
+    const sorted=[...nodes].map(n=>({n,p:proj(n.x,n.y,n.z)}))
+      .sort((a,b)=>a.p.depth-b.p.depth);
+
+    sorted.forEach(({n,p})=>{
+      if(!p.vis||p.alpha<0.04) return;
+      n.ph=(n.ph||0)+0.032;
+      const pls=0.6+0.4*Math.sin(n.ph);
+
+      if(n.type==='geo'){
+        const sz=n.size*(p.scale||1)*0.55;
+
+        // rings
+        [4,2.4].forEach((m,i)=>{
+          ctx.beginPath();ctx.arc(p.sx,p.sy,sz*m,0,Math.PI*2);
+          ctx.strokeStyle=gold(i===0?0.1*pls:0.28*pls);
+          ctx.lineWidth=1;ctx.stroke();
+        });
+
+        // glow
+        const g=ctx.createRadialGradient(p.sx,p.sy,0,p.sx,p.sy,sz*5);
+        g.addColorStop(0,gold(0.55));g.addColorStop(0.35,gold(0.18));g.addColorStop(1,'transparent');
+        ctx.fillStyle=g;ctx.beginPath();ctx.arc(p.sx,p.sy,sz*5,0,Math.PI*2);ctx.fill();
+
+        // core
+        ctx.fillStyle=C_GOLD;ctx.beginPath();ctx.arc(p.sx,p.sy,sz,0,Math.PI*2);ctx.fill();
+
+        // label
+        ctx.save();
+        ctx.font=`700 11px 'Sora',sans-serif`;
+        ctx.textAlign='center';
+        ctx.fillStyle=gold(p.alpha*0.9);
+        ctx.fillText(n.label,p.sx,p.sy-sz*4.5-5);
+        ctx.restore();
+
+      } else {
+        const sz=n.size*(p.scale||1)*0.52*p.alpha;
+        const g=ctx.createRadialGradient(p.sx,p.sy,0,p.sx,p.sy,sz*3.5);
+        g.addColorStop(0,teal(0.45*p.alpha));g.addColorStop(1,'transparent');
+        ctx.fillStyle=g;ctx.beginPath();ctx.arc(p.sx,p.sy,sz*3.5,0,Math.PI*2);ctx.fill();
+        ctx.fillStyle=teal(p.alpha*0.85);
+        ctx.beginPath();ctx.arc(p.sx,p.sy,Math.max(0.7,sz),0,Math.PI*2);ctx.fill();
+      }
+    });
+  }
+
+  function frame(){
+    ctx.clearRect(0,0,W,H);
+    rot+=0.0028;
+    drawGlobe();
+    drawEdges();
+    drawPackets();
+    drawNodes();
+    raf=requestAnimationFrame(frame);
+  }
+
+  function setup(){
+    if(raf) cancelAnimationFrame(raf);
+    init(); frame();
+  }
+
+  let tmr;
+  window.addEventListener('resize',()=>{ clearTimeout(tmr); tmr=setTimeout(setup,120); });
+  setup();
+})();
+</script>
+
+</body>
+</html>
