@@ -248,11 +248,42 @@ body.c-hidden #cursor-ring { opacity:0; }
   background-size:180px 180px;
 }
 
+/* TAGLINE BAR */
+#s-tagline {
+  position:relative; z-index:1;
+  padding:28px 56px;
+  border-top:1px solid var(--bdr);
+  border-bottom:1px solid var(--bdr);
+  display:flex; align-items:center; justify-content:space-between; gap:24px;
+  background:rgba(255,255,255,0.015);
+}
+.tagline-main { font-size:clamp(13px,1.4vw,17px); font-weight:800; letter-spacing:.18em; text-transform:uppercase; color:var(--teal); }
+.tagline-sub  { font-size:clamp(11px,1vw,13px); font-weight:400; color:var(--soft); text-align:right; max-width:460px; line-height:1.6; }
+
+/* IMPACT */
+#s-impact {
+  position:relative; z-index:1;
+  padding:80px 56px;
+}
+.impact-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; }
+.impact-card {
+  background:var(--card); border:1px solid var(--bdr); border-radius:14px;
+  padding:32px 28px; backdrop-filter:blur(24px);
+  transition:border-color .3s, transform .3s;
+}
+.impact-card:hover { border-color:var(--bdrh); transform:translateY(-4px); }
+.impact-check { width:36px; height:36px; border-radius:50%; background:rgba(0,212,184,.1); border:1px solid rgba(0,212,184,.25); display:flex; align-items:center; justify-content:center; margin-bottom:20px; }
+.impact-check svg { width:16px; height:16px; stroke:var(--teal); fill:none; stroke-width:2.5; stroke-linecap:round; stroke-linejoin:round; }
+.impact-title { font-size:16px; font-weight:700; letter-spacing:-0.02em; color:var(--white); margin-bottom:10px; }
+.impact-desc  { font-size:13px; line-height:1.75; color:var(--body); }
+
 @media(max-width:1024px){
   .nav{padding:0 28px;} .nav-links{display:none;}
   #s-hero{grid-template-columns:1fr;} .hero-left{padding:80px 28px 40px;}
   .hero-right{height:50vw;min-height:260px;}
   #s-pillars{padding:0 28px 60px;} .pillars-grid{grid-template-columns:1fr;}
+  #s-tagline{padding:20px 28px;flex-direction:column;align-items:flex-start;gap:8px;} .tagline-sub{text-align:left;}
+  #s-impact{padding:60px 28px;} .impact-grid{grid-template-columns:1fr;}
   .scene-sticky{grid-template-columns:1fr;} .canvas-wrap,.canvas-wrap-left{width:100%;position:relative;height:50vw;}
   .pipeline-wrap{width:100%;padding:0 28px;position:relative;}
   #s-ai .scene-sticky{grid-template-columns:1fr;}
@@ -283,7 +314,7 @@ body.c-hidden #cursor-ring { opacity:0; }
   </ul>
   <div class="nav-right">
     <a href="#s-pillars" class="nav-ghost">Explore work</a>
-    <a href="mailto:connect@yajur.ai" class="nav-cta">Get access →</a>
+    <a href="https://wa.me/message/E7VVRHRTVZIYC1" class="nav-cta" target="_blank" rel="noopener">Get access →</a>
   </div>
 </nav>
 
@@ -301,8 +332,8 @@ body.c-hidden #cursor-ring { opacity:0; }
       We believe that healthcare is fundamentally also a <em>data problem</em>, and solving this requires a paradigm shift in how medical information is structured, accessed, and utilized. At <em>Yajur Healthcare</em>, we are revolutionizing the future of healthcare by transforming medical data into actionable intelligence. Our mission is to bridge the knowledge gap in healthcare through <em>disease-specific datasets</em> and cutting-edge <em>AI-driven applications</em> that empower doctors, nurses, patients, radiologists, and pathologists.
     </p>
     <div class="cta-row" id="h-cta">
-      <a href="#s-cta" class="btn-p">Build with us <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
-      <a href="#s-pillars" class="btn-g">Explore our work <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+      <a href="https://wa.me/message/E7VVRHRTVZIYC1" class="btn-p" target="_blank" rel="noopener">Build with us <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+      <a href="https://wa.me/message/E7VVRHRTVZIYC1" class="btn-g" target="_blank" rel="noopener">Get Early Access <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
     </div>
     <div class="compliance" id="h-comp">
       <span class="comp-lbl">Certified</span>
@@ -328,21 +359,48 @@ body.c-hidden #cursor-ring { opacity:0; }
       <div class="p-icon"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg></div>
       <h3 class="p-name">Disease-Specific Datasets</h3>
       <p class="p-desc">High-fidelity, curated datasets engineered for clinical pathways. AI-training-ready with built-in governance, provenance tracking, and compliance profiling.</p>
-      <div class="chips"><span class="chip">Oncology</span><span class="chip">Cardiology</span><span class="chip">Radiology</span><span class="chip">Lab Reports</span></div>
+      <div class="chips"><span class="chip">Dataset Design</span><span class="chip">Data Curation</span><span class="chip">Data Engineering</span></div>
     </div>
     <div class="pillar">
       <div class="p-num">02 / AI</div>
       <div class="p-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg></div>
       <h3 class="p-name">AI-Driven Applications</h3>
       <p class="p-desc">Intelligent co-pilot agents and orchestration layers that surface the right clinical context for every care decision, built on composable persona-aware frameworks.</p>
-      <div class="chips"><span class="chip">Co-Pilot</span><span class="chip">Agents</span><span class="chip">Dashboards</span></div>
+      <div class="chips"><span class="chip">Intelligent Co-Pilot</span><span class="chip">Agent Orchestration</span><span class="chip">Insightful Dashboards</span></div>
     </div>
     <div class="pillar">
       <div class="p-num">03 / INTEGRATION</div>
       <div class="p-icon"><svg viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92c0-1.61-1.31-2.92-2.92-2.92z"/></svg></div>
       <h3 class="p-name">Interoperability</h3>
       <p class="p-desc">ABDM, FHIR R4, and HL7-aligned pipelines connecting legacy systems to modern AI infrastructure with privacy-first, compliance-native architecture.</p>
-      <div class="chips"><span class="chip">FHIR R4</span><span class="chip">HL7</span><span class="chip">NHCX</span><span class="chip">ABDM</span></div>
+      <div class="chips"><span class="chip">Standards Based Pipelines</span><span class="chip">Legacy Modernization</span><span class="chip">Real-time Data Flows</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- TAGLINE BAR -->
+<div id="s-tagline">
+  <span class="tagline-main">Seamless Integration, Maximum Impact</span>
+  <span class="tagline-sub">We Deliver Healthcare Capabilities That Meet Today's Patient Needs. Not Yesterday's Requirements.</span>
+</div>
+
+<!-- IMPACT -->
+<section id="s-impact">
+  <div class="impact-grid">
+    <div class="impact-card">
+      <div class="impact-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+      <div class="impact-title">Bridging the Gap</div>
+      <p class="impact-desc">We eliminate inefficiencies in patient care by reducing redundant tests, broken care pathways, and high out-of-pocket expenses.</p>
+    </div>
+    <div class="impact-card">
+      <div class="impact-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+      <div class="impact-title">Enhancing Clinical Outcomes</div>
+      <p class="impact-desc">By leveraging AI and multi-modal data, we bring precision, consistency, and real-world insights to healthcare.</p>
+    </div>
+    <div class="impact-card">
+      <div class="impact-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+      <div class="impact-title">Empowering Stakeholders</div>
+      <p class="impact-desc">Our solutions benefit hospitals, researchers, insurers, and startups, ensuring data-driven decision-making at every level.</p>
     </div>
   </div>
 </section>
@@ -463,7 +521,7 @@ body.c-hidden #cursor-ring { opacity:0; }
     <h2 class="cta-h" id="cta-h">Build the future of<br>medical AI <span>together.</span></h2>
     <p class="cta-p" id="cta-p">Contact us to explore our data capabilities, AI partnership models, and interoperability roadmap. The next era of clinical intelligence starts here.</p>
     <div class="cta-btns" id="cta-btns">
-      <a href="mailto:connect@yajur.ai" class="btn-p">Get started <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+      <a href="https://wa.me/message/E7VVRHRTVZIYC1" class="btn-p" target="_blank" rel="noopener">Get started <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
       <a href="https://www.linkedin.com/company/yajur-ai/" class="btn-g" target="_blank" rel="noopener">LinkedIn <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
     </div>
   </div>
