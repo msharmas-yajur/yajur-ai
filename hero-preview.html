@@ -9,7 +9,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@studio-freight/lenis@1.0.42/dist/lenis.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lenis@1.1.14/dist/lenis.min.js"></script>
 <style>
 :root {
   --bg:    #0A0F1E;
@@ -477,30 +477,34 @@ gsap.registerPlugin(ScrollTrigger);
 const DPR = Math.min(window.devicePixelRatio||1, 2);
 
 // ══════════════════════════════════════════════════════════════════════
-//  PHASE 2A — LENIS SMOOTH SCROLL INERTIA
+//  PHASE 2A — LENIS SMOOTH SCROLL INERTIA (with graceful fallback)
 // ══════════════════════════════════════════════════════════════════════
-const lenis = new Lenis({
-  duration: 1.3,
-  easing: t => Math.min(1, 1.001 - Math.pow(2, -10 * t)), // expo ease-out
-  smoothWheel: true,
-  wheelMultiplier: 0.92,
-  touchMultiplier: 1.8,
-});
+// scrollVel is declared first so DNA/neural IIFEs below always have it
+let scrollVel = () => 0;
 
-// Keep GSAP ScrollTrigger in sync with Lenis position
-lenis.on('scroll', ScrollTrigger.update);
-gsap.ticker.add(t => lenis.raf(t * 1000));
-gsap.ticker.lagSmoothing(0);
+try {
+  const lenis = new Lenis({
+    duration: 1.3,
+    easing: t => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+    wheelMultiplier: 0.92,
+    touchMultiplier: 1.8,
+  });
 
-// Expose scroll velocity for canvas animations
-let _scrollVel = 0, _lastLenisY = 0;
-lenis.on('scroll', ({scroll}) => {
-  _scrollVel = Math.abs(scroll - _lastLenisY);
-  _lastLenisY = scroll;
-});
-// Decay velocity between scroll events
-(function velDecay(){ _scrollVel *= 0.88; requestAnimationFrame(velDecay); })();
-const scrollVel = () => Math.min(8, _scrollVel);
+  // Keep GSAP ScrollTrigger in sync with Lenis position
+  lenis.on('scroll', ScrollTrigger.update);
+  gsap.ticker.add(t => lenis.raf(t * 1000));
+  gsap.ticker.lagSmoothing(0);
+
+  // Expose scroll velocity for canvas animations
+  let _sv = 0, _ly = 0;
+  lenis.on('scroll', ({scroll}) => { _sv = Math.abs(scroll - _ly); _ly = scroll; });
+  (function vd(){ _sv *= 0.88; requestAnimationFrame(vd); })();
+  scrollVel = () => Math.min(8, _sv);
+
+} catch(e) {
+  // Lenis unavailable — page still fully functional, just without smooth scroll
+  console.warn('[yajur] Lenis not available:', e.message);
+}
 const teal = a=>`rgba(0,212,184,${a})`;
 const gold = a=>`rgba(245,166,35,${a})`;
 const wht  = a=>`rgba(232,237,245,${a})`;
@@ -715,49 +719,36 @@ const purp = a=>`rgba(160,120,255,${a})`;
 //  PHASE 2B — MOUSE-DRIVEN GLOBAL PARALLAX (camera tilt simulation)
 // ══════════════════════════════════════════════════════════════════════
 (function(){
-  let pmx=0, pmy=0;   // target normalised mouse (-1..+1)
-  let cpx=0, cpy=0;   // current lerped position
+  let pmx=0, pmy=0, cpx=0, cpy=0;
 
   document.addEventListener('mousemove', e => {
     pmx = (e.clientX / window.innerWidth  - 0.5) * 2;
     pmy = (e.clientY / window.innerHeight - 0.5) * 2;
   });
 
-  // Cache elements once
-  const heroRight    = document.querySelector('.hero-right');
-  const heroLeft     = document.querySelector('.hero-left');
-  const canvasWraps  = document.querySelectorAll('.canvas-wrap, .canvas-wrap-left');
-  const sceneCopies  = document.querySelectorAll('.scene-copy');
-  const pipeWrap     = document.querySelector('.pipeline-wrap');
-  const navEl        = document.querySelector('.nav');
+  const heroRight   = document.querySelector('.hero-right');
+  const heroLeft    = document.querySelector('.hero-left');
+  const canvasWraps = document.querySelectorAll('.canvas-wrap, .canvas-wrap-left');
+  const sceneCopies = document.querySelectorAll('.scene-copy');
+  const pipeWrap    = document.querySelector('.pipeline-wrap');
 
   function lerp(a,b,t){ return a+(b-a)*t; }
 
   (function loop(){
-    // Very slow lerp — the lag IS the effect
     cpx = lerp(cpx, pmx, 0.032);
     cpy = lerp(cpy, pmy, 0.032);
+    const px = cpx * 14, py = cpy * 8;
 
-    const px = cpx * 14;   // max ±14px horizontal
-    const py = cpy * 8;    // max ±8px vertical
+    // Canvas wrappers (background) — move with mouse
+    canvasWraps.forEach(c => c.style.transform = `translate(${px*.75}px,${py*.45}px)`);
+    if(pipeWrap) pipeWrap.style.transform = `translate(${px*.65}px,${py*.4}px)`;
 
-    // Canvas layer — moves WITH mouse (background depth)
-    canvasWraps.forEach(c => {
-      c.style.transform = `translate(${px * 0.75}px, ${py * 0.45}px)`;
-    });
-    if(pipeWrap) pipeWrap.style.transform = `translate(${px * 0.65}px, ${py * 0.4}px)`;
+    // Globe panel — largest shift (deepest layer)
+    if(heroRight) heroRight.style.transform = `translate(${px*.85}px,${py*.5}px)`;
 
-    // Globe — largest movement (deepest layer)
-    if(heroRight) heroRight.style.transform = `translate(${px * 0.85}px, ${py * 0.5}px)`;
-
-    // Text — counter-moves slightly (foreground layer, creates depth separation)
-    sceneCopies.forEach(c => {
-      c.style.transform = `translate(${-px * 0.18}px, ${-py * 0.1}px)`;
-    });
-    if(heroLeft) heroLeft.style.transform = `translate(${-px * 0.22}px, ${-py * 0.12}px)`;
-
-    // Nav shifts subtly (gives floating feel)
-    if(navEl) navEl.style.transform = `translateX(${-px * 0.06}px)`;
+    // Text — subtle counter-movement (foreground, creates depth illusion)
+    sceneCopies.forEach(c => c.style.transform = `translate(${-px*.18}px,${-py*.1}px)`);
+    if(heroLeft) heroLeft.style.transform = `translate(${-px*.22}px,${-py*.12}px)`;
 
     requestAnimationFrame(loop);
   })();
