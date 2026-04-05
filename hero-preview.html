@@ -187,8 +187,65 @@ body { background:var(--bg); color:var(--white); font-family:var(--f); line-heig
 #s-ai .scene-copy { grid-column:2; padding:0 56px 0 40px; }
 
 /* DNA drag cursor */
-#dna-canvas { cursor:grab; }
-#dna-canvas:active { cursor:grabbing; }
+#dna-canvas { cursor:none; }
+
+/* ── CUSTOM CURSOR ───────────────────────────────────── */
+html { cursor:none; }
+a,button,.btn-p,.btn-g,.nav-cta,.nav-ghost,.pillar,label { cursor:none; }
+#cursor-dot {
+  position:fixed; z-index:10000; pointer-events:none;
+  width:7px; height:7px; border-radius:50%;
+  background:var(--teal);
+  transform:translate(-50%,-50%);
+  will-change:transform;
+  transition:width .18s ease,height .18s ease,background .18s ease,opacity .18s ease;
+}
+#cursor-ring {
+  position:fixed; z-index:9999; pointer-events:none;
+  width:30px; height:30px; border-radius:50%;
+  border:1.5px solid rgba(0,212,184,0.5);
+  transform:translate(-50%,-50%);
+  will-change:transform;
+  transition:width .32s cubic-bezier(.23,1,.32,1),
+             height .32s cubic-bezier(.23,1,.32,1),
+             border-color .25s ease,opacity .2s ease;
+}
+body.c-hover #cursor-dot  { width:11px; height:11px; background:var(--gold); }
+body.c-hover #cursor-ring { width:44px; height:44px; border-color:rgba(245,166,35,0.55); }
+body.c-click #cursor-dot  { width:5px; height:5px; opacity:.7; }
+body.c-click #cursor-ring { width:22px; height:22px; }
+body.c-hidden #cursor-dot,
+body.c-hidden #cursor-ring { opacity:0; }
+
+/* ── WORD SPLIT ──────────────────────────────────────── */
+.word-wrap  { display:inline-block; overflow:hidden; vertical-align:bottom; line-height:inherit; }
+.word-inner { display:inline-block; }
+
+/* ── CHROMATIC ABERRATION ────────────────────────────── */
+@keyframes chromaIn {
+  0%   { filter:drop-shadow(-4px 0 0 rgba(255,45,45,.75)) drop-shadow(4px 0 0 rgba(0,210,255,.75)); }
+  55%  { filter:drop-shadow(-1px 0 0 rgba(255,45,45,.18)) drop-shadow(1px 0 0 rgba(0,210,255,.18)); }
+  100% { filter:none; }
+}
+.chroma-flash { animation:chromaIn .5s ease-out forwards; }
+
+/* ── FILM GRAIN ──────────────────────────────────────── */
+@keyframes grainShift {
+  0%  {transform:translate(0,0)}  10%{transform:translate(-2%,-3%)}
+  20% {transform:translate(-4%,2%)} 30%{transform:translate(3%,-4%)}
+  40% {transform:translate(-1%,5%)} 50%{transform:translate(-3%,1%)}
+  60% {transform:translate(4%,-2%)} 70%{transform:translate(1%,3%)}
+  80% {transform:translate(-3%,4%)} 90%{transform:translate(2%,-1%)}
+  100%{transform:translate(0,0)}
+}
+#grain-overlay {
+  position:fixed; inset:-10%; z-index:9997; pointer-events:none;
+  width:120%; height:120%;
+  opacity:0.038; mix-blend-mode:overlay;
+  animation:grainShift .45s steps(1) infinite;
+  background-repeat:repeat;
+  background-size:180px 180px;
+}
 
 @media(max-width:1024px){
   .nav{padding:0 28px;} .nav-links{display:none;}
@@ -205,6 +262,9 @@ body { background:var(--bg); color:var(--white); font-family:var(--f); line-heig
 <body>
 <div class="bg-grid"></div>
 <div class="bg-glow"></div>
+<div id="grain-overlay"></div>
+<div id="cursor-dot"></div>
+<div id="cursor-ring"></div>
 
 <!-- NAV -->
 <nav class="nav">
@@ -568,21 +628,60 @@ const purp = a=>`rgba(160,120,255,${a})`;
 
 
 // ══════════════════════════════════════════════════════════════════════
-//  GSAP HERO
+//  GSAP HERO — word-split headline + chromatic aberration
 // ══════════════════════════════════════════════════════════════════════
-gsap.timeline({defaults:{ease:'power2.out'}})
-  .to('#h-ey',  {opacity:1,y:0,duration:.7}, .15)
-  .to('#h-hl',  {opacity:1,y:0,duration:.75},.28)
-  .to('#h-sub', {opacity:1,y:0,duration:.7}, .42)
-  .to('#h-cta', {opacity:1,y:0,duration:.65},.54)
-  .to('#h-comp',{opacity:1,y:0,duration:.6}, .64)
-  .to('#pill1', {opacity:1,y:0,duration:.6}, .82)
-  .to('#pill2', {opacity:1,y:0,duration:.6}, .94)
-  .to('#pill3', {opacity:1,y:0,duration:.6},1.06);
+(function(){
+  // Split each headline line into individual words
+  function splitWords(container){
+    const lines=container.querySelectorAll('span');
+    lines.forEach(line=>{
+      const text=line.textContent.trim();
+      if(!text) return;
+      const words=text.split(/\s+/);
+      line.innerHTML=words.map(w=>
+        `<span class="word-wrap"><span class="word-inner">${w}</span></span>`
+      ).join(' ');
+    });
+    return container.querySelectorAll('.word-inner');
+  }
 
-gsap.utils.toArray('.pillar').forEach((el,i)=>{
-  gsap.to(el,{scrollTrigger:{trigger:el,start:'top 85%',once:true},opacity:1,y:0,duration:.7,delay:i*.14,ease:'power2.out'});
-});
+  const hlEl=document.getElementById('h-hl');
+  const wordEls=splitWords(hlEl);
+
+  // Headline visible, words handle own opacity
+  gsap.set(hlEl,{opacity:1,y:0});
+  // Set each word-inner to start state
+  gsap.set(wordEls,{opacity:0,y:26,scale:0.86});
+
+  // Split sub into word spans too
+  const subEl=document.getElementById('h-sub');
+  // Simpler: sub animates as a block but with a clip reveal
+  gsap.set(subEl,{opacity:0,y:0,clipPath:'inset(0 100% 0 0)'});
+
+  const heroTl=gsap.timeline({defaults:{ease:'power3.out'}});
+  heroTl
+    .to('#h-ey', {opacity:1,y:0,duration:.65},0.2)
+    // Fire chroma on headline start
+    .call(()=>{
+      hlEl.classList.add('chroma-flash');
+      setTimeout(()=>hlEl.classList.remove('chroma-flash'),500);
+    },null,0.32)
+    // Words stagger in
+    .to(wordEls,{opacity:1,y:0,scale:1,duration:.6,stagger:.065},0.35)
+    // Sub text: left→right clip reveal
+    .to(subEl,{opacity:1,clipPath:'inset(0 0% 0 0)',duration:.85,ease:'power2.inOut'},0.72)
+    .to('#h-cta', {opacity:1,y:0,duration:.6},1.12)
+    .to('#h-comp',{opacity:1,duration:.55},1.3)
+    .to('#pill1', {opacity:1,y:0,duration:.55},1.44)
+    .to('#pill2', {opacity:1,y:0,duration:.55},1.56)
+    .to('#pill3', {opacity:1,y:0,duration:.55},1.68);
+
+  // Pillar cards
+  gsap.utils.toArray('.pillar').forEach((el,i)=>{
+    gsap.to(el,{scrollTrigger:{trigger:el,start:'top 85%',once:true},
+      opacity:1,y:0,duration:.7,delay:i*.14,ease:'power2.out'});
+  });
+})();
 
 
 // ══════════════════════════════════════════════════════════════════════
@@ -1144,6 +1243,106 @@ gsap.utils.toArray('.pillar').forEach((el,i)=>{
 
   let rt; window.addEventListener('resize',()=>{ clearTimeout(rt); rt=setTimeout(init,100); });
   init(); frame();
+})();
+
+
+// ══════════════════════════════════════════════════════════════════════
+//  PHASE 1A — FILM GRAIN
+// ══════════════════════════════════════════════════════════════════════
+(function(){
+  // Generate a random 180×180 noise texture once, use as CSS background-image
+  // Regenerate every 250ms to get animated grain without per-frame canvas cost
+  const el=document.getElementById('grain-overlay');
+  const SIZE=180;
+
+  function makeGrainURL(){
+    const c=document.createElement('canvas');
+    c.width=c.height=SIZE;
+    const ctx=c.getContext('2d');
+    const id=ctx.createImageData(SIZE,SIZE);
+    const d=id.data;
+    for(let i=0;i<d.length;i+=4){
+      const v=Math.random()*255|0;
+      d[i]=d[i+1]=d[i+2]=v;
+      d[i+3]=Math.random()*80+40|0;  // varied alpha for organic feel
+    }
+    ctx.putImageData(id,0,0);
+    return c.toDataURL('image/png');
+  }
+
+  // Pre-generate 6 frames so we can cycle without per-frame generation
+  const FRAMES=6;
+  const frames=[];
+  for(let i=0;i<FRAMES;i++) frames.push(makeGrainURL());
+
+  let fi=0;
+  el.style.backgroundImage=`url(${frames[0]})`;
+
+  setInterval(()=>{
+    fi=(fi+1)%FRAMES;
+    el.style.backgroundImage=`url(${frames[fi]})`;
+  },55); // ~18fps grain rotation
+})();
+
+
+// ══════════════════════════════════════════════════════════════════════
+//  PHASE 1B — CUSTOM CURSOR with lerp lag
+// ══════════════════════════════════════════════════════════════════════
+(function(){
+  const dot=document.getElementById('cursor-dot');
+  const ring=document.getElementById('cursor-ring');
+
+  let mx=window.innerWidth/2, my=window.innerHeight/2;
+  let dx=mx, dy=my;    // dot (fast)
+  let rx=mx, ry=my;    // ring (slow)
+  let visible=false;
+
+  document.addEventListener('mousemove',e=>{
+    mx=e.clientX; my=e.clientY;
+    if(!visible){
+      visible=true;
+      document.body.classList.remove('c-hidden');
+    }
+  });
+
+  document.addEventListener('mouseleave',()=>{
+    document.body.classList.add('c-hidden');
+  });
+  document.addEventListener('mouseenter',()=>{
+    document.body.classList.remove('c-hidden');
+  });
+
+  // Hover state on interactive elements
+  const hoverTargets='a,button,.btn-p,.btn-g,.nav-cta,.nav-ghost,.pillar,#dna-canvas,.badge';
+  document.querySelectorAll(hoverTargets).forEach(el=>{
+    el.addEventListener('mouseenter',()=>document.body.classList.add('c-hover'));
+    el.addEventListener('mouseleave',()=>document.body.classList.remove('c-hover'));
+  });
+
+  document.addEventListener('mousedown',()=>document.body.classList.add('c-click'));
+  document.addEventListener('mouseup',  ()=>document.body.classList.remove('c-click'));
+
+  // Lerp loop — dot is fast, ring lags behind
+  function lerp(a,b,t){ return a+(b-a)*t; }
+
+  // Start hidden
+  document.body.classList.add('c-hidden');
+
+  (function loop(){
+    // Dot: fast lerp (snappy)
+    dx=lerp(dx,mx,0.22);
+    dy=lerp(dy,my,0.22);
+    dot.style.left=dx+'px';
+    dot.style.top=dy+'px';
+
+    // Ring: slow lerp (dreamy lag)
+    rx=lerp(rx,mx,0.09);
+    ry=lerp(ry,my,0.09);
+    ring.style.left=rx+'px';
+    ring.style.top=ry+'px';
+
+    requestAnimationFrame(loop);
+  })();
 })();
 </script>
 </body>
