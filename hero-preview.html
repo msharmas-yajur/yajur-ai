@@ -9,6 +9,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@studio-freight/lenis@1.0.42/dist/lenis.min.js"></script>
 <style>
 :root {
   --bg:    #0A0F1E;
@@ -474,6 +475,32 @@ body.c-hidden #cursor-ring { opacity:0; }
 <script>
 gsap.registerPlugin(ScrollTrigger);
 const DPR = Math.min(window.devicePixelRatio||1, 2);
+
+// ══════════════════════════════════════════════════════════════════════
+//  PHASE 2A — LENIS SMOOTH SCROLL INERTIA
+// ══════════════════════════════════════════════════════════════════════
+const lenis = new Lenis({
+  duration: 1.3,
+  easing: t => Math.min(1, 1.001 - Math.pow(2, -10 * t)), // expo ease-out
+  smoothWheel: true,
+  wheelMultiplier: 0.92,
+  touchMultiplier: 1.8,
+});
+
+// Keep GSAP ScrollTrigger in sync with Lenis position
+lenis.on('scroll', ScrollTrigger.update);
+gsap.ticker.add(t => lenis.raf(t * 1000));
+gsap.ticker.lagSmoothing(0);
+
+// Expose scroll velocity for canvas animations
+let _scrollVel = 0, _lastLenisY = 0;
+lenis.on('scroll', ({scroll}) => {
+  _scrollVel = Math.abs(scroll - _lastLenisY);
+  _lastLenisY = scroll;
+});
+// Decay velocity between scroll events
+(function velDecay(){ _scrollVel *= 0.88; requestAnimationFrame(velDecay); })();
+const scrollVel = () => Math.min(8, _scrollVel);
 const teal = a=>`rgba(0,212,184,${a})`;
 const gold = a=>`rgba(245,166,35,${a})`;
 const wht  = a=>`rgba(232,237,245,${a})`;
@@ -685,6 +712,59 @@ const purp = a=>`rgba(160,120,255,${a})`;
 
 
 // ══════════════════════════════════════════════════════════════════════
+//  PHASE 2B — MOUSE-DRIVEN GLOBAL PARALLAX (camera tilt simulation)
+// ══════════════════════════════════════════════════════════════════════
+(function(){
+  let pmx=0, pmy=0;   // target normalised mouse (-1..+1)
+  let cpx=0, cpy=0;   // current lerped position
+
+  document.addEventListener('mousemove', e => {
+    pmx = (e.clientX / window.innerWidth  - 0.5) * 2;
+    pmy = (e.clientY / window.innerHeight - 0.5) * 2;
+  });
+
+  // Cache elements once
+  const heroRight    = document.querySelector('.hero-right');
+  const heroLeft     = document.querySelector('.hero-left');
+  const canvasWraps  = document.querySelectorAll('.canvas-wrap, .canvas-wrap-left');
+  const sceneCopies  = document.querySelectorAll('.scene-copy');
+  const pipeWrap     = document.querySelector('.pipeline-wrap');
+  const navEl        = document.querySelector('.nav');
+
+  function lerp(a,b,t){ return a+(b-a)*t; }
+
+  (function loop(){
+    // Very slow lerp — the lag IS the effect
+    cpx = lerp(cpx, pmx, 0.032);
+    cpy = lerp(cpy, pmy, 0.032);
+
+    const px = cpx * 14;   // max ±14px horizontal
+    const py = cpy * 8;    // max ±8px vertical
+
+    // Canvas layer — moves WITH mouse (background depth)
+    canvasWraps.forEach(c => {
+      c.style.transform = `translate(${px * 0.75}px, ${py * 0.45}px)`;
+    });
+    if(pipeWrap) pipeWrap.style.transform = `translate(${px * 0.65}px, ${py * 0.4}px)`;
+
+    // Globe — largest movement (deepest layer)
+    if(heroRight) heroRight.style.transform = `translate(${px * 0.85}px, ${py * 0.5}px)`;
+
+    // Text — counter-moves slightly (foreground layer, creates depth separation)
+    sceneCopies.forEach(c => {
+      c.style.transform = `translate(${-px * 0.18}px, ${-py * 0.1}px)`;
+    });
+    if(heroLeft) heroLeft.style.transform = `translate(${-px * 0.22}px, ${-py * 0.12}px)`;
+
+    // Nav shifts subtly (gives floating feel)
+    if(navEl) navEl.style.transform = `translateX(${-px * 0.06}px)`;
+
+    requestAnimationFrame(loop);
+  })();
+})();
+
+
+// ══════════════════════════════════════════════════════════════════════
 //  DNA — proper 3D double helix, scroll-progress driven build
 // ══════════════════════════════════════════════════════════════════════
 (function(){
@@ -847,7 +927,9 @@ const purp = a=>`rgba(160,120,255,${a})`;
   function frame(){
     ctx.clearRect(0,0,W,H);
 
-    if(!dragging){ autoRot+=0.005; manualRot+=dragVel; dragVel*=0.94; }
+    // Scroll velocity spins the helix faster — feels physically connected to the gesture
+    const sv=scrollVel();
+    if(!dragging){ autoRot+=0.005+sv*0.014; manualRot+=dragVel; dragVel*=0.94; }
     const rotAngle=autoRot+manualRot;
 
     // Subtle bg glow
@@ -980,13 +1062,24 @@ const purp = a=>`rgba(160,120,255,${a})`;
     const MDIST=90+connAlpha*40;
 
     // Update + draw bg nodes
+    const sv=scrollVel();
     for(let i=0;i<activeBg;i++){
       const n=bgNodes[i];
+      // Fast scroll adds turbulence — nodes scatter then settle
+      if(sv>1.2){
+        n.vx+=(Math.random()-.5)*sv*0.07;
+        n.vy+=(Math.random()-.5)*sv*0.07;
+      }
+      // Speed cap + gentle damping so they don't fly off
+      const spd=Math.hypot(n.vx,n.vy);
+      if(spd>1.4){ n.vx*=1.4/spd; n.vy*=1.4/spd; }
+      n.vx*=0.992; n.vy*=0.992;
+
       n.x+=n.vx; n.y+=n.vy; n.ph+=.018;
       if(n.x<0||n.x>W) n.vx*=-1;
       if(n.y<0||n.y>H) n.vy*=-1;
       n.lit+=(Math.hypot(n.x-mx,n.y-my)<MDIST?1:0-n.lit)*.07;
-      n.scale=Math.min(1,n.scale+0.04); // spawn scale-in
+      n.scale=Math.min(1,n.scale+0.04);
     }
 
     // All nodes array: bg + agent
