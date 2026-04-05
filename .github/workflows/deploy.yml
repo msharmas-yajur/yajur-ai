@@ -1,27 +1,21 @@
-# Sample workflow for building and deploying a Jekyll site to GitHub Pages
-name: Deploy Jekyll with GitHub Pages dependencies preinstalled
+name: Deploy to GitHub Pages
 
 on:
-  # Runs on pushes targeting the default branch
   push:
-    branches: ["dev", "main"]
-
-  # Allows you to run this workflow manually from the Actions tab
+    branches: ["main"]
   workflow_dispatch:
 
-# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:
   contents: read
   pages: write
   id-token: write
+  actions: write
 
-# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
 concurrency:
   group: "pages"
   cancel-in-progress: false
 
 jobs:
-  # Build job
   build:
     runs-on: ubuntu-latest
     steps:
@@ -30,9 +24,9 @@ jobs:
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: '3.3' # Specify Ruby version
-          bundler-cache: true # runs 'bundle install' and caches installed gems automatically
-          cache-version: 0 # Increment this number if you need to re-download cached gems
+          ruby-version: '3.3'
+          bundler-cache: true
+          cache-version: 0
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Build with Jekyll
@@ -42,7 +36,6 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
 
-  # Deployment job
   deploy:
     environment:
       name: github-pages
@@ -53,3 +46,33 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
+  health-check:
+    runs-on: ubuntu-latest
+    needs: deploy
+    steps:
+      - name: Wait for deployment to propagate
+        run: sleep 30
+
+      - name: Check homepage
+        run: curl -sSf -o /dev/null -w "%{http_code}" https://yajur.ai/ | grep -q 200
+
+      - name: Check blog post
+        run: curl -sSf -o /dev/null -w "%{http_code}" https://yajur.ai/2026/03/11/building-a-data-lakehouse-for-your-hospital.html | grep -q 200
+
+      - name: Check sitemap
+        run: curl -sSf -o /dev/null -w "%{http_code}" https://yajur.ai/sitemap.xml | grep -q 200
+
+      - name: Auto-rollback on failure
+        if: failure()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          COMMIT_MSG: ${{ github.event.head_commit.message }}
+        run: |
+          if echo "$COMMIT_MSG" | grep -q '\[rollback\]'; then
+            echo "::error::Health check failed on a rollback commit. Manual intervention required."
+            exit 1
+          fi
+          echo "Health check failed — triggering rollback..."
+          gh workflow run rollback.yml --repo "$REPO" --ref main

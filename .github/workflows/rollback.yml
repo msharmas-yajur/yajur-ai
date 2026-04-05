@@ -1,0 +1,39 @@
+name: Rollback main
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  rollback:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: main
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure git
+        run: |
+          git config user.email "actions@github.com"
+          git config user.name "GitHub Actions"
+
+      - name: Revert last commit on main
+        run: |
+          set -e
+          LAST_MSG=$(git log -1 --pretty=format:"%s")
+          echo "Reverting: $LAST_MSG"
+
+          # Use -m 1 in case it's a merge commit; works for regular commits too
+          git revert -m 1 --no-edit HEAD
+
+          # Amend to add [rollback] tag (circuit breaker for health check)
+          REVERT_MSG=$(git log -1 --pretty=format:"%s")
+          git commit --amend -m "[rollback] $REVERT_MSG"
+
+          git push origin main
+          echo "Rolled back main. Deploy will trigger automatically."
