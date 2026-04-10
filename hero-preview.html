@@ -1,1488 +1,1607 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>YAJUR.ai — The Medical Data Infrastructure Company</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/lenis@1.1.14/dist/lenis.min.js"></script>
-<style>
-:root {
-  --bg:    #0A0F1E;
-  --teal:  #00D4B8;
-  --gold:  #F5A623;
-  --white: #E8EDF5;
-  --body:  rgba(232,237,245,0.82);
-  --soft:  rgba(232,237,245,0.50);
-  --faint: rgba(232,237,245,0.25);
-  --card:  rgba(11,18,34,0.72);
-  --bdr:   rgba(0,212,184,0.10);
-  --bdrh:  rgba(0,212,184,0.30);
-  --td:    rgba(0,212,184,0.10);
-  --f:     'Montserrat', system-ui, sans-serif;
-}
-*,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
-html { scroll-behavior:smooth; }
-body { background:var(--bg); color:var(--white); font-family:var(--f); line-height:1.6; overflow-x:hidden; }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Yajur.ai — Preview</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@studio-freight/lenis@1.0.42/bundled/lenis.min.js"></script>
+  <style>
+    /* ─── RESET ─── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-.bg-grid {
-  position:fixed; inset:0; z-index:0; pointer-events:none;
-  background-image: linear-gradient(rgba(0,212,184,0.025) 1px,transparent 1px), linear-gradient(90deg,rgba(0,212,184,0.025) 1px,transparent 1px);
-  background-size:64px 64px;
-}
-.bg-glow {
-  position:fixed; inset:0; z-index:0; pointer-events:none;
-  background: radial-gradient(ellipse 60% 50% at 70% 35%,rgba(0,212,184,0.055) 0%,transparent 70%),
-              radial-gradient(ellipse 40% 40% at 15% 80%,rgba(245,166,35,0.04) 0%,transparent 60%);
-}
+    /* ─── TOKENS ─── */
+    :root {
+      --bg:      #05101C;
+      --navy:    #09152A;
+      --teal:    #00C4A2;
+      --orange:  #BF5700;
+      --text:    #DCE8F5;
+      --muted:   #F0F5FA;
+      --yellow:  #F5D060;
+      --surface: rgba(13,31,60,0.60);
+      --border:  rgba(0,196,162,0.14);
+      --ob:      rgba(191,87,0,0.16);
+      --font:    'Montserrat', sans-serif;
+    }
+    /* ─── BASE ─── */
+    html { scroll-behavior: auto; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      font-weight: 300;
+      line-height: 1.6;
+      overflow-x: hidden;
+      cursor: none;
+      -webkit-font-smoothing: antialiased;
+    }
+    a { color: inherit; text-decoration: none; }
 
-/* NAV */
-.nav {
-  position:fixed; top:0; left:0; right:0; z-index:500;
-  height:68px; display:flex; align-items:center; justify-content:space-between;
-  padding:0 56px; background:rgba(10,15,30,0.85); backdrop-filter:blur(24px);
-  border-bottom:1px solid var(--bdr);
-}
-.nav-logo { display:flex; align-items:center; gap:10px; font-weight:800; font-size:17px; letter-spacing:-0.03em; color:var(--white); text-decoration:none; }
-.logo-mark { width:30px; height:30px; border-radius:8px; background:var(--td); border:1px solid rgba(0,212,184,0.22); display:flex; align-items:center; justify-content:center; }
-.logo-mark svg { width:15px; height:15px; }
-.nav-links { display:flex; gap:36px; list-style:none; }
-.nav-links a { font-size:13px; font-weight:500; color:var(--soft); text-decoration:none; transition:color .2s; }
-.nav-links a:hover { color:var(--white); }
-.nav-right { display:flex; align-items:center; gap:12px; }
-.nav-ghost { font-size:13px; font-weight:600; color:var(--soft); text-decoration:none; padding:7px 18px; border:1px solid rgba(255,255,255,0.10); border-radius:6px; transition:all .2s; }
-.nav-ghost:hover { color:var(--white); border-color:rgba(255,255,255,0.24); }
-.nav-cta { font-size:13px; font-weight:700; letter-spacing:.01em; color:#031410; background:var(--teal); text-decoration:none; padding:8px 22px; border-radius:6px; transition:all .25s; }
-.nav-cta:hover { box-shadow:0 0 28px rgba(0,212,184,0.5); transform:translateY(-1px); }
+    /* Bold/emphasis in body copy → yellow highlight */
+    .hero-sub b, .hero-sub strong,
+    .impact-desc b, .impact-desc strong,
+    .mission-body b, .mission-body strong,
+    .pillar-desc b, .pillar-desc strong,
+    .scene-p b, .scene-p strong,
+    .feat-list b, .feat-list strong,
+    .impact-item b, .impact-item strong,
+    .insight-card b, .insight-card strong,
+    .legacy-desc b, .legacy-desc strong,
+    .footer-cta b, .footer-cta strong,
+    .contact-desc b, .contact-desc strong,
+    .conv-body b, .conv-body strong {
+      color: var(--yellow);
+      font-weight: 700;
+    }
 
-/* HERO */
-#s-hero { position:relative; z-index:1; height:100vh; min-height:600px; display:grid; grid-template-columns:55fr 45fr; padding-top:68px; overflow:hidden; }
-.hero-left { display:flex; flex-direction:column; justify-content:center; padding:72px 44px 80px 56px; position:relative; z-index:2; }
-.eyebrow { display:inline-flex; align-items:center; gap:12px; margin-bottom:36px; font-size:14px; font-weight:700; letter-spacing:.2em; text-transform:uppercase; color:var(--teal); opacity:0; transform:translateY(10px); }
-.eyebrow-bar { width:28px; height:1px; background:var(--teal); flex-shrink:0; }
-.headline { font-weight:800; font-size:clamp(34px,4vw,60px); line-height:1.06; letter-spacing:-0.04em; margin-bottom:28px; opacity:0; transform:translateY(18px); }
-.hl-dim  { display:block; color:var(--faint); font-weight:300; }
-.hl-teal { display:block; color:var(--teal); }
-.hl-gold { display:block; color:var(--gold); }
-.sub { font-size:clamp(14px,1.3vw,17px); font-weight:400; line-height:1.8; color:var(--body); max-width:490px; margin-bottom:52px; opacity:0; transform:translateY(12px); }
-.sub em { font-style:normal; color:var(--teal); font-weight:600; }
-.cta-row { display:flex; gap:14px; align-items:center; flex-wrap:wrap; margin-bottom:56px; opacity:0; transform:translateY(10px); }
-.btn-p { display:inline-flex; align-items:center; gap:10px; padding:13px 30px; background:var(--teal); color:#031410; font-family:var(--f); font-size:14px; font-weight:700; text-decoration:none; border-radius:8px; letter-spacing:.01em; transition:all .25s; position:relative; overflow:hidden; }
-.btn-p::before { content:''; position:absolute; inset:0; background:linear-gradient(135deg,rgba(255,255,255,.18) 0%,transparent 55%); opacity:0; transition:opacity .2s; }
-.btn-p:hover { transform:translateY(-2px); box-shadow:0 8px 28px rgba(0,212,184,.42); }
-.btn-p:hover::before { opacity:1; }
-.btn-p svg,.btn-g svg { width:15px; height:15px; stroke:currentColor; fill:none; stroke-width:2.5; stroke-linecap:round; }
-.btn-g { display:inline-flex; align-items:center; gap:8px; padding:13px 28px; background:transparent; color:var(--body); font-family:var(--f); font-size:14px; font-weight:600; text-decoration:none; border:1px solid rgba(255,255,255,0.18); border-radius:8px; transition:all .25s; }
-.btn-g:hover { color:var(--white); border-color:rgba(255,255,255,0.36); background:rgba(255,255,255,.05); }
-.compliance { display:flex; align-items:center; gap:8px; flex-wrap:wrap; opacity:0; }
-.comp-lbl { font-size:10px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:var(--soft); margin-right:4px; }
-.badge { display:inline-flex; align-items:center; gap:5px; padding:4px 11px; background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.10); border-radius:4px; font-size:10px; font-weight:700; letter-spacing:.07em; color:var(--soft); transition:all .2s; cursor:default; }
-.badge:hover { border-color:var(--teal); color:var(--teal); background:var(--td); }
-.pip { width:4px; height:4px; border-radius:50%; background:var(--teal); opacity:.8; }
-.hero-right { position:relative; overflow:hidden; display:flex; align-items:center; justify-content:center; }
-.hero-right::before { content:''; position:absolute; inset:0; pointer-events:none; background:radial-gradient(ellipse 80% 65% at 50% 50%,rgba(0,212,184,0.06) 0%,transparent 72%); }
-#globe { width:100%; height:100%; display:block; }
-.pill { position:absolute; background:rgba(11,18,34,0.90); backdrop-filter:blur(20px); border:1px solid var(--bdr); border-radius:12px; padding:14px 18px; pointer-events:none; opacity:0; }
-.pill-1 { top:22%; left:3%; }
-.pill-2 { top:28%; right:4%; }
-.pill-3 { bottom:22%; right:6%; }
-.pill-val { font-size:20px; font-weight:800; color:var(--teal); letter-spacing:-0.04em; line-height:1; }
-.pill-lbl { font-size:10px; color:var(--body); margin-top:4px; white-space:nowrap; font-weight:500; }
+    /* ─── CURSOR ─── */
+    #cursor {
+      position: fixed; top: 0; left: 0;
+      width: 8px; height: 8px;
+      background: var(--teal); border-radius: 50%;
+      pointer-events: none; z-index: 9999;
+      transform: translate(-50%,-50%);
+      mix-blend-mode: screen;
+    }
+    #cursor-ring {
+      position: fixed; top: 0; left: 0;
+      width: 32px; height: 32px;
+      border: 1px solid rgba(0,196,162,0.55);
+      border-radius: 50%;
+      pointer-events: none; z-index: 9998;
+      transform: translate(-50%,-50%);
+      transition: width .22s, height .22s;
+    }
 
-/* PILLARS */
-#s-pillars { position:relative; z-index:1; padding:0 56px 80px; }
-.pillars-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
-.pillar { background:var(--card); border:1px solid var(--bdr); border-radius:14px; padding:32px 28px 26px; backdrop-filter:blur(24px); transition:all .35s cubic-bezier(.23,1,.32,1); position:relative; overflow:hidden; cursor:default; opacity:0; transform:translateY(30px); }
-.pillar::after { content:''; position:absolute; top:0; left:0; right:0; height:1px; background:linear-gradient(90deg,transparent 5%,var(--teal) 50%,transparent 95%); opacity:0; transition:opacity .35s; }
-.pillar:hover { border-color:var(--bdrh); transform:translateY(-5px); box-shadow:0 24px 60px rgba(0,0,0,.4),0 0 40px rgba(0,212,184,.07); }
-.pillar:hover::after { opacity:1; }
-.p-num { font-size:10px; font-weight:700; letter-spacing:.16em; color:var(--teal); opacity:.5; margin-bottom:20px; }
-.p-icon { width:46px; height:46px; background:var(--td); border:1px solid rgba(0,212,184,.16); border-radius:11px; display:flex; align-items:center; justify-content:center; margin-bottom:20px; transition:all .3s; }
-.pillar:hover .p-icon { background:rgba(0,212,184,.18); box-shadow:0 0 22px rgba(0,212,184,.2); }
-.p-icon svg { width:22px; height:22px; stroke:var(--teal); fill:none; stroke-width:1.5; stroke-linecap:round; stroke-linejoin:round; }
-.p-name { font-size:18px; font-weight:700; letter-spacing:-0.03em; color:var(--white); margin-bottom:10px; }
-.p-desc { font-size:13px; line-height:1.75; color:var(--body); font-weight:400; margin-bottom:22px; }
-.chips { display:flex; gap:6px; flex-wrap:wrap; }
-.chip { font-size:10px; font-weight:600; padding:3px 9px; border-radius:100px; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.10); color:var(--soft); letter-spacing:.04em; transition:all .2s; }
-.pillar:hover .chip { border-color:rgba(0,212,184,.2); color:rgba(0,212,184,.8); }
+    /* ─── SCROLL PROGRESS ─── */
+    #scroll-progress {
+      position: fixed; top: 0; left: 0;
+      height: 2px; width: 0%;
+      background: linear-gradient(90deg, var(--teal), var(--orange));
+      z-index: 300;
+    }
 
-/* SCROLL SCENES */
-.scroll-scene { height:300vh; position:relative; z-index:1; }
-.scene-sticky {
-  position:sticky; top:0; height:100vh; overflow:hidden;
-  display:grid; grid-template-columns:44% 56%; align-items:center;
-}
-.scene-copy { position:relative; z-index:2; padding:0 40px 0 56px; }
-.scene-tag { display:inline-flex; align-items:center; gap:10px; margin-bottom:24px; font-size:10px; font-weight:700; letter-spacing:.2em; text-transform:uppercase; color:var(--teal); }
-.scene-tag-bar { width:22px; height:1px; background:var(--teal); }
-.scene-h2 { font-size:clamp(26px,3vw,46px); font-weight:800; letter-spacing:-0.035em; line-height:1.1; margin-bottom:20px; color:var(--white); }
-.scene-h2 span { color:var(--teal); }
-.scene-p { font-size:15px; font-weight:400; line-height:1.82; color:var(--body); max-width:430px; margin-bottom:28px; }
-.scene-features { list-style:none; display:flex; flex-direction:column; gap:14px; }
-.scene-features li {
-  display:flex; align-items:flex-start; gap:12px;
-  font-size:13px; font-weight:500; color:var(--body);
-  opacity:0; transform:translateX(-16px);
-  transition: color 0.4s, text-shadow 0.4s;
-}
-.scene-features li.feat-active { color:var(--teal); text-shadow:0 0 16px rgba(0,212,184,0.4); }
-.feat-dot { flex-shrink:0; width:6px; height:6px; border-radius:50%; background:var(--teal); margin-top:5px; box-shadow:0 0 8px var(--teal); }
+    /* ─── NAV ─── */
+    .nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1.1rem 3.5rem;
+      backdrop-filter: blur(16px) saturate(160%);
+      -webkit-backdrop-filter: blur(16px) saturate(160%);
+      background: rgba(5,16,28,0.52);
+      border-bottom: 1px solid rgba(0,196,162,0.07);
+      transition: background .4s;
+    }
+    .nav-logo {
+      display: flex; align-items: center; gap: .55rem;
+      font-weight: 900; font-size: 1.05rem; letter-spacing: .14em;
+      text-transform: uppercase; color: var(--orange);
+    }
+    .nav-logo img {
+      width: 28px; height: 28px; object-fit: contain; display: block;
+      background: #fff; border-radius: 50%; padding: 3px;
+    }
+    .nav-links { display: flex; list-style: none; gap: 2.5rem; align-items: center; line-height: 1; }
+    .nav-links a {
+      font-size: .75rem; font-weight: 700;
+      letter-spacing: .09em; text-transform: uppercase;
+      color: #FFFFFF;
+      position: relative; padding-bottom: 3px;
+      transition: color .2s;
+    }
+    .nav-links a::after {
+      content: ''; position: absolute; bottom: 0; left: 0;
+      width: 0; height: 2px;
+      background: var(--yellow);
+      transition: width .25s cubic-bezier(0.16,1,0.3,1);
+    }
+    .nav-links a:hover::after { width: 100%; }
 
-/* Canvas wrappers */
-.canvas-wrap {
-  position:absolute; top:0; right:0; width:56%; height:100%;
-  pointer-events:auto; overflow:hidden;
-}
-.canvas-wrap canvas { width:100%; height:100%; display:block; }
-/* AI neural — canvas on left */
-.canvas-wrap-left {
-  position:absolute; top:0; left:0; width:56%; height:100%;
-  pointer-events:auto; overflow:hidden;
-}
-.canvas-wrap-left canvas { width:100%; height:100%; display:block; }
+    /* Yajur Labs dropdown */
+    .nav-dropdown { position: relative; }
+    .nav-dropdown__toggle {
+      font-size: .75rem; font-weight: 700;
+      letter-spacing: .09em; text-transform: uppercase;
+      color: #FFFFFF; background: none; border: none;
+      font-family: var(--font); cursor: none;
+      padding: 0 0 3px 0; margin: 0; position: relative;
+      display: flex; align-items: center; gap: .35rem;
+      line-height: inherit; vertical-align: middle;
+    }
+    .nav-dropdown__toggle::after {
+      content: ''; position: absolute; bottom: 0; left: 0;
+      width: 0; height: 2px; background: var(--yellow);
+      transition: width .25s cubic-bezier(0.16,1,0.3,1);
+    }
+    .nav-dropdown:hover .nav-dropdown__toggle::after,
+    .nav-dropdown.is-open .nav-dropdown__toggle::after { width: 100%; }
+    .nav-dropdown__caret {
+      display: inline-block; font-size: .6rem;
+      transition: transform .2s;
+    }
+    .nav-dropdown.is-open .nav-dropdown__caret { transform: rotate(180deg); }
+    .nav-dropdown__menu {
+      display: none; position: absolute; top: calc(100% + .8rem); left: 50%;
+      transform: translateX(-50%);
+      background: rgba(9,21,42,0.95);
+      border: 1px solid var(--border);
+      border-radius: 4px; min-width: 180px;
+      backdrop-filter: blur(16px); z-index: 50;
+      padding: .5rem 0;
+      box-shadow: 0 16px 40px rgba(0,0,0,0.4);
+    }
+    .nav-dropdown.is-open .nav-dropdown__menu { display: block; }
+    .nav-dropdown__menu a {
+      display: block; padding: .65rem 1.2rem;
+      font-size: .72rem; font-weight: 600;
+      letter-spacing: .07em; text-transform: none;
+      color: #FFFFFF;
+      transition: color .15s, background .15s;
+    }
+    .nav-dropdown__menu a::after { display: none; }
+    .nav-dropdown__menu a:hover { color: var(--teal); background: rgba(0,196,162,0.07); }
+    .nav-actions { display: flex; gap: .75rem; align-items: center; }
+    .btn-nav {
+      background: var(--teal); color: #05101C;
+      font-family: var(--font); font-size: .72rem; font-weight: 700;
+      letter-spacing: .09em; text-transform: uppercase;
+      border: none; border-radius: 3px; padding: .5rem 1.25rem;
+      cursor: none; transition: opacity .2s, transform .15s;
+    }
+    .btn-nav:hover { opacity: .88; transform: translateY(-1px); }
 
-/* INTEROP PIPELINE */
-.pipeline-wrap { position:absolute; top:0; right:0; width:56%; height:100%; display:flex; flex-direction:column; justify-content:center; padding:0 52px 0 44px; z-index:2; }
-.pipeline-scene { display:flex; flex-direction:column; justify-content:center; gap:24px; }
-.track-row {
-  display:flex; flex-direction:column; gap:8px;
-  opacity:0; transform:translateX(30px);
-}
-.track-label { display:flex; align-items:center; gap:10px; }
-.track-badge { padding:3px 10px; border-radius:4px; font-size:10px; font-weight:800; letter-spacing:.08em; }
-.track-badge.hl7  { background:rgba(245,166,35,.12); color:var(--gold);  border:1px solid rgba(245,166,35,.25); }
-.track-badge.fhir { background:rgba(0,212,184,.12);  color:var(--teal);  border:1px solid rgba(0,212,184,.25); }
-.track-badge.ai   { background:rgba(232,237,245,.07); color:var(--white); border:1px solid rgba(232,237,245,.2); }
-.track-meta { font-size:11px; color:var(--soft); font-weight:400; }
-.track-dir { font-size:10px; color:var(--faint); font-weight:600; letter-spacing:.06em; margin-left:auto; }
-.track-bar { position:relative; height:38px; background:rgba(255,255,255,.03); border-radius:8px; overflow:hidden; border:1px solid rgba(255,255,255,.07); }
-.track-fill { position:absolute; top:0; left:0; height:100%; width:0%; border-radius:8px; }
-.track-fill.hl7-f  { background:linear-gradient(90deg,rgba(245,166,35,.35),rgba(245,166,35,.06)); }
-.track-fill.fhir-f { background:linear-gradient(90deg,rgba(0,212,184,.35),rgba(0,212,184,.06)); }
-.track-fill.ai-f   { background:linear-gradient(90deg,rgba(232,237,245,.25),rgba(232,237,245,.03)); }
-.track-packets { position:absolute; top:0; left:0; right:0; height:100%; overflow:hidden; }
-.packet { position:absolute; top:50%; transform:translateY(-50%); height:6px; border-radius:3px; opacity:0; }
-.packet.hl7-pk  { background:var(--gold);  box-shadow:0 0 8px var(--gold); }
-.packet.fhir-pk { background:var(--teal);  box-shadow:0 0 8px var(--teal); }
-.packet.ai-pk   { background:var(--white); box-shadow:0 0 8px rgba(232,237,245,.5); }
-.pipe-connector { display:flex; align-items:center; gap:10px; padding:0 4px; opacity:0; }
-.pipe-line { flex:1; height:1px; }
-.pipe-arrow { flex-shrink:0; }
-.pipe-badges { display:flex; gap:8px; flex-wrap:wrap; margin-top:4px; opacity:0; }
+    /* ─── SHARED BUTTON STYLES ─── */
+    .btn-primary {
+      display: inline-block;
+      background: var(--teal); color: #05101C;
+      font-family: var(--font); font-size: .78rem; font-weight: 700;
+      letter-spacing: .1em; text-transform: uppercase;
+      border: none; border-radius: 3px; padding: .75rem 1.9rem;
+      cursor: none; transition: opacity .2s, transform .15s, box-shadow .2s;
+    }
+    .btn-primary:hover { opacity: .88; transform: translateY(-2px); box-shadow: 0 8px 28px rgba(0,196,162,0.26); }
+    .btn-ghost {
+      display: inline-block;
+      background: none; border: 1px solid var(--border); color: var(--text);
+      font-family: var(--font); font-size: .78rem; font-weight: 500;
+      letter-spacing: .08em; text-transform: uppercase;
+      border-radius: 3px; padding: .75rem 1.9rem;
+      cursor: none; transition: border-color .2s;
+    }
+    .btn-ghost:hover { border-color: var(--text); }
+    .btn-orange {
+      display: inline-block;
+      background: var(--orange); color: #fff;
+      font-family: var(--font); font-size: .78rem; font-weight: 700;
+      letter-spacing: .1em; text-transform: uppercase;
+      border: none; border-radius: 3px; padding: .75rem 1.9rem;
+      cursor: none; transition: opacity .2s, transform .15s;
+    }
+    .btn-orange:hover { opacity: .88; transform: translateY(-2px); }
 
-/* CTA */
-#s-cta { position:relative; z-index:1; height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; overflow:hidden; }
-#convergence-canvas { position:absolute; inset:0; width:100%; height:100%; }
-.cta-content { position:relative; z-index:2; max-width:700px; padding:0 32px; }
-.cta-h { font-size:clamp(28px,4vw,56px); font-weight:800; letter-spacing:-0.04em; line-height:1.1; margin-bottom:20px; }
-.cta-h span { color:var(--gold); }
-.cta-p { font-size:16px; font-weight:400; line-height:1.75; color:var(--body); margin-bottom:44px; }
-.cta-btns { display:flex; gap:16px; justify-content:center; flex-wrap:wrap; }
+    /* ─── HERO ─── */
+    #s-hero { min-height: 100vh; display: grid; grid-template-columns: 55% 45%; }
+    .hero-text {
+      display: flex; flex-direction: column; justify-content: center;
+      padding: 9rem 4rem 6rem 5.5rem; background: var(--bg);
+    }
+    .hero-canvas { position: relative; overflow: hidden; background: #05101C; }
+    .hero-canvas canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
 
-/* AI grid — canvas on left, text col 2 */
-#s-ai .scene-sticky { grid-template-columns:56% 44%; }
-#s-ai .scene-copy { grid-column:2; padding:0 56px 0 40px; }
+    .eyebrow {
+      display: flex; align-items: center; gap: .7rem;
+      font-size: .68rem; font-weight: 600;
+      letter-spacing: .2em; text-transform: uppercase;
+      color: var(--teal); margin-bottom: 2.4rem;
+    }
+    .eyebrow-line { display: block; width: 26px; height: 1px; background: currentColor; flex-shrink: 0; }
 
-/* DNA drag cursor */
-#dna-canvas { cursor:none; }
+    .h-display {
+      font-weight: 900; font-size: clamp(2.6rem, 4.8vw, 4.5rem);
+      line-height: 1.02; letter-spacing: -.025em; color: var(--text);
+    }
+    .h-display .thin   { font-weight: 100; display: block; margin-bottom: .5rem; }
+    .h-display .hi-t   { color: var(--teal); }
+    .h-display .hi-o   { color: var(--orange); }
 
-/* ── CUSTOM CURSOR ───────────────────────────────────── */
-html { cursor:none; }
-a,button,.btn-p,.btn-g,.nav-cta,.nav-ghost,.pillar,label { cursor:none; }
-#cursor-dot {
-  position:fixed; z-index:10000; pointer-events:none;
-  width:7px; height:7px; border-radius:50%;
-  background:var(--teal);
-  transform:translate(-50%,-50%);
-  will-change:transform;
-  transition:width .18s ease,height .18s ease,background .18s ease,opacity .18s ease;
-}
-#cursor-ring {
-  position:fixed; z-index:9999; pointer-events:none;
-  width:30px; height:30px; border-radius:50%;
-  border:1.5px solid rgba(0,212,184,0.5);
-  transform:translate(-50%,-50%);
-  will-change:transform;
-  transition:width .32s cubic-bezier(.23,1,.32,1),
-             height .32s cubic-bezier(.23,1,.32,1),
-             border-color .25s ease,opacity .2s ease;
-}
-body.c-hover #cursor-dot  { width:11px; height:11px; background:var(--gold); }
-body.c-hover #cursor-ring { width:44px; height:44px; border-color:rgba(245,166,35,0.55); }
-body.c-click #cursor-dot  { width:5px; height:5px; opacity:.7; }
-body.c-click #cursor-ring { width:22px; height:22px; }
-body.c-hidden #cursor-dot,
-body.c-hidden #cursor-ring { opacity:0; }
+    .hero-sub {
+      font-size: 1.05rem; font-weight: 300; line-height: 1.78;
+      color: var(--muted); max-width: 450px;
+      margin-top: 1.6rem; margin-bottom: 2.4rem;
+    }
+    .hero-cta { display: flex; gap: 1rem; align-items: center; }
+    .hero-divider {
+      margin-top: 4rem; padding-top: 2.5rem;
+      border-top: 1px solid var(--border);
+      display: flex; gap: 3.5rem;
+    }
+    .stat-val {
+      font-size: 2rem; font-weight: 800;
+      line-height: 1; letter-spacing: -.025em; color: var(--text);
+    }
+    .stat-val sup { font-size: 1rem; color: var(--teal); }
+    .stat-lbl { font-size: .68rem; font-weight: 400; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-top: .3rem; }
 
-/* ── WORD SPLIT ──────────────────────────────────────── */
-.word-wrap  { display:inline-block; overflow:hidden; vertical-align:bottom; line-height:inherit; }
-.word-inner { display:inline-block; }
+    /* ─── IMPACT BANNER ─── */
+    #s-impact {
+      padding: 6rem 5.5rem;
+      background: var(--navy);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+    .impact-tag {
+      font-size: .68rem; font-weight: 600; letter-spacing: .22em;
+      text-transform: uppercase; color: var(--teal);
+      font-style: italic; margin-bottom: 1.4rem;
+    }
+    .impact-title {
+      font-weight: 800; font-size: clamp(1.7rem, 3vw, 2.6rem);
+      line-height: 1.12; letter-spacing: -.02em; color: var(--text);
+      max-width: 820px; margin-bottom: 1.4rem;
+    }
+    .impact-desc {
+      font-size: 1.05rem; font-weight: 300; line-height: 1.78;
+      color: var(--muted); max-width: 760px;
+    }
 
-/* ── CHROMATIC ABERRATION ────────────────────────────── */
-@keyframes chromaIn {
-  0%   { filter:drop-shadow(-4px 0 0 rgba(255,45,45,.75)) drop-shadow(4px 0 0 rgba(0,210,255,.75)); }
-  55%  { filter:drop-shadow(-1px 0 0 rgba(255,45,45,.18)) drop-shadow(1px 0 0 rgba(0,210,255,.18)); }
-  100% { filter:none; }
-}
-.chroma-flash { animation:chromaIn .5s ease-out forwards; }
+    /* ─── MISSION ─── */
+    #s-mission { padding: 7rem 5.5rem; background: var(--bg); }
+    .mission-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 5rem; align-items: start;
+    }
+    .mission-title {
+      font-weight: 800; font-size: clamp(1.8rem, 3vw, 2.8rem);
+      line-height: 1.1; letter-spacing: -.022em; color: var(--text);
+    }
+    .mission-title em { font-style: normal; color: var(--teal); }
+    .mission-body p {
+      font-size: 1.05rem; font-weight: 300; line-height: 1.8; color: var(--muted);
+    }
+    .mission-body p + p { margin-top: 1.5rem; }
 
-/* ── FILM GRAIN ──────────────────────────────────────── */
-@keyframes grainShift {
-  0%  {transform:translate(0,0)}  10%{transform:translate(-2%,-3%)}
-  20% {transform:translate(-4%,2%)} 30%{transform:translate(3%,-4%)}
-  40% {transform:translate(-1%,5%)} 50%{transform:translate(-3%,1%)}
-  60% {transform:translate(4%,-2%)} 70%{transform:translate(1%,3%)}
-  80% {transform:translate(-3%,4%)} 90%{transform:translate(2%,-1%)}
-  100%{transform:translate(0,0)}
-}
-#grain-overlay {
-  position:fixed; inset:-10%; z-index:9997; pointer-events:none;
-  width:120%; height:120%;
-  opacity:0.038; mix-blend-mode:overlay;
-  animation:grainShift .45s steps(1) infinite;
-  background-repeat:repeat;
-  background-size:180px 180px;
-}
+    /* ─── PILLARS ─── */
+    #s-pillars { padding: 6rem 5.5rem; background: var(--navy); }
+    .section-header { margin-bottom: 3.5rem; }
+    .section-label {
+      font-size: .68rem; font-weight: 600; letter-spacing: .2em;
+      text-transform: uppercase; color: var(--teal); margin-bottom: .8rem;
+    }
+    .section-label--orange { color: var(--orange); }
+    .section-h2 {
+      font-weight: 800; font-size: clamp(1.8rem, 3vw, 2.7rem);
+      line-height: 1.1; letter-spacing: -.022em; color: var(--text);
+    }
+    .pillars-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; }
+    .pillar-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 4px; padding: 2rem 1.8rem;
+      backdrop-filter: blur(12px);
+      transition: border-color .25s, transform .25s;
+    }
+    .pillar-card:hover { border-color: var(--teal); transform: translateY(-3px); }
+    .pillar-tag {
+      font-size: .65rem; font-weight: 600; letter-spacing: .18em;
+      text-transform: uppercase; color: var(--teal); margin-bottom: 1rem;
+    }
+    .pillar-card:nth-child(2) .pillar-tag { color: var(--orange); }
+    .pillar-card:nth-child(2) { border-color: var(--ob); }
+    .pillar-card:nth-child(2):hover { border-color: var(--orange); }
+    .pillar-title {
+      font-weight: 700; font-size: 1.1rem; letter-spacing: -.01em;
+      color: var(--text); margin-bottom: .75rem;
+    }
+    .pillar-desc { font-size: .96rem; font-weight: 300; color: var(--muted); line-height: 1.7; margin-bottom: 1.2rem; }
+    .pillar-items { list-style: none; display: flex; flex-direction: column; gap: .45rem; }
+    .pillar-items li {
+      font-size: .8rem; font-weight: 500; color: var(--muted);
+      display: flex; align-items: center; gap: .6rem;
+    }
+    .pillar-items li::before {
+      content: ''; flex-shrink: 0; width: 4px; height: 4px;
+      border-radius: 50%; background: var(--teal);
+    }
+    .pillar-card:nth-child(2) .pillar-items li::before { background: var(--orange); }
 
-/* TAGLINE BAR */
-#s-tagline {
-  position:relative; z-index:1;
-  padding:28px 56px;
-  border-top:1px solid var(--bdr);
-  border-bottom:1px solid var(--bdr);
-  display:flex; align-items:center; justify-content:space-between; gap:24px;
-  background:rgba(255,255,255,0.015);
-}
-.tagline-main { font-size:clamp(13px,1.4vw,17px); font-weight:800; letter-spacing:.18em; text-transform:uppercase; color:var(--teal); }
-.tagline-sub  { font-size:clamp(11px,1vw,13px); font-weight:400; color:var(--soft); text-align:right; max-width:460px; line-height:1.6; }
+    /* ─── SCROLL SCENES ─── */
+    .scene-outer { position: relative; height: 260vh; }
+    .scene-sticky {
+      position: sticky; top: 0; height: 100vh; overflow: hidden;
+      display: grid; grid-template-columns: 1fr 1fr;
+    }
+    .scene-sticky--flip .scene-cv  { order: 2; }
+    .scene-sticky--flip .scene-txt { order: 1; }
+    .scene-cv { position: relative; overflow: hidden; background: #05101C; }
+    .scene-cv canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+    .scene-txt {
+      display: flex; flex-direction: column; justify-content: center;
+      padding: 5rem 4.5rem; position: relative; background: var(--bg);
+      overflow: hidden;
+    }
+    .ghost-num {
+      position: absolute; top: 2.5rem; right: 2.5rem;
+      font-size: 6.5rem; font-weight: 900; line-height: 1; letter-spacing: -.04em;
+      color: transparent; -webkit-text-stroke: 1px var(--border);
+      pointer-events: none; user-select: none;
+    }
+    .scene-tag {
+      display: flex; align-items: center; gap: .6rem;
+      font-size: .68rem; font-weight: 600; letter-spacing: .2em;
+      text-transform: uppercase; color: var(--teal); margin-bottom: 1.1rem;
+    }
+    .scene-tag::before { content: ''; display: block; width: 18px; height: 1px; background: currentColor; }
+    .scene-tag--o { color: var(--orange); }
+    .scene-h { font-weight: 800; font-size: clamp(1.9rem, 3.2vw, 3rem); line-height: 1.08; letter-spacing: -.025em; color: var(--text); margin-bottom: 1.2rem; }
+    .scene-h em   { font-style: normal; color: var(--teal); }
+    .scene-h .org { color: var(--orange); }
+    .scene-p { font-size: 1.02rem; font-weight: 300; line-height: 1.78; color: var(--muted); max-width: 400px; margin-bottom: 1.8rem; }
+    .feat-list { list-style: none; display: flex; flex-direction: column; gap: .65rem; }
+    .feat-list li {
+      display: flex; align-items: flex-start; gap: .8rem;
+      font-size: .96rem; font-weight: 400; color: var(--muted);
+    }
+    .feat-list li::before {
+      content: ''; flex-shrink: 0; width: 5px; height: 5px;
+      border-radius: 50%; background: var(--teal); margin-top: .42em;
+      transform: scale(0);
+      transition: transform 0s;
+    }
+    .feat-list li.bullet-in::before {
+      animation: dotPop 0.4s cubic-bezier(0.34,1.56,0.64,1) forwards;
+    }
+    @keyframes dotPop {
+      from { transform: scale(0); opacity: 0; }
+      60%  { transform: scale(1.5); opacity: 1; }
+      to   { transform: scale(1);   opacity: 1; }
+    }
+    .feat-list li b { color: var(--text); font-weight: 600; }
+    .feat-list--o li::before { background: var(--orange); }
 
-/* IMPACT */
-#s-impact {
-  position:relative; z-index:1;
-  padding:80px 56px;
-}
-.impact-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; }
-.impact-card {
-  background:var(--card); border:1px solid var(--bdr); border-radius:14px;
-  padding:32px 28px; backdrop-filter:blur(24px);
-  transition:border-color .3s, transform .3s;
-}
-.impact-card:hover { border-color:var(--bdrh); transform:translateY(-4px); }
-.impact-check { width:36px; height:36px; border-radius:50%; background:rgba(0,212,184,.1); border:1px solid rgba(0,212,184,.25); display:flex; align-items:center; justify-content:center; margin-bottom:20px; }
-.impact-check svg { width:16px; height:16px; stroke:var(--teal); fill:none; stroke-width:2.5; stroke-linecap:round; stroke-linejoin:round; }
-.impact-title { font-size:16px; font-weight:700; letter-spacing:-0.02em; color:var(--white); margin-bottom:10px; }
-.impact-desc  { font-size:13px; line-height:1.75; color:var(--body); }
+    /* ─── IMPACT STATEMENT ─── */
+    #s-impact-stmt { padding: 7rem 5.5rem; background: var(--navy); }
+    .impact-stmt-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 5rem; align-items: center;
+    }
+    .impact-stmt-left .section-h2 { margin-bottom: 2rem; }
+    .impact-stmt-items { display: flex; flex-direction: column; gap: 1.5rem; }
+    .impact-item {
+      background: var(--surface); border-left: 2px solid var(--teal);
+      border-radius: 0 4px 4px 0; padding: 1.25rem 1.5rem;
+      backdrop-filter: blur(12px);
+    }
+    .impact-item p { font-size: 1rem; font-weight: 400; color: var(--muted); line-height: 1.65; }
+    .impact-item p strong { color: var(--text); font-weight: 600; }
+    .impact-stmt-closing {
+      margin-top: 2.5rem; padding-top: 2rem; border-top: 1px solid var(--border);
+    }
+    .impact-stmt-closing p { font-size: .9rem; font-weight: 300; color: var(--muted); line-height: 1.75; }
+    .impact-stmt-closing p + p { margin-top: .75rem; font-weight: 500; color: var(--text); }
 
-@media(max-width:1024px){
-  .nav{padding:0 28px;} .nav-links{display:none;}
-  #s-hero{grid-template-columns:1fr;} .hero-left{padding:80px 28px 40px;}
-  .hero-right{height:50vw;min-height:260px;}
-  #s-pillars{padding:0 28px 60px;} .pillars-grid{grid-template-columns:1fr;}
-  #s-tagline{padding:20px 28px;flex-direction:column;align-items:flex-start;gap:8px;} .tagline-sub{text-align:left;}
-  #s-impact{padding:60px 28px;} .impact-grid{grid-template-columns:1fr;}
-  .scene-sticky{grid-template-columns:1fr;} .canvas-wrap,.canvas-wrap-left{width:100%;position:relative;height:50vw;}
-  .pipeline-wrap{width:100%;padding:0 28px;position:relative;}
-  #s-ai .scene-sticky{grid-template-columns:1fr;}
-  #s-ai .scene-copy{grid-column:1;padding:0 28px;}
-}
-</style>
+    /* ─── INSIGHTS ─── */
+    #s-insights { padding: 7rem 5.5rem; background: var(--bg); }
+    .insights-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem; margin-top: 3rem; }
+    .insight-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 4px; padding: 2rem 1.8rem;
+      backdrop-filter: blur(12px);
+      transition: border-color .25s, transform .2s;
+      display: flex; flex-direction: column; gap: .75rem;
+    }
+    .insight-card:hover { border-color: var(--teal); transform: translateY(-3px); }
+    .insight-card h3 { font-size: .98rem; font-weight: 700; color: var(--text); line-height: 1.4; }
+    .insight-card p  { font-size: .96rem; font-weight: 300; color: var(--muted); line-height: 1.7; flex: 1; }
+    .insight-link {
+      font-size: .72rem; font-weight: 600; letter-spacing: .1em;
+      text-transform: uppercase; color: var(--teal);
+      display: flex; align-items: center; gap: .5rem;
+      transition: gap .2s;
+    }
+    .insight-card:hover .insight-link { gap: .8rem; }
+
+    /* ─── LEGACY CRITIQUE ─── */
+    #s-legacy {
+      padding: 7rem 5.5rem; background: var(--navy);
+      border-top: 1px solid var(--border);
+    }
+    .legacy-inner { max-width: 900px; }
+    .legacy-title {
+      font-weight: 900; font-size: clamp(2rem, 4vw, 3.6rem);
+      line-height: 1.05; letter-spacing: -.025em; color: var(--text);
+      margin-bottom: 1.6rem;
+    }
+    .legacy-subtitle {
+      font-size: clamp(1.2rem, 2vw, 1.8rem); font-weight: 100;
+      color: var(--muted); line-height: 1.35; margin-bottom: 1.8rem;
+    }
+    .legacy-desc {
+      font-size: 1.05rem; font-weight: 300; line-height: 1.8;
+      color: var(--muted); max-width: 680px; margin-bottom: 2.5rem;
+    }
+    .legacy-highlight {
+      display: inline-block;
+      background: var(--ob); border: 1px solid var(--orange);
+      border-radius: 3px; padding: .3rem .75rem;
+      font-size: .78rem; font-weight: 700; color: var(--orange);
+      letter-spacing: .06em;
+    }
+
+    /* ─── SECURITY / CERTS ─── */
+    #s-security { padding: 7rem 5.5rem; background: var(--bg); }
+    .security-top {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 5rem;
+      align-items: start; margin-bottom: 4rem;
+    }
+    .security-cta-row { display: flex; gap: 1rem; margin-top: 2rem; }
+    .certs-title { font-weight: 700; font-size: 1rem; letter-spacing: -.01em; color: var(--text); margin-bottom: .5rem; }
+    .certs-sub   { font-size: .86rem; font-weight: 300; color: var(--muted); margin-bottom: 2rem; }
+    .cert-grid   { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; }
+    .cert-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 4px; padding: 1.5rem 1.25rem; text-align: center;
+      backdrop-filter: blur(12px);
+      transition: border-color .25s, transform .2s;
+    }
+    .cert-card:hover { border-color: var(--teal); transform: translateY(-2px); }
+    .cert-name { font-size: 1.1rem; font-weight: 800; color: var(--teal); margin-bottom: .4rem; }
+    .cert-region { font-size: .72rem; font-weight: 400; letter-spacing: .08em; color: var(--muted); text-transform: uppercase; }
+    .footer-ctas-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 1rem; margin-top: 3rem; }
+    .footer-cta {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 4px; padding: 1.75rem 1.5rem;
+      backdrop-filter: blur(12px);
+    }
+    .footer-cta h4 { font-size: .9rem; font-weight: 700; color: var(--text); margin-bottom: .5rem; line-height: 1.4; }
+    .footer-cta p  { font-size: .92rem; font-weight: 300; color: var(--muted); }
+
+    /* ─── VISION ─── */
+    #s-vision { padding: 6rem 5.5rem; background: var(--navy); text-align: center; }
+    .vision-inner { max-width: 800px; margin: 0 auto; }
+    blockquote {
+      font-size: clamp(1.3rem, 2.5vw, 2rem); font-weight: 200;
+      line-height: 1.55; color: var(--text); font-style: italic;
+      letter-spacing: -.01em; margin-bottom: 1.5rem;
+    }
+    blockquote::before { content: '\201C'; color: var(--teal); font-size: 3rem; line-height: 0; vertical-align: -0.5em; margin-right: .2rem; }
+    blockquote::after  { content: '\201D'; color: var(--teal); font-size: 3rem; line-height: 0; vertical-align: -0.5em; margin-left: .2rem; }
+    .vision-label { font-size: .68rem; font-weight: 700; letter-spacing: .22em; text-transform: uppercase; color: var(--teal); }
+
+    /* ─── CONTACT ─── */
+    #s-contact { padding: 6rem 5.5rem; background: var(--bg); text-align: center; }
+    .contact-inner { max-width: 600px; margin: 0 auto; }
+    .contact-title { font-weight: 800; font-size: clamp(1.8rem, 3.5vw, 3.2rem); line-height: 1.1; letter-spacing: -.025em; color: var(--text); margin-bottom: 1rem; }
+    .contact-title em { font-style: normal; color: var(--teal); }
+    .contact-desc { font-size: 1.05rem; font-weight: 300; color: var(--muted); margin-bottom: 2.2rem; }
+    .contact-cta { display: flex; justify-content: center; gap: 1rem; }
+
+    /* ─── CONVERGENCE ─── */
+    #s-convergence {
+      position: relative; min-height: 100vh;
+      display: flex; align-items: center; justify-content: center;
+      background: #05101C; text-align: center; overflow: hidden;
+    }
+    #s-convergence canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+    .conv-inner { position: relative; z-index: 2; max-width: 720px; padding: 4rem 2rem; }
+    .conv-eyebrow {
+      display: flex; align-items: center; justify-content: center; gap: .7rem;
+      font-size: .68rem; font-weight: 600; letter-spacing: .2em;
+      text-transform: uppercase; color: var(--orange); margin-bottom: 1.6rem;
+    }
+    .conv-eyebrow span { display: block; width: 26px; height: 1px; background: var(--orange); }
+    .conv-title {
+      font-weight: 900; font-size: clamp(2.8rem, 5.5vw, 5rem);
+      line-height: .98; letter-spacing: -.03em; color: var(--text); margin-bottom: 1.4rem;
+    }
+    .conv-title .thin { font-weight: 100; display: block; }
+    .conv-title em    { font-style: normal; color: var(--teal); }
+    .conv-body { font-size: 1.05rem; font-weight: 300; line-height: 1.75; color: var(--muted); margin-bottom: 2.8rem; }
+    .conv-cta  { display: flex; justify-content: center; gap: 1rem; }
+    .btn-xl {
+      display: inline-block; background: var(--teal); color: #05101C;
+      font-family: var(--font); font-size: .8rem; font-weight: 800;
+      letter-spacing: .12em; text-transform: uppercase;
+      border: none; border-radius: 3px; padding: .9rem 2.4rem;
+      cursor: none; transition: opacity .2s, transform .15s, box-shadow .2s;
+    }
+    .btn-xl:hover { opacity: .88; transform: translateY(-2px); box-shadow: 0 10px 36px rgba(0,196,162,0.28); }
+    .btn-xl-ghost {
+      display: inline-block; background: none;
+      border: 1px solid rgba(0,196,162,0.35); color: var(--teal);
+      font-family: var(--font); font-size: .8rem; font-weight: 600;
+      letter-spacing: .12em; text-transform: uppercase;
+      border-radius: 3px; padding: .9rem 2.4rem;
+      cursor: none; transition: border-color .2s;
+    }
+    .btn-xl-ghost:hover { border-color: var(--teal); }
+
+    /* ─── WORD SPLIT ─── */
+    .word-wrap  { overflow: hidden; display: inline-block; }
+    .word-inner { display: inline-block; }
+  </style>
 </head>
 <body>
-<div class="bg-grid"></div>
-<div class="bg-glow"></div>
-<div id="grain-overlay"></div>
-<div id="cursor-dot"></div>
+
+<div id="scroll-progress"></div>
+<div id="cursor"></div>
 <div id="cursor-ring"></div>
 
 <!-- NAV -->
 <nav class="nav">
   <a href="/" class="nav-logo">
-    <span class="logo-mark">
-      <svg viewBox="0 0 24 24" fill="none" stroke="#00D4B8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
-    </span>
-    YAJUR<span style="color:var(--teal)">.</span>ai
+    <img src="https://yajur.ai/assets/logo.png" alt="Yajur.ai">
+    YAJUR.ai
   </a>
   <ul class="nav-links">
-    <li><a href="#s-data">Data</a></li>
-    <li><a href="#s-ai">AI</a></li>
-    <li><a href="#s-interop">Interop</a></li>
-    <li><a href="#s-cta">Contact</a></li>
+    <li><a href="#s-mission">Mission</a></li>
+    <li><a href="#s-pillars">Solutions</a></li>
+    <li><a href="#s-insights">Insights</a></li>
+    <li><a href="https://yajur.ai/pontifex.html">Pontifex</a></li>
+    <li class="nav-dropdown" id="navDropdown">
+      <button class="nav-dropdown__toggle" id="navDropdownBtn">
+        Yajur Labs <span class="nav-dropdown__caret">&#9660;</span>
+      </button>
+      <div class="nav-dropdown__menu">
+        <a href="https://yajur.ai/sandbox/datalakehouse-navigator.html">Datalakehouse Navigator</a>
+        <a href="https://yajur.ai/nursing-roster-v5.html">Nursing Roster</a>
+        <a href="https://yajur.ai/gcoe-patient-oncocare-v7.html">Onco-CoE Platform</a>
+      </div>
+    </li>
+    <li><a href="#s-contact">Contact</a></li>
   </ul>
-  <div class="nav-right">
-    <a href="#s-pillars" class="nav-ghost">Explore work</a>
-    <a href="https://wa.me/message/E7VVRHRTVZIYC1" class="nav-cta" target="_blank" rel="noopener">Get access →</a>
+  <div class="nav-actions">
+    <a href="https://wa.me/message/E7VVRHRTVZIYC1" class="btn-nav">Get Early Access</a>
   </div>
 </nav>
 
 <!-- HERO -->
 <section id="s-hero">
-  <div class="hero-left">
-    <div class="eyebrow" id="h-ey"><span class="eyebrow-bar"></span>YAJUR.AI</div>
-    <h1 class="headline" id="h-hl">
-      <span class="hl-dim">The</span>
-      <span class="hl-teal">Medical Data</span>
-      <span>Infrastructure</span>
-      <span class="hl-gold">Company.</span>
+  <div class="hero-text">
+    <h1 class="h-display">
+      <span class="thin">YAJUR.ai:</span>
+      The Medical <span class="hi-t">Data</span>
+      Infrastructure
+      <span class="hi-o">Company</span>
     </h1>
-    <p class="sub" id="h-sub">
-      We believe that healthcare is fundamentally also a <em>data problem</em>, and solving this requires a paradigm shift in how medical information is structured, accessed, and utilized. At <em>Yajur Healthcare</em>, we are revolutionizing the future of healthcare by transforming medical data into actionable intelligence. Our mission is to bridge the knowledge gap in healthcare through <em>disease-specific datasets</em> and cutting-edge <em>AI-driven applications</em> that empower doctors, nurses, patients, radiologists, and pathologists.
+    <p class="hero-sub">
+      We believe healthcare is fundamentally a data problem. Yajur transforms
+      medical data into actionable intelligence — bridging fragmented records with
+      AI-ready infrastructure built for India's healthcare ecosystem.
     </p>
-    <div class="cta-row" id="h-cta">
-      <a href="https://wa.me/message/E7VVRHRTVZIYC1" class="btn-p" target="_blank" rel="noopener">Build with us <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
-      <a href="https://wa.me/message/E7VVRHRTVZIYC1" class="btn-g" target="_blank" rel="noopener">Get Early Access <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+    <div class="hero-cta">
+      <a href="https://wa.me/message/E7VVRHRTVZIYC1" class="btn-primary" target="_blank" rel="noopener">Build with Us</a>
+      <a href="https://yajur.ai/pontifex.html" class="btn-ghost">Explore Pontifex &rarr;</a>
     </div>
-    <div class="compliance" id="h-comp">
-      <span class="comp-lbl">Certified</span>
-      <span class="badge"><span class="pip"></span>HIPAA</span>
-      <span class="badge"><span class="pip"></span>SOC 2</span>
-      <span class="badge"><span class="pip"></span>ABDM</span>
-      <span class="badge"><span class="pip"></span>DHA UAE</span>
+    <div class="hero-divider">
+      <div>
+        <div class="stat-val">3<sup>+</sup></div>
+        <div class="stat-lbl">Core Pillars</div>
+      </div>
+      <div>
+        <div class="stat-val">4<sup>+</sup></div>
+        <div class="stat-lbl">Record Types</div>
+      </div>
+      <div>
+        <div class="stat-val">100<sup>%</sup></div>
+        <div class="stat-lbl">ABDM Compliant</div>
+      </div>
     </div>
   </div>
-  <div class="hero-right">
-    <canvas id="globe"></canvas>
-    <div class="pill pill-1" id="pill1"><div class="pill-val">3</div><div class="pill-lbl">Geographies</div></div>
-    <div class="pill pill-2" id="pill2"><div class="pill-val">FHIR R4</div><div class="pill-lbl">Standards-native</div></div>
-    <div class="pill pill-3" id="pill3"><div class="pill-val">ABDM</div><div class="pill-lbl">Health Stack Ready</div></div>
+  <div class="hero-canvas">
+    <canvas id="cvGlobe"></canvas>
   </div>
 </section>
 
-<!-- PILLARS -->
+<!-- SEAMLESS IMPACT -->
+<section id="s-impact">
+  <p class="impact-tag">Seamless Integration, Maximum Impact</p>
+  <h2 class="impact-title">
+    We Deliver Healthcare Capabilities That Meet Today's Patient Needs.
+    Not Yesterday's Requirements.
+  </h2>
+  <p class="impact-desc">
+    Partner with Yajur to continuously deliver AI-powered healthcare capabilities —
+    built on modern infrastructure, compliant from day one, and designed to evolve
+    with your patients' changing needs. Healthcare requirements don't wait.
+    Neither should your technology.
+  </p>
+</section>
+
+<!-- MISSION -->
+<section id="s-mission">
+  <div class="mission-grid">
+    <div>
+      <h2 class="mission-title">A strategic approach to <em>clinical data</em></h2>
+    </div>
+    <div class="mission-body">
+      <p>
+        We believe that healthcare is fundamentally also a data problem. We approach
+        this by providing clinical data curation on one end and building intelligent
+        agents on the other.
+      </p>
+      <p>
+        Our mission is to bridge the gap between fragmented medical records and
+        actionable AI insights, ensuring that high-fidelity data becomes the bedrock
+        of modern medicine.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- CORE PILLARS -->
 <section id="s-pillars">
+  <div class="section-header">
+    <p class="section-label">What We Build</p>
+    <h2 class="section-h2">Our Core Pillars</h2>
+  </div>
   <div class="pillars-grid">
-    <div class="pillar">
-      <div class="p-num">01 / DATA</div>
-      <div class="p-icon"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg></div>
-      <h3 class="p-name">Disease-Specific Datasets</h3>
-      <p class="p-desc">High-fidelity, curated datasets engineered for clinical pathways. AI-training-ready with built-in governance, provenance tracking, and compliance profiling.</p>
-      <div class="chips"><span class="chip">Dataset Design</span><span class="chip">Data Curation</span><span class="chip">Data Engineering</span></div>
+    <div class="pillar-card">
+      <p class="pillar-tag">01 / Data</p>
+      <h3 class="pillar-title">Disease Specific Datasets</h3>
+      <p class="pillar-desc">High-fidelity, curated datasets designed for specific clinical pathways and research objectives.</p>
+      <ul class="pillar-items">
+        <li>Dataset Design</li>
+        <li>Data Curation</li>
+        <li>Data Engineering</li>
+      </ul>
     </div>
-    <div class="pillar">
-      <div class="p-num">02 / AI</div>
-      <div class="p-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg></div>
-      <h3 class="p-name">AI-Driven Applications</h3>
-      <p class="p-desc">Intelligent co-pilot agents and orchestration layers that surface the right clinical context for every care decision, built on composable persona-aware frameworks.</p>
-      <div class="chips"><span class="chip">Intelligent Co-Pilot</span><span class="chip">Agent Orchestration</span><span class="chip">Insightful Dashboards</span></div>
+    <div class="pillar-card">
+      <p class="pillar-tag">02 / AI</p>
+      <h3 class="pillar-title">AI Driven Applications</h3>
+      <p class="pillar-desc">Intelligent orchestration layers and co-pilot agents that streamline medical workflows.</p>
+      <ul class="pillar-items">
+        <li>Intelligent Co-Pilot</li>
+        <li>Agent Orchestration</li>
+        <li>Insightful Dashboards</li>
+      </ul>
     </div>
-    <div class="pillar">
-      <div class="p-num">03 / INTEGRATION</div>
-      <div class="p-icon"><svg viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92c0-1.61-1.31-2.92-2.92-2.92z"/></svg></div>
-      <h3 class="p-name">Interoperability</h3>
-      <p class="p-desc">ABDM, FHIR R4, and HL7-aligned pipelines connecting legacy systems to modern AI infrastructure with privacy-first, compliance-native architecture.</p>
-      <div class="chips"><span class="chip">Standards Based Pipelines</span><span class="chip">Legacy Modernization</span><span class="chip">Real-time Data Flows</span></div>
+    <div class="pillar-card">
+      <p class="pillar-tag">03 / Integration</p>
+      <h3 class="pillar-title">Interoperability</h3>
+      <p class="pillar-desc">Compliance-driven data pipelines that ensure seamless flow across legacy and modern systems.</p>
+      <ul class="pillar-items">
+        <li>Standards Based Pipelines</li>
+        <li>Legacy Modernization</li>
+        <li>Real-time Data Flows</li>
+      </ul>
     </div>
   </div>
 </section>
 
-<!-- TAGLINE BAR -->
-<div id="s-tagline">
-  <span class="tagline-main">Seamless Integration, Maximum Impact</span>
-  <span class="tagline-sub">We Deliver Healthcare Capabilities That Meet Today's Patient Needs. Not Yesterday's Requirements.</span>
+<!-- DATA SERVICE (DNA Canvas) -->
+<div class="scene-outer">
+  <div class="scene-sticky" id="scene-data">
+    <div class="scene-cv">
+      <canvas id="cvDNA"></canvas>
+    </div>
+    <div class="scene-txt">
+      <span class="ghost-num">01</span>
+      <p class="scene-tag">Data</p>
+      <h2 class="scene-h">Disease Specific<br><em>Datasets</em></h2>
+      <p class="scene-p">
+        We design and structure disease-specific datasets aligned to clinical
+        pathways. Curated, annotated, and validated for accuracy — engineered
+        for AI training, fine-tuning, and reproducible clinical outcomes.
+      </p>
+      <ul class="feat-list">
+        <li><b>Disease-Specific Design</b> — aligned to clinical pathways and research objectives</li>
+        <li><b>High-Quality Annotation</b> — curated, validated, clinically relevant</li>
+        <li><b>AI-Ready Engineering</b> — optimized for training and fine-tuning</li>
+        <li><b>Data Governance</b> — ownership, access controls, auditability</li>
+        <li><b>Privacy &amp; Compliance</b> — security profiles aligned with regulatory requirements</li>
+      </ul>
+    </div>
+  </div>
 </div>
 
-<!-- IMPACT -->
-<section id="s-impact">
-  <div class="impact-grid">
-    <div class="impact-card">
-      <div class="impact-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
-      <div class="impact-title">Bridging the Gap</div>
-      <p class="impact-desc">We eliminate inefficiencies in patient care by reducing redundant tests, broken care pathways, and high out-of-pocket expenses.</p>
+<!-- AI SERVICE (Neural Canvas) -->
+<div class="scene-outer">
+  <div class="scene-sticky scene-sticky--flip" id="scene-ai">
+    <div class="scene-cv">
+      <canvas id="cvNeural"></canvas>
     </div>
-    <div class="impact-card">
-      <div class="impact-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
-      <div class="impact-title">Enhancing Clinical Outcomes</div>
-      <p class="impact-desc">By leveraging AI and multi-modal data, we bring precision, consistency, and real-world insights to healthcare.</p>
-    </div>
-    <div class="impact-card">
-      <div class="impact-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
-      <div class="impact-title">Empowering Stakeholders</div>
-      <p class="impact-desc">Our solutions benefit hospitals, researchers, insurers, and startups, ensuring data-driven decision-making at every level.</p>
-    </div>
-  </div>
-</section>
-
-<!-- DATA / DNA SECTION -->
-<section id="s-data" class="scroll-scene">
-  <div class="scene-sticky">
-    <div class="scene-copy" id="data-copy">
-      <div class="scene-tag" id="data-tag"><span class="scene-tag-bar"></span>01 / Data</div>
-      <h2 class="scene-h2" id="data-h2">Disease-Specific<br><span>Datasets</span></h2>
-      <p class="scene-p" id="data-p">High-fidelity medical data curated for AI training pipelines. Each dataset is structured for specific clinical pathways — from oncology to cardiology — with built-in governance and provenance tracking.</p>
-      <ul class="scene-features" id="data-feats">
-        <li id="df1"><span class="feat-dot"></span>Dataset Design &amp; Clinical Pathway Alignment</li>
-        <li id="df2"><span class="feat-dot"></span>High-Quality Curation &amp; Annotation</li>
-        <li id="df3"><span class="feat-dot"></span>AI-Ready Dataset Engineering</li>
-        <li id="df4"><span class="feat-dot"></span>Privacy, Security &amp; Compliance Profiling</li>
-      </ul>
-    </div>
-    <div class="canvas-wrap">
-      <canvas id="dna-canvas"></canvas>
-    </div>
-  </div>
-</section>
-
-<!-- AI / NEURAL SECTION -->
-<section id="s-ai" class="scroll-scene">
-  <div class="scene-sticky">
-    <div class="canvas-wrap-left">
-      <canvas id="neural-canvas"></canvas>
-    </div>
-    <div class="scene-copy" id="ai-copy">
-      <div class="scene-tag" id="ai-tag"><span class="scene-tag-bar"></span>02 / AI</div>
-      <h2 class="scene-h2" id="ai-h2">Intelligent<br><span>Agent Orchestration</span></h2>
-      <p class="scene-p" id="ai-p">Composable AI agents that reason across clinical data, surface contextual insights, and coordinate across multi-modal pipelines — governed by human-in-the-loop oversight.</p>
-      <ul class="scene-features" id="ai-feats">
-        <li id="af1"><span class="feat-dot"></span>Intelligent Clinical Co-Pilot</li>
-        <li id="af2"><span class="feat-dot"></span>Multi-Agent Orchestration Framework</li>
-        <li id="af3"><span class="feat-dot"></span>Persona-Aware Data Experiences</li>
-        <li id="af4"><span class="feat-dot"></span>AI-First Capability Expansion</li>
+    <div class="scene-txt">
+      <span class="ghost-num">02</span>
+      <p class="scene-tag scene-tag--o">Alignment</p>
+      <h2 class="scene-h">
+        <span class="org">Augmented Intelligence</span><br>Apps
+      </h2>
+      <p class="scene-p">
+        Patient-centric data constructs with persona-aware experiences.
+        From intelligent co-pilots to composable agent orchestration —
+        built for every stakeholder in the clinical workflow.
+      </p>
+      <ul class="feat-list feat-list--o">
+        <li><b>Patient-Centric Constructs</b> — clinical, operational, and research use cases</li>
+        <li><b>Multi-Modal Pipelines</b> — diverse healthcare data types, seamlessly</li>
+        <li><b>Persona-Aware Experiences</b> — right data, right context, per user role</li>
+        <li><b>Composable Framework</b> — define, configure, and evolve your use cases</li>
+        <li><b>Intelligent Co-Pilot</b> — coordinated AI agents across the pipeline lifecycle</li>
       </ul>
     </div>
   </div>
-</section>
+</div>
 
-<!-- INTEROP SECTION -->
-<section id="s-interop" class="scroll-scene">
-  <div class="scene-sticky">
-    <div class="scene-copy" id="interop-copy">
-      <div class="scene-tag" id="int-tag"><span class="scene-tag-bar"></span>03 / Interoperability</div>
-      <h2 class="scene-h2" id="int-h2">Compliance-Driven<br><span>Data Pipelines</span></h2>
-      <p class="scene-p" id="int-p">Standards-native pipelines that connect fragmented clinical systems to AI-ready infrastructure. From legacy HL7 to modern FHIR — seamless, secure, real-time.</p>
-      <ul class="scene-features" id="int-feats">
-        <li id="if1"><span class="feat-dot"></span>Interoperable Data Ingestion</li>
-        <li id="if2"><span class="feat-dot"></span>Standards-Based Normalization</li>
-        <li id="if3"><span class="feat-dot"></span>Real-time Multi-Modal Flows</li>
-        <li id="if4"><span class="feat-dot"></span>Scalable Lakehouse Infrastructure</li>
+<!-- INTEROP SERVICE (Pipeline Canvas) -->
+<div class="scene-outer">
+  <div class="scene-sticky" id="scene-interop">
+    <div class="scene-cv">
+      <canvas id="cvPipeline"></canvas>
+    </div>
+    <div class="scene-txt">
+      <span class="ghost-num">03</span>
+      <p class="scene-tag">Interoperability</p>
+      <h2 class="scene-h">Compliance Driven<br><em>Data Pipelines</em></h2>
+      <p class="scene-p">
+        NHCX, ABDM, HL7 FHIR, SNOMED CT — Yajur speaks every dialect
+        of healthcare data. Seamless ingestion, standards-based normalization,
+        cloud-native lakehouse infrastructure.
+      </p>
+      <ul class="feat-list">
+        <li><b>Interoperable Ingestion</b> — clinical, administrative, patient-generated sources</li>
+        <li><b>Standards-Based Normalization</b> — analytics- and AI-ready formats</li>
+        <li><b>Multi-Modal Enablement</b> — structured, unstructured, imaging, device feeds</li>
+        <li><b>Privacy-First Architecture</b> — consent management, de-identification, access control</li>
+        <li><b>Scalable Lakehouse</b> — longitudinal records and population-level analytics</li>
       </ul>
     </div>
-    <div class="pipeline-wrap">
-      <div class="pipeline-scene">
-        <div class="track-row" id="track-hl7">
-          <div class="track-label">
-            <span class="track-badge hl7">HL7</span>
-            <span class="track-meta">Legacy clinical messages</span>
-            <span class="track-dir">INGEST</span>
-          </div>
-          <div class="track-bar">
-            <div class="track-fill hl7-f" id="fill-hl7"></div>
-            <div class="track-packets" id="pkts-hl7"></div>
-          </div>
-        </div>
-        <div class="pipe-connector" id="conn1">
-          <div class="pipe-line" style="background:linear-gradient(90deg,rgba(245,166,35,.4),rgba(0,212,184,.4));"></div>
-          <svg class="pipe-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#00D4B8" stroke-width="2" stroke-linecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-        </div>
-        <div class="track-row" id="track-fhir">
-          <div class="track-label">
-            <span class="track-badge fhir">FHIR R4</span>
-            <span class="track-meta">Normalized health resources</span>
-            <span class="track-dir">TRANSFORM</span>
-          </div>
-          <div class="track-bar">
-            <div class="track-fill fhir-f" id="fill-fhir"></div>
-            <div class="track-packets" id="pkts-fhir"></div>
-          </div>
-        </div>
-        <div class="pipe-connector" id="conn2">
-          <div class="pipe-line" style="background:linear-gradient(90deg,rgba(0,212,184,.4),rgba(232,237,245,.4));"></div>
-          <svg class="pipe-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#00D4B8" stroke-width="2" stroke-linecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-        </div>
-        <div class="track-row" id="track-ai">
-          <div class="track-label">
-            <span class="track-badge ai">AI-READY</span>
-            <span class="track-meta">Curated lakehouse datasets</span>
-            <span class="track-dir">SERVE</span>
-          </div>
-          <div class="track-bar">
-            <div class="track-fill ai-f" id="fill-ai"></div>
-            <div class="track-packets" id="pkts-ai"></div>
-          </div>
-        </div>
-        <div class="pipe-badges" id="pipe-badges">
-          <span class="badge"><span class="pip"></span>HIPAA</span>
-          <span class="badge"><span class="pip"></span>SOC 2</span>
-          <span class="badge"><span class="pip"></span>ABDM</span>
-          <span class="badge"><span class="pip"></span>DHA UAE</span>
-        </div>
+  </div>
+</div>
+
+<!-- IMPACT STATEMENT -->
+<section id="s-impact-stmt">
+  <div class="impact-stmt-grid">
+    <div class="impact-stmt-left">
+      <p class="section-label">Our Impact</p>
+      <h2 class="section-h2">Turning knowledge into augmented intelligence</h2>
+      <div class="impact-stmt-closing">
+        <p>
+          At Yajur Healthcare, we are turning knowledge into augmented intelligence,
+          shaping a future where healthcare is proactive, personalized, and powered by data.
+        </p>
+        <p>Let's build the future of AI-driven healthcare — together.</p>
+      </div>
+    </div>
+    <div class="impact-stmt-items">
+      <div class="impact-item">
+        <p><strong>Bridging the Gap</strong> — We eliminate inefficiencies in patient care by reducing redundant tests, broken care pathways, and high out-of-pocket expenses.</p>
+      </div>
+      <div class="impact-item">
+        <p><strong>Enhancing Clinical Outcomes</strong> — By leveraging AI and multi-modal data, we bring precision, consistency, and real-world insights to healthcare.</p>
+      </div>
+      <div class="impact-item">
+        <p><strong>Empowering Stakeholders</strong> — Our solutions benefit hospitals, researchers, insurers, and startups, ensuring data-driven decision-making at every level.</p>
       </div>
     </div>
   </div>
 </section>
 
-<!-- CTA -->
-<section id="s-cta">
-  <canvas id="convergence-canvas"></canvas>
-  <div class="cta-content">
-    <div class="eyebrow" id="cta-ey" style="justify-content:center;margin-bottom:24px;"><span class="eyebrow-bar"></span>Build Together</div>
-    <h2 class="cta-h" id="cta-h">Build the future of<br>medical AI <span>together.</span></h2>
-    <p class="cta-p" id="cta-p">Contact us to explore our data capabilities, AI partnership models, and interoperability roadmap. The next era of clinical intelligence starts here.</p>
-    <div class="cta-btns" id="cta-btns">
-      <a href="https://wa.me/message/E7VVRHRTVZIYC1" class="btn-p" target="_blank" rel="noopener">Get started <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
-      <a href="https://www.linkedin.com/company/yajur-ai/" class="btn-g" target="_blank" rel="noopener">LinkedIn <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+<!-- INSIGHTS -->
+<section id="s-insights">
+  <div class="section-header">
+    <p class="section-label">Pontifex</p>
+    <h2 class="section-h2">Insights &amp; Perspectives</h2>
+  </div>
+  <div class="insights-grid">
+    <div class="insight-card">
+      <h3>Fine-Tuning Large Language Models for Oncology: Key Challenges</h3>
+      <p>Explore the 13 essential recommendations for building robust, recency-aware AI systems for cancer care.</p>
+      <a href="/2024/12/15/fine-tuning-large-language-models-for-oncology-key-challenges.html" class="insight-link">Read More &rarr;</a>
+    </div>
+    <div class="insight-card">
+      <h3>Health Record Formats: Essential for Fine-Tuning a Citizen's Healthcare Journey</h3>
+      <p>Discover the four essential health record formats — clinical notes, lab results, radiology, and prescriptions — that are rebuilding the digital health journey.</p>
+      <a href="/2024/11/20/health-record-formats-essential-for-fine-tuning-a-citizens-healthcare-journey.html" class="insight-link">Read More &rarr;</a>
+    </div>
+    <div class="insight-card">
+      <h3>A Task Framework for Healthcare: Enabling Agentic AI Workflows in EHR Systems</h3>
+      <p>Moving from traditional transaction-driven models to task-driven frameworks for AI implementation.</p>
+      <a href="/2025/03/19/a-task-framework-for-healthcare-for-enabling-ai-agentic-workflows-in-ehr-systems.html" class="insight-link">Read More &rarr;</a>
+    </div>
+    <div class="insight-card">
+      <h3>Why Digitization Alone Couldn't Fix India's Health Claims Ecosystem</h3>
+      <p>Exploring the fundamental challenges of data fragmentation and the promise of NHCX.</p>
+      <a href="/2026/02/13/why-digitization-alone-couldnt-fix-indias-health-claims-ecosystem.html" class="insight-link">Read More &rarr;</a>
+    </div>
+  </div>
+</section>
+
+<!-- LEGACY CRITIQUE -->
+<section id="s-legacy">
+  <div class="legacy-inner">
+    <span class="legacy-highlight">18–24 month delivery cycles</span>
+    <h2 class="legacy-title" style="margin-top:1.2rem">Legacy Systems Can't Support<br>Modern Capabilities</h2>
+    <div class="legacy-subtitle">
+      Healthcare Needs Evolve<br>
+      Faster Than Traditional Software<br>
+      Lifecycle Can Deliver
+    </div>
+    <p class="legacy-desc">
+      While you wait 18–24 months for legacy vendors to deliver yesterday's requirements,
+      patient needs and clinical standards continue to advance. The gap keeps growing.
+    </p>
+    <a href="https://wa.me/message/E7VVRHRTVZIYC1" class="btn-primary" target="_blank" rel="noopener">Build with Yajur</a>
+  </div>
+</section>
+
+<!-- SECURITY & CERTIFICATIONS -->
+<section id="s-security">
+  <div class="security-top">
+    <div>
+      <p class="section-label">Security Native</p>
+      <h2 class="section-h2">YAJUR.ai: The Medical Data Infrastructure Company.</h2>
+      <div class="security-cta-row">
+        <a href="https://wa.me/message/E7VVRHRTVZIYC1" class="btn-primary" target="_blank" rel="noopener">Get Early Access</a>
+        <a href="https://yajur.ai/sandbox/datalakehouse-navigator.html" class="btn-ghost">Tech Stack</a>
+      </div>
+    </div>
+    <div>
+      <p class="certs-title">Global Standards and Certifications</p>
+      <p class="certs-sub">Adhering to international medical data standards.</p>
+      <div class="cert-grid">
+        <div class="cert-card">
+          <div class="cert-name">HIPAA</div>
+          <div class="cert-region">USA Standard</div>
+        </div>
+        <div class="cert-card">
+          <div class="cert-name">SOC 2</div>
+          <div class="cert-region">Security</div>
+        </div>
+        <div class="cert-card">
+          <div class="cert-name">ABDM</div>
+          <div class="cert-region">India Health</div>
+        </div>
+        <div class="cert-card" style="border-color: var(--ob);">
+          <div class="cert-name" style="color:var(--orange)">DHA</div>
+          <div class="cert-region">UAE — Pending</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <h3 class="section-h2" style="font-size:1.4rem; margin-bottom:1rem">We are ready to help</h3>
+  <div class="footer-ctas-grid">
+    <div class="footer-cta">
+      <h4>Contact Us</h4>
+      <p>Add AI-Capabilities as your Strategic Advantage</p>
+    </div>
+    <div class="footer-cta">
+      <h4>Let's Build the Future of Healthcare Data — Together</h4>
+      <p>Discover What Our Platform Can Enable for You</p>
+    </div>
+    <div class="footer-cta">
+      <h4>Learn from Our Journey Across Healthcare, Data &amp; AI</h4>
+      <p>Reach out, Let Us Innovate</p>
+    </div>
+  </div>
+</section>
+
+<!-- VISION -->
+<section id="s-vision">
+  <div class="vision-inner">
+    <blockquote>
+      There's a clear paradigm shift taking place across medical information,
+      and we are at the forefront of this transformation.
+    </blockquote>
+    <p class="vision-label">YAJUR.ai Vision</p>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section id="s-contact">
+  <div class="contact-inner">
+    <p class="section-label" style="justify-content:center; margin-bottom:.8rem;">Get in Touch</p>
+    <h2 class="contact-title">Build the future of <em>medical AI</em> together.</h2>
+    <p class="contact-desc">Contact us to explore our data capabilities and partnership models.</p>
+    <div class="contact-cta">
+      <a href="mailto:connect@yajur.ai" class="btn-primary">Get Started</a>
+      <a href="https://wa.me/message/E7VVRHRTVZIYC1" class="btn-ghost" target="_blank" rel="noopener">WhatsApp Us</a>
+    </div>
+  </div>
+</section>
+
+<!-- CONVERGENCE CTA -->
+<section id="s-convergence">
+  <canvas id="cvConvergence"></canvas>
+  <div class="conv-inner">
+    <p class="conv-eyebrow"><span></span>The Convergence<span></span></p>
+    <h2 class="conv-title">
+      <span class="thin">The time for</span>
+      <em>AI-first</em>
+      <span class="thin">medicine is now.</span>
+    </h2>
+    <p class="conv-body">
+      Karpathy, Amodei, Hassabis, Nadella, Pichai, Ng — every major AI voice
+      has converged on healthcare. Yajur builds the infrastructure that makes it real.
+    </p>
+    <div class="conv-cta">
+      <a href="https://wa.me/message/E7VVRHRTVZIYC1" class="btn-xl" target="_blank" rel="noopener">Build with Yajur</a>
+      <a href="https://yajur.ai/pontifex.html" class="btn-xl-ghost">Read the Thesis &rarr;</a>
     </div>
   </div>
 </section>
 
 <script>
-gsap.registerPlugin(ScrollTrigger);
-const DPR = Math.min(window.devicePixelRatio||1, 2);
 
-// ══════════════════════════════════════════════════════════════════════
-//  PHASE 2A — LENIS SMOOTH SCROLL INERTIA (with graceful fallback)
-// ══════════════════════════════════════════════════════════════════════
-// scrollVel is declared first so DNA/neural IIFEs below always have it
-let scrollVel = () => 0;
-
-try {
-  const lenis = new Lenis({
-    duration: 1.3,
-    easing: t => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-    wheelMultiplier: 0.92,
-    touchMultiplier: 1.8,
+/* ═══════════════════════════════════════════════════════
+   CURSOR
+═══════════════════════════════════════════════════════ */
+(function () {
+  var dot = document.getElementById('cursor');
+  var ring = document.getElementById('cursor-ring');
+  var mx = 0, my = 0, rx = 0, ry = 0;
+  document.addEventListener('mousemove', function (e) {
+    mx = e.clientX; my = e.clientY;
+    dot.style.transform = 'translate(' + (mx - 4) + 'px,' + (my - 4) + 'px)';
   });
-
-  // Keep GSAP ScrollTrigger in sync with Lenis position
-  lenis.on('scroll', ScrollTrigger.update);
-  gsap.ticker.add(t => lenis.raf(t * 1000));
-  gsap.ticker.lagSmoothing(0);
-
-  // Expose scroll velocity for canvas animations
-  let _sv = 0, _ly = 0;
-  lenis.on('scroll', ({scroll}) => { _sv = Math.abs(scroll - _ly); _ly = scroll; });
-  (function vd(){ _sv *= 0.88; requestAnimationFrame(vd); })();
-  scrollVel = () => Math.min(8, _sv);
-
-} catch(e) {
-  // Lenis unavailable — page still fully functional, just without smooth scroll
-  console.warn('[yajur] Lenis not available:', e.message);
-}
-const teal = a=>`rgba(0,212,184,${a})`;
-const gold = a=>`rgba(245,166,35,${a})`;
-const wht  = a=>`rgba(232,237,245,${a})`;
-const purp = a=>`rgba(160,120,255,${a})`;
-
-// ══════════════════════════════════════════════════════════════════════
-//  GLOBE
-// ══════════════════════════════════════════════════════════════════════
-(function(){
-  const C=document.getElementById('globe');
-  const ctx=C.getContext('2d');
-  let W,H,CX,CY,R,rot=0;
-  function ll2v(lat,lng){
-    const phi=(90-lat)*Math.PI/180, th=(lng+180)*Math.PI/180;
-    return { x:-Math.sin(phi)*Math.cos(th), y:Math.cos(phi), z:Math.sin(phi)*Math.sin(th) };
-  }
-  function rotY(v,a){ return { x:v.x*Math.cos(a)+v.z*Math.sin(a), y:v.y, z:-v.x*Math.sin(a)+v.z*Math.cos(a) }; }
-  function proj(v){ return { sx:CX+v.x*R, sy:CY-v.y*R, vis:v.z>-0.1, alpha:Math.max(0,Math.min(1,(v.z+0.2)/0.8)) }; }
-  function slerp(a,b,t){
-    let d=a.x*b.x+a.y*b.y+a.z*b.z;
-    d=Math.min(1,Math.max(-1,d));
-    const om=Math.acos(d);
-    if(Math.abs(om)<1e-4) return {...a};
-    const s=Math.sin(om);
-    const ta=Math.sin((1-t)*om)/s, tb=Math.sin(t*om)/s;
-    return { x:ta*a.x+tb*b.x, y:ta*a.y+tb*b.y, z:ta*a.z+tb*b.z };
-  }
-  const GEO=[
-    {id:'IND',label:'India', sublabel:'Bengaluru', lat:20.59,lng:78.96},
-    {id:'UAE',label:'UAE',   sublabel:'Dubai',     lat:23.42,lng:53.85},
-    {id:'USA',label:'USA',   sublabel:'New York',  lat:37.09,lng:-95.71}
-  ];
-  const ARCS=[{f:'IND',t:'UAE',col:'gold'},{f:'IND',t:'USA',col:'teal'},{f:'UAE',t:'USA',col:'teal'}];
-  const pkts=ARCS.flatMap((a,i)=>[
-    {arc:i,t:Math.random(),spd:0.0025+Math.random()*0.002,rev:false},
-    {arc:i,t:(Math.random()+0.5)%1,spd:0.002+Math.random()*0.002,rev:true}
-  ]);
-  function init(){
-    W=C.offsetWidth; H=C.offsetHeight;
-    C.width=W*DPR; C.height=H*DPR; ctx.scale(DPR,DPR);
-    CX=W*.5; CY=H*.47; R=Math.min(W,H)*.36;
-  }
-  function drawBase(){
-    const g=ctx.createRadialGradient(CX-R*.25,CY-R*.2,R*.05,CX,CY,R);
-    g.addColorStop(0,'rgba(18,30,58,0.95)');
-    g.addColorStop(0.55,'rgba(10,18,38,0.92)');
-    g.addColorStop(1,'rgba(5,10,22,0.95)');
-    ctx.beginPath(); ctx.arc(CX,CY,R,0,Math.PI*2);
-    ctx.fillStyle=g; ctx.fill();
-    const atm=ctx.createRadialGradient(CX,CY,R*0.88,CX,CY,R*1.1);
-    atm.addColorStop(0,'transparent');
-    atm.addColorStop(0.6,teal(0.07));
-    atm.addColorStop(1,'transparent');
-    ctx.beginPath(); ctx.arc(CX,CY,R*1.1,0,Math.PI*2);
-    ctx.fillStyle=atm; ctx.fill();
-    ctx.save();
-    ctx.beginPath(); ctx.arc(CX,CY,R*0.998,0,Math.PI*2); ctx.clip();
-    for(let lat=-60;lat<=60;lat+=30){
-      const phi=(90-lat)*Math.PI/180, yr=R*Math.cos(phi), xr=R*Math.sin(phi);
-      ctx.beginPath(); let go=false;
-      for(let a=0;a<=Math.PI*2;a+=0.04){
-        const v=rotY({x:xr*Math.cos(a),y:yr,z:xr*Math.sin(a)},rot);
-        const p=proj(v);
-        if(!p.vis){go=false;continue;}
-        go?ctx.lineTo(p.sx,p.sy):(ctx.moveTo(p.sx,p.sy),go=true);
-      }
-      ctx.strokeStyle=teal(0.06); ctx.lineWidth=0.5; ctx.stroke();
-    }
-    for(let lng=0;lng<360;lng+=30){
-      ctx.beginPath(); let go=false;
-      for(let la=-90;la<=90;la+=4){
-        const v=rotY(ll2v(la,lng),rot); const p=proj(v);
-        if(!p.vis){go=false;continue;}
-        go?ctx.lineTo(p.sx,p.sy):(ctx.moveTo(p.sx,p.sy),go=true);
-      }
-      ctx.strokeStyle=teal(0.04); ctx.lineWidth=0.4; ctx.stroke();
-    }
-    ctx.restore();
-  }
-  function drawArcs(){
-    ARCS.forEach((arc,i)=>{
-      const va=ll2v(GEO.find(g=>g.id===arc.f).lat,GEO.find(g=>g.id===arc.f).lng);
-      const vb=ll2v(GEO.find(g=>g.id===arc.t).lat,GEO.find(g=>g.id===arc.t).lng);
-      const N=80;
-      [false,true].forEach(isFront=>{
-        ctx.beginPath(); let go=false;
-        for(let k=0;k<=N;k++){
-          const v=rotY(slerp(va,vb,k/N),rot);
-          const front=v.z>0;
-          if(front!==isFront){go=false;continue;}
-          const p=proj(v);
-          if(!p.vis){go=false;continue;}
-          go?ctx.lineTo(p.sx,p.sy):(ctx.moveTo(p.sx,p.sy),go=true);
-        }
-        const cf=arc.col==='gold'?gold:teal;
-        ctx.strokeStyle=isFront?cf(0.55):cf(0.15);
-        ctx.lineWidth=isFront?1.5:0.7;
-        ctx.stroke();
-      });
-    });
-  }
-  function drawPackets(){
-    pkts.forEach(pk=>{
-      pk.t+=(pk.rev?-1:1)*pk.spd;
-      if(pk.t>1) pk.t=0; if(pk.t<0) pk.t=1;
-      const arc=ARCS[pk.arc];
-      const va=ll2v(GEO.find(g=>g.id===arc.f).lat,GEO.find(g=>g.id===arc.f).lng);
-      const vb=ll2v(GEO.find(g=>g.id===arc.t).lat,GEO.find(g=>g.id===arc.t).lng);
-      const v=rotY(slerp(va,vb,pk.t),rot);
-      if(!v||v.z<-0.05) return;
-      const p=proj(v);
-      const cf=arc.col==='gold'?gold:teal;
-      const col=arc.col==='gold'?'#F5A623':'#00D4B8';
-      const g2=ctx.createRadialGradient(p.sx,p.sy,0,p.sx,p.sy,10);
-      g2.addColorStop(0,cf(0.8)); g2.addColorStop(1,'transparent');
-      ctx.fillStyle=g2; ctx.beginPath(); ctx.arc(p.sx,p.sy,10,0,Math.PI*2); ctx.fill();
-      ctx.fillStyle=col; ctx.beginPath(); ctx.arc(p.sx,p.sy,3.5,0,Math.PI*2); ctx.fill();
-    });
-  }
-  function drawPins(){
-    GEO.forEach((g,i)=>{
-      const v=rotY(ll2v(g.lat,g.lng),rot);
-      if(v.z<-0.15) return;
-      const p=proj(v);
-      const pulse=0.65+0.35*Math.sin(Date.now()*0.003+i*1.5);
-      ctx.beginPath(); ctx.arc(p.sx,p.sy,14,0,Math.PI*2);
-      ctx.strokeStyle=gold(0.22*pulse); ctx.lineWidth=1; ctx.stroke();
-      const g2=ctx.createRadialGradient(p.sx,p.sy,0,p.sx,p.sy,9);
-      g2.addColorStop(0,gold(0.85)); g2.addColorStop(1,'transparent');
-      ctx.fillStyle=g2; ctx.beginPath(); ctx.arc(p.sx,p.sy,9,0,Math.PI*2); ctx.fill();
-      ctx.fillStyle='#F5A623'; ctx.beginPath(); ctx.arc(p.sx,p.sy,4.5,0,Math.PI*2); ctx.fill();
-      ctx.fillStyle='#FFFFFF'; ctx.beginPath(); ctx.arc(p.sx,p.sy,1.5,0,Math.PI*2); ctx.fill();
-      ctx.save();
-      ctx.textAlign='center';
-      ctx.font=`700 12px 'Montserrat',sans-serif`;
-      ctx.fillStyle=`rgba(245,166,35,${Math.min(1,v.z*3+0.7)})`;
-      ctx.fillText(g.label,p.sx,p.sy-21);
-      ctx.font=`400 9px 'Montserrat',sans-serif`;
-      ctx.fillStyle=wht(0.45);
-      ctx.fillText(g.sublabel,p.sx,p.sy-10);
-      ctx.restore();
-    });
-  }
-  function frame(){
-    ctx.clearRect(0,0,W,H); rot+=0.003;
-    drawBase(); drawArcs(); drawPackets(); drawPins();
-    requestAnimationFrame(frame);
-  }
-  let rt; window.addEventListener('resize',()=>{ clearTimeout(rt); rt=setTimeout(init,100); });
-  init(); frame();
-})();
-
-
-// ══════════════════════════════════════════════════════════════════════
-//  GSAP HERO — word-split headline + chromatic aberration
-// ══════════════════════════════════════════════════════════════════════
-(function(){
-  // Split each headline line into individual words
-  function splitWords(container){
-    const lines=container.querySelectorAll('span');
-    lines.forEach(line=>{
-      const text=line.textContent.trim();
-      if(!text) return;
-      const words=text.split(/\s+/);
-      line.innerHTML=words.map(w=>
-        `<span class="word-wrap"><span class="word-inner">${w}</span></span>`
-      ).join(' ');
-    });
-    return container.querySelectorAll('.word-inner');
-  }
-
-  const hlEl=document.getElementById('h-hl');
-  const wordEls=splitWords(hlEl);
-
-  // Headline visible, words handle own opacity
-  gsap.set(hlEl,{opacity:1,y:0});
-  // Set each word-inner to start state
-  gsap.set(wordEls,{opacity:0,y:26,scale:0.86});
-
-  // Split sub into word spans too
-  const subEl=document.getElementById('h-sub');
-  // Simpler: sub animates as a block but with a clip reveal
-  gsap.set(subEl,{opacity:0,y:0,clipPath:'inset(0 100% 0 0)'});
-
-  const heroTl=gsap.timeline({defaults:{ease:'power3.out'}});
-  heroTl
-    .to('#h-ey', {opacity:1,y:0,duration:.65},0.2)
-    // Fire chroma on headline start
-    .call(()=>{
-      hlEl.classList.add('chroma-flash');
-      setTimeout(()=>hlEl.classList.remove('chroma-flash'),500);
-    },null,0.32)
-    // Words stagger in
-    .to(wordEls,{opacity:1,y:0,scale:1,duration:.6,stagger:.065},0.35)
-    // Sub text: left→right clip reveal
-    .to(subEl,{opacity:1,clipPath:'inset(0 0% 0 0)',duration:.85,ease:'power2.inOut'},0.72)
-    .to('#h-cta', {opacity:1,y:0,duration:.6},1.12)
-    .to('#h-comp',{opacity:1,duration:.55},1.3)
-    .to('#pill1', {opacity:1,y:0,duration:.55},1.44)
-    .to('#pill2', {opacity:1,y:0,duration:.55},1.56)
-    .to('#pill3', {opacity:1,y:0,duration:.55},1.68);
-
-  // Pillar cards
-  gsap.utils.toArray('.pillar').forEach((el,i)=>{
-    gsap.to(el,{scrollTrigger:{trigger:el,start:'top 85%',once:true},
-      opacity:1,y:0,duration:.7,delay:i*.14,ease:'power2.out'});
-  });
-})();
-
-
-// ══════════════════════════════════════════════════════════════════════
-//  PHASE 2B — MOUSE-DRIVEN GLOBAL PARALLAX (camera tilt simulation)
-// ══════════════════════════════════════════════════════════════════════
-(function(){
-  let pmx=0, pmy=0, cpx=0, cpy=0;
-
-  document.addEventListener('mousemove', e => {
-    pmx = (e.clientX / window.innerWidth  - 0.5) * 2;
-    pmy = (e.clientY / window.innerHeight - 0.5) * 2;
-  });
-
-  const heroRight   = document.querySelector('.hero-right');
-  const heroLeft    = document.querySelector('.hero-left');
-  const canvasWraps = document.querySelectorAll('.canvas-wrap, .canvas-wrap-left');
-  const sceneCopies = document.querySelectorAll('.scene-copy');
-  const pipeWrap    = document.querySelector('.pipeline-wrap');
-
-  function lerp(a,b,t){ return a+(b-a)*t; }
-
-  (function loop(){
-    cpx = lerp(cpx, pmx, 0.032);
-    cpy = lerp(cpy, pmy, 0.032);
-    const px = cpx * 14, py = cpy * 8;
-
-    // Canvas wrappers (background) — move with mouse
-    canvasWraps.forEach(c => c.style.transform = `translate(${px*.75}px,${py*.45}px)`);
-    if(pipeWrap) pipeWrap.style.transform = `translate(${px*.65}px,${py*.4}px)`;
-
-    // Globe panel — largest shift (deepest layer)
-    if(heroRight) heroRight.style.transform = `translate(${px*.85}px,${py*.5}px)`;
-
-    // Text — subtle counter-movement (foreground, creates depth illusion)
-    sceneCopies.forEach(c => c.style.transform = `translate(${-px*.18}px,${-py*.1}px)`);
-    if(heroLeft) heroLeft.style.transform = `translate(${-px*.22}px,${-py*.12}px)`;
-
-    requestAnimationFrame(loop);
+  (function tick() {
+    rx += (mx - rx) * 0.1; ry += (my - ry) * 0.1;
+    ring.style.transform = 'translate(' + (rx - 16) + 'px,' + (ry - 16) + 'px)';
+    requestAnimationFrame(tick);
   })();
+  document.querySelectorAll('button, a').forEach(function (el) {
+    el.addEventListener('mouseenter', function () { ring.style.width = '48px'; ring.style.height = '48px'; });
+    el.addEventListener('mouseleave', function () { ring.style.width = '32px'; ring.style.height = '32px'; });
+  });
 })();
 
-
-// ══════════════════════════════════════════════════════════════════════
-//  DNA — proper 3D double helix, scroll-progress driven build
-// ══════════════════════════════════════════════════════════════════════
-(function(){
-  const C=document.getElementById('dna-canvas');
-  const ctx=C.getContext('2d');
-  let W,H,CX,CY;
-
-  const TURNS=6, STEPS=240, R_HELIX=85, PITCH=50;
-
-  let autoRot=0, manualRot=0, dragVel=0;
-  let dragging=false, lastX=0;
-  let dnaProgress=0; // 0→1, driven by ScrollTrigger scrub
-
-  const PAIR_LABELS=['Clinical','Lab','Radiology','Prescription','Pathology','Genomic'];
-  const PAIR_COLORS=[teal,gold,purp,wht,teal,gold];
-  const PAIR_HEX=['#00D4B8','#F5A623','#A078FF','#E8EDF5','#00D4B8','#F5A623'];
-
-  C.addEventListener('mousedown',e=>{ dragging=true; lastX=e.clientX; dragVel=0; });
-  window.addEventListener('mousemove',e=>{
-    if(!dragging) return;
-    const dx=e.clientX-lastX; lastX=e.clientX;
-    manualRot+=dx*0.008; dragVel=dx*0.008;
+/* ═══════════════════════════════════════════════════════
+   YAJUR LABS DROPDOWN
+═══════════════════════════════════════════════════════ */
+(function () {
+  var dropdown = document.getElementById('navDropdown');
+  var btn      = document.getElementById('navDropdownBtn');
+  if (!dropdown || !btn) return;
+  btn.addEventListener('click', function (e) {
+    e.stopPropagation();
+    dropdown.classList.toggle('is-open');
   });
-  window.addEventListener('mouseup',()=>{ dragging=false; });
-  C.addEventListener('touchstart',e=>{ dragging=true; lastX=e.touches[0].clientX; },{passive:true});
-  C.addEventListener('touchmove',e=>{
-    const dx=e.touches[0].clientX-lastX; lastX=e.touches[0].clientX;
-    manualRot+=dx*0.008; dragVel=dx*0.008;
-  },{passive:true});
-  C.addEventListener('touchend',()=>{ dragging=false; });
-
-  // Scrub: progress drives the build-in animation
-  ScrollTrigger.create({
-    trigger:'#s-data', start:'top bottom', end:'bottom top',
-    scrub:true, onUpdate:self=>{ dnaProgress=self.progress; }
+  document.addEventListener('click', function () {
+    dropdown.classList.remove('is-open');
   });
+})();
 
-  // Text reveals: scrub-based, staggered
-  gsap.timeline({
-    scrollTrigger:{trigger:'#s-data',start:'top 75%',end:'top 15%',scrub:1.2}
-  })
-  .from('#data-tag',{opacity:0,x:-18,duration:1})
-  .from('#data-h2',{opacity:0,y:28,duration:1},0.15)
-  .from('#data-p',{opacity:0,y:18,duration:1},0.3);
+/* ═══════════════════════════════════════════════════════
+   SCROLL PROGRESS
+═══════════════════════════════════════════════════════ */
+(function () {
+  var bar = document.getElementById('scroll-progress');
+  window.addEventListener('scroll', function () {
+    var s = document.documentElement.scrollTop;
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    bar.style.width = (h > 0 ? s / h * 100 : 0) + '%';
+  }, { passive: true });
+})();
 
-  // Feature items: each activates at a specific scroll threshold
-  const featIds=['#df1','#df2','#df3','#df4'];
-  featIds.forEach((id,i)=>{
-    gsap.to(id,{
-      scrollTrigger:{trigger:'#s-data',start:`${30+i*12}% top`,end:`${44+i*12}% top`,scrub:1},
-      opacity:1, x:0, duration:1
+/* ═══════════════════════════════════════════════════════
+   LENIS
+═══════════════════════════════════════════════════════ */
+var lenis;
+if (window.Lenis) {
+  lenis = new Lenis({ duration: 1.3, easing: function (t) { return Math.min(1, 1.001 - Math.pow(2, -10 * t)); } });
+  (function raf(t) { lenis.raf(t); requestAnimationFrame(raf); })(0);
+  if (window.ScrollTrigger) {
+    ScrollTrigger.scrollerProxy(document.body, {
+      scrollTop: function (v) { return arguments.length ? lenis.scrollTo(v) : lenis.animatedScroll; },
+      getBoundingClientRect: function () { return { top: 0, left: 0, width: window.innerWidth, height: window.innerHeight }; }
     });
-  });
+    lenis.on('scroll', ScrollTrigger.update);
+  }
+}
 
-  function init(){
-    W=C.offsetWidth; H=C.offsetHeight;
-    C.width=W*DPR; C.height=H*DPR; ctx.scale(DPR,DPR);
-    CX=W*.5; CY=H*.5;
+/* ═══════════════════════════════════════════════════════
+   COLOR HELPERS  (canvas panels always dark)
+═══════════════════════════════════════════════════════ */
+function tc(a) { return 'rgba(0,196,162,'  + (a == null ? 1 : a) + ')'; }
+function oc(a) { return 'rgba(191,87,0,'   + (a == null ? 1 : a) + ')'; }
+function wc(a) { return 'rgba(220,232,245,'+ (a == null ? 1 : a) + ')'; }
+var DPR = Math.min(window.devicePixelRatio || 1, 2);
+
+/* ═══════════════════════════════════════════════════════
+   CANVAS 1 — GLOBE
+═══════════════════════════════════════════════════════ */
+(function () {
+  var cv = document.getElementById('cvGlobe');
+  var ctx = cv.getContext('2d');
+  var W, H, R, cx, cy, frame = 0;
+  var dots = [], edges = [];
+  var PHI = Math.PI * (3 - Math.sqrt(5));
+
+  function build() {
+    dots = []; edges = [];
+    var N = 280;
+    for (var i = 0; i < N; i++) {
+      var y = 1 - (i / (N-1)) * 2;
+      var r = Math.sqrt(1 - y*y);
+      var th = PHI * i;
+      dots.push({ x: Math.cos(th)*r, y: y, z: Math.sin(th)*r });
+    }
+    for (var a = 0; a < dots.length; a++) {
+      for (var b = a+1; b < dots.length; b++) {
+        var dx = dots[a].x-dots[b].x, dy = dots[a].y-dots[b].y, dz = dots[a].z-dots[b].z;
+        if (dx*dx+dy*dy+dz*dz < 0.14) edges.push([a,b]);
+      }
+    }
   }
 
-  function rotateY(x,y,z,a){
-    return { x:x*Math.cos(a)+z*Math.sin(a), y, z:-x*Math.sin(a)+z*Math.cos(a) };
+  function proj(d, ang) {
+    var c = Math.cos(ang), s = Math.sin(ang);
+    var px = d.x*c - d.z*s;
+    var pz = d.x*s + d.z*c;
+    var sc = (pz+2)/3;
+    return { sx: cx+px*R*sc, sy: cy+d.y*R*sc, z: pz };
   }
 
-  function buildElements(rotAngle){
-    const elems=[];
-    const rungEvery=Math.round(STEPS/(TURNS*8));
-    const TOTAL_H=TURNS*PITCH*2;
-    // How many segments to render based on progress:
-    // progress 0→0.35: helix builds from center outward
-    // progress 0.35→1.0: full helix visible
-    const buildFrac=Math.min(1, dnaProgress/0.35);
-    const maxHalfI=Math.floor(buildFrac * STEPS * 0.5);
-    const HALF=STEPS/2;
+  function resize() {
+    W = cv.width  = cv.offsetWidth  * DPR;
+    H = cv.height = cv.offsetHeight * DPR;
+    cx = W/2; cy = H/2; R = Math.min(W,H)*0.32; build();
+  }
 
-    for(let i=0;i<=STEPS;i++){
-      const distFromCenter=Math.abs(i-HALF);
-      if(distFromCenter>maxHalfI) continue; // build from center outward
+  function draw() {
+    ctx.clearRect(0,0,W,H);
+    var ang = frame * 0.0028;
+    var ps  = dots.map(function(d){ return proj(d,ang); });
+    var g = ctx.createRadialGradient(cx,cy,0,cx,cy,R*1.3);
+    g.addColorStop(0,tc(0.06)); g.addColorStop(1,'transparent');
+    ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+    for (var i=0;i<edges.length;i++) {
+      var a=ps[edges[i][0]],b=ps[edges[i][1]],vis=(a.z+b.z)/2;
+      if(vis<-0.5)continue;
+      ctx.strokeStyle=tc(Math.max(0,(vis+0.5)/1.5)*0.18);
+      ctx.lineWidth=0.6*DPR;
+      ctx.beginPath(); ctx.moveTo(a.sx,a.sy); ctx.lineTo(b.sx,b.sy); ctx.stroke();
+    }
+    for (var j=0;j<ps.length;j++) {
+      var p=ps[j]; if(p.z<-0.45)continue;
+      var v=(p.z+0.45)/1.45;
+      ctx.beginPath(); ctx.arc(p.sx,p.sy,(0.8+p.z*1.4)*DPR,0,Math.PI*2);
+      ctx.fillStyle=j%22===0?oc(v*0.95):tc(v*0.65); ctx.fill();
+    }
+    ctx.save(); ctx.translate(cx,cy); ctx.rotate(0.25); ctx.scale(1,0.32);
+    ctx.beginPath(); ctx.arc(0,0,R*1.15,0,Math.PI*2);
+    ctx.strokeStyle=tc(0.1); ctx.lineWidth=DPR; ctx.stroke(); ctx.restore();
+    frame++; requestAnimationFrame(draw);
+  }
+  window.addEventListener('resize',resize); resize(); draw();
+})();
 
-      const t=i/STEPS;
-      const theta=t*TURNS*Math.PI*2;
-      const yBase=TOTAL_H*(t-0.5);
-      const fadeEdge=Math.min(1,Math.min(distFromCenter/10, (maxHalfI-distFromCenter)/8));
+/* ═══════════════════════════════════════════════════════
+   CANVAS 2 — 3D DNA HELIX
+   True 3D helix projected with perspective.
+   Two phosphate strands + base pairs + nucleotide nodes + data labels.
+═══════════════════════════════════════════════════════ */
+(function () {
+  var cv  = document.getElementById('cvDNA');
+  var ctx = cv.getContext('2d');
+  var W, H, frame = 0;
 
-      // Strand A
-      const ax0=R_HELIX*Math.cos(theta), az0=R_HELIX*Math.sin(theta);
-      const {x:ax,y:ay,z:az}=rotateY(ax0,yBase,az0,rotAngle);
-      elems.push({type:'A',x:ax,y:ay,z:az,i,fade:fadeEdge});
+  // Helix parameters
+  var TURNS   = 3.5;   // full rotations along the helix axis
+  var RPTS    = 100;   // points per strand
+  var FOCAL   = 900;   // perspective focal length (px, pre-DPR)
 
-      // Strand B (offset π)
-      const bx0=R_HELIX*Math.cos(theta+Math.PI), bz0=R_HELIX*Math.sin(theta+Math.PI);
-      const {x:bx,y:by,z:bz}=rotateY(bx0,yBase,bz0,rotAngle);
-      elems.push({type:'B',x:bx,y:by,z:bz,i,fade:fadeEdge});
+  // Healthcare label tokens
+  var LABELS = ['FHIR R4','ABDM','ICD-10','SNOMED CT','HL7 v2','NHCX','DICOM','CDA'];
 
-      // Base pair rungs
-      if(i>0 && i%rungEvery===0){
-        const ri=Math.floor(i/rungEvery);
-        const pIdx=ri%PAIR_LABELS.length;
-        const midZ=(az+bz)/2;
-        elems.push({
-          type:'rung',
-          ax,ay,bx,by,z:midZ,
-          colorFn:PAIR_COLORS[pIdx],
-          colorHex:PAIR_HEX[pIdx],
-          label:PAIR_LABELS[pIdx],
-          isFront:midZ>0,
-          ri, fade:fadeEdge,
-          // highlight rungs at high progress
-          highlight: dnaProgress>0.6 && (ri % PAIR_LABELS.length === Math.floor((dnaProgress-0.6)/0.4*PAIR_LABELS.length*2) % PAIR_LABELS.length)
+  function resize() {
+    W = cv.width  = cv.offsetWidth  * DPR;
+    H = cv.height = cv.offsetHeight * DPR;
+  }
+
+  // Project a 3D point to 2D with perspective divide
+  function project(x3, y3, z3) {
+    var f = FOCAL * DPR;
+    var sc = f / (f + z3);
+    return { x: W/2 + x3 * sc, y: y3, sc: sc, z: z3 };
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+
+    // Background glow from centre
+    var bg = ctx.createRadialGradient(W/2, H/2, 0, W/2, H/2, H*0.55);
+    bg.addColorStop(0, tc(0.05)); bg.addColorStop(1, 'transparent');
+    ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+
+    // Rotation angle advances over time
+    var rot = frame * 0.012;
+
+    var hRadius = Math.min(W, H) * 0.16; // horizontal radius of helix
+
+    // Build strand point lists
+    var strandA = [], strandB = [];
+    for (var i = 0; i <= RPTS; i++) {
+      var t    = i / RPTS;
+      var th   = t * TURNS * Math.PI * 2;
+      var yPos = t * H * 0.92 + H * 0.04;  // map 0..1 to vertical
+
+      var ax3 = hRadius * Math.cos(th + rot);
+      var az3 = hRadius * Math.sin(th + rot);
+      var bx3 = hRadius * Math.cos(th + rot + Math.PI);
+      var bz3 = hRadius * Math.sin(th + rot + Math.PI);
+
+      strandA.push(project(ax3, yPos, az3));
+      strandB.push(project(bx3, yPos, bz3));
+    }
+
+    // --- DRAW BASE PAIRS (behind strands) ---
+    // Collect and sort by average z for painter's algorithm
+    var pairs = [];
+    var pairStep = 4;
+    for (var i = 0; i <= RPTS; i += pairStep) {
+      var a = strandA[i], b = strandB[i];
+      pairs.push({ a: a, b: b, avgZ: (a.z + b.z) / 2, idx: i });
+    }
+    pairs.sort(function(p, q){ return p.avgZ - q.avgZ; });
+
+    for (var pi = 0; pi < pairs.length; pi++) {
+      var pr = pairs[pi];
+      var a = pr.a, b = pr.b;
+      // Depth-based visibility (hide pairs facing away)
+      var depthFade = Math.max(0, (pr.avgZ + hRadius) / (hRadius * 2));
+      var al = depthFade * 0.6;
+      if (al < 0.05) continue;
+
+      // Gradient bar teal → white → orange
+      var gr = ctx.createLinearGradient(a.x, a.y, b.x, b.y);
+      gr.addColorStop(0,   tc(al * 0.9));
+      gr.addColorStop(0.45, wc(al * 0.4));
+      gr.addColorStop(1,   oc(al * 0.85));
+      ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y);
+      ctx.strokeStyle = gr;
+      ctx.lineWidth = Math.max(0.5, a.sc * 1.6) * DPR;
+      ctx.stroke();
+
+      // Nucleotide nodes at ends
+      var nr = Math.max(1, (0.5 + depthFade * 2.5)) * DPR;
+      // Node A (teal)
+      var ga = ctx.createRadialGradient(a.x, a.y, 0, a.x, a.y, nr * 3);
+      ga.addColorStop(0, tc(depthFade * 0.6)); ga.addColorStop(1, 'transparent');
+      ctx.beginPath(); ctx.arc(a.x, a.y, nr * 3, 0, Math.PI*2);
+      ctx.fillStyle = ga; ctx.fill();
+      ctx.beginPath(); ctx.arc(a.x, a.y, nr, 0, Math.PI*2);
+      ctx.fillStyle = tc(depthFade); ctx.fill();
+
+      // Node B (orange)
+      var gb = ctx.createRadialGradient(b.x, b.y, 0, b.x, b.y, nr * 3);
+      gb.addColorStop(0, oc(depthFade * 0.5)); gb.addColorStop(1, 'transparent');
+      ctx.beginPath(); ctx.arc(b.x, b.y, nr * 3, 0, Math.PI*2);
+      ctx.fillStyle = gb; ctx.fill();
+      ctx.beginPath(); ctx.arc(b.x, b.y, nr, 0, Math.PI*2);
+      ctx.fillStyle = oc(depthFade * 0.95); ctx.fill();
+    }
+
+    // --- DRAW STRANDS ---
+    function drawStrand(pts, col) {
+      for (var si = 0; si < pts.length - 1; si++) {
+        var p0 = pts[si], p1 = pts[si+1];
+        var vz = (p0.z + p1.z) / 2;
+        var av = Math.max(0, (vz + hRadius) / (hRadius * 2));
+        if (av < 0.04) continue;
+        ctx.strokeStyle = col(av * 0.75);
+        ctx.lineWidth = Math.max(0.8, p0.sc * 3) * DPR;
+        ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+        ctx.beginPath(); ctx.moveTo(p0.x, p0.y); ctx.lineTo(p1.x, p1.y); ctx.stroke();
+      }
+    }
+    drawStrand(strandA, tc);
+    drawStrand(strandB, oc);
+
+    // --- FLOATING DATA LABELS ---
+    ctx.font = 'bold ' + (7.5 * DPR) + 'px Montserrat,monospace';
+    var labelX = W/2 + hRadius * 1.7;
+    for (var li = 0; li < LABELS.length; li++) {
+      var ly = H * 0.07 + li * (H * 0.115) + Math.sin(frame * 0.008 + li * 0.9) * 5 * DPR;
+      var la = 0.18 + 0.12 * Math.sin(frame * 0.006 + li);
+      ctx.fillStyle = li % 2 === 0 ? tc(la) : oc(la * 0.8);
+      ctx.fillText(LABELS[li], labelX, ly);
+    }
+
+    // --- VIGNETTE ---
+    var vig = ctx.createRadialGradient(W/2, H/2, H*0.3, W/2, H/2, H*0.75);
+    vig.addColorStop(0, 'transparent');
+    vig.addColorStop(1, 'rgba(5,16,28,0.5)');
+    ctx.fillStyle = vig; ctx.fillRect(0, 0, W, H);
+
+    frame++; requestAnimationFrame(draw);
+  }
+
+  window.addEventListener('resize', resize);
+  resize(); draw();
+})();
+
+/* ═══════════════════════════════════════════════════════
+   CANVAS 3 — MAGNET LINES
+   Uniform grid of short line segments. Each line smoothly
+   rotates to point toward the mouse cursor — like a magnetic
+   field snapping iron filings. Off-canvas: rest at 45°.
+═══════════════════════════════════════════════════════ */
+(function () {
+  var cv  = document.getElementById('cvNeural');
+  var ctx = cv.getContext('2d');
+  var W, H, lines = [];
+  var mouse = { x: -9999, y: -9999, over: false };
+
+  var SPACING  = 30;          // grid cell size (pre-DPR px)
+  var HALF_LEN = 13;          // half-length of each line (pre-DPR px)
+  var LERP     = 0.07;        // angle smoothing per frame
+  var DEFAULT_ANGLE = Math.PI / 4;   // 45° rest orientation
+  var ghostT   = 0;           // ghost cursor orbit angle
+
+  function buildGrid() {
+    lines = [];
+    var sp   = SPACING * DPR;
+    var cols = Math.ceil(W / sp) + 1;
+    var rows = Math.ceil(H / sp) + 1;
+    // Centre the grid
+    var ox = (W - (cols - 1) * sp) / 2;
+    var oy = (H - (rows - 1) * sp) / 2;
+    for (var r = 0; r < rows; r++) {
+      for (var c = 0; c < cols; c++) {
+        lines.push({
+          cx:    ox + c * sp,
+          cy:    oy + r * sp,
+          angle: DEFAULT_ANGLE,
+          // ~8 % orange accent lines
+          hot: Math.random() < 0.08
         });
       }
     }
-    elems.sort((a,b)=>a.z-b.z);
-    return elems;
   }
 
-  function tubeLine(x1,y1,x2,y2,cFn,alpha,w){
-    ctx.save(); ctx.lineCap='round';
-    ctx.beginPath(); ctx.moveTo(CX+x1,CY+y1); ctx.lineTo(CX+x2,CY+y2);
-    ctx.strokeStyle=cFn(alpha*.15); ctx.lineWidth=w*4; ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(CX+x1,CY+y1); ctx.lineTo(CX+x2,CY+y2);
-    ctx.strokeStyle=cFn(alpha*.42); ctx.lineWidth=w*2; ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(CX+x1,CY+y1); ctx.lineTo(CX+x2,CY+y2);
-    ctx.strokeStyle=cFn(alpha*.9);  ctx.lineWidth=w;   ctx.stroke();
-    ctx.restore();
+  function resize() {
+    W = cv.width  = cv.offsetWidth  * DPR;
+    H = cv.height = cv.offsetHeight * DPR;
+    buildGrid();
   }
 
-  function sphereNode(wx,wy,wz,cFn,hex,sz,fade){
-    const sx=CX+wx, sy=CY+wy;
-    const depth=(wz+R_HELIX)/(2*R_HELIX);
-    const a=(0.3+depth*0.7)*fade;
-    const r=sz*(0.6+depth*0.4);
-    const g=ctx.createRadialGradient(sx,sy,0,sx,sy,r*3);
-    g.addColorStop(0,cFn(a*.65)); g.addColorStop(1,'transparent');
-    ctx.fillStyle=g; ctx.beginPath(); ctx.arc(sx,sy,r*3,0,Math.PI*2); ctx.fill();
-    const sg=ctx.createRadialGradient(sx-r*.3,sy-r*.3,r*.05,sx,sy,r);
-    sg.addColorStop(0,wht(a*.9));
-    sg.addColorStop(0.35,hex+'CC');
-    sg.addColorStop(1,hex+'44');
-    ctx.fillStyle=sg; ctx.beginPath(); ctx.arc(sx,sy,r,0,Math.PI*2); ctx.fill();
-  }
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
 
-  let prevA=null, prevB=null;
+    // Subtle background glow
+    var bg = ctx.createRadialGradient(W/2, H/2, 0, W/2, H/2, H * 0.65);
+    bg.addColorStop(0, tc(0.05)); bg.addColorStop(1, 'transparent');
+    ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
 
-  function applyVignette(){
-    // Top fade
-    const tg=ctx.createLinearGradient(0,0,0,H*.22);
-    tg.addColorStop(0,'#0A0F1E'); tg.addColorStop(1,'transparent');
-    ctx.fillStyle=tg; ctx.fillRect(0,0,W,H*.22);
-    // Bottom fade
-    const bg=ctx.createLinearGradient(0,H*.78,0,H);
-    bg.addColorStop(0,'transparent'); bg.addColorStop(1,'#0A0F1E');
-    ctx.fillStyle=bg; ctx.fillRect(0,H*.78,W,H*.22);
-    // Left blend into text
-    const lg=ctx.createLinearGradient(0,0,W*.22,0);
-    lg.addColorStop(0,'#0A0F1E'); lg.addColorStop(1,'transparent');
-    ctx.fillStyle=lg; ctx.fillRect(0,0,W*.22,H);
-  }
+    var hl = HALF_LEN * DPR;
 
-  function frame(){
-    ctx.clearRect(0,0,W,H);
+    // Ghost cursor: slow elliptical orbit when real mouse isn't present
+    ghostT += 0.009;
+    var gx = W / 2 + Math.cos(ghostT)            * W * 0.28;
+    var gy = H / 2 + Math.sin(ghostT * 0.7) * H * 0.22;
+    var activeX = mouse.over ? mouse.x : gx;
+    var activeY = mouse.over ? mouse.y : gy;
 
-    // Scroll velocity spins the helix faster — feels physically connected to the gesture
-    const sv=scrollVel();
-    if(!dragging){ autoRot+=0.005+sv*0.014; manualRot+=dragVel; dragVel*=0.94; }
-    const rotAngle=autoRot+manualRot;
+    for (var i = 0; i < lines.length; i++) {
+      var ln = lines[i];
 
-    // Subtle bg glow
-    const bg=ctx.createRadialGradient(CX,CY,0,CX,CY,Math.max(W,H)*.55);
-    bg.addColorStop(0,teal(0.04)); bg.addColorStop(1,'transparent');
-    ctx.fillStyle=bg; ctx.fillRect(0,0,W,H);
+      // Always point toward active source (ghost or real mouse)
+      var target = Math.atan2(activeY - ln.cy, activeX - ln.cx);
 
-    const elems=buildElements(rotAngle);
-    prevA=null; prevB=null;
+      // Shortest-path lerp (handles ±π wrap)
+      var diff = target - ln.angle;
+      while (diff >  Math.PI) diff -= Math.PI * 2;
+      while (diff < -Math.PI) diff += Math.PI * 2;
+      ln.angle += diff * LERP;
 
-    elems.forEach(el=>{
-      if(el.y<-H*.62||el.y>H*.62) return;
-      const depth=(el.z+R_HELIX)/(2*R_HELIX);
-      const alpha=(0.2+depth*0.8)*el.fade;
+      // Brightness by proximity to active source
+      var dx = ln.cx - activeX, dy = ln.cy - activeY;
+      var dist = Math.sqrt(dx * dx + dy * dy) / DPR;
+      var prox = Math.max(0, 1 - dist / 260);
+      // Real mouse: full range; ghost: subtler so it reads as "idle"
+      var alpha = mouse.over
+        ? 0.28 + prox * 0.58
+        : 0.20 + prox * 0.28;
+      var lw = (0.9 + prox * 1.6) * DPR;
 
-      if(el.type==='A'){
-        sphereNode(el.x,el.y,el.z,teal,'#00D4B8',4.5,el.fade);
-        if(prevA && Math.abs(el.i-prevA.i)===1){
-          tubeLine(prevA.x,prevA.y,el.x,el.y,teal,alpha*prevA.fade,1.6);
-        }
-        prevA={...el};
-      } else if(el.type==='B'){
-        sphereNode(el.x,el.y,el.z,gold,'#F5A623',4.5,el.fade);
-        if(prevB && Math.abs(el.i-prevB.i)===1){
-          tubeLine(prevB.x,prevB.y,el.x,el.y,gold,alpha*prevB.fade,1.6);
-        }
-        prevB={...el};
-      } else if(el.type==='rung'){
-        const rdepth=(el.z+R_HELIX)/(2*R_HELIX);
-        const ralpha=(0.15+rdepth*0.8)*el.fade;
-        const boost=el.highlight?1.8:1;
-        const cx1=CX+el.ax, cy1=CY+el.ay;
-        const cx2=CX+el.bx, cy2=CY+el.by;
-        ctx.save(); ctx.lineCap='round';
-        ctx.beginPath(); ctx.moveTo(cx1,cy1); ctx.lineTo(cx2,cy2);
-        ctx.strokeStyle=el.colorFn(ralpha*.35*boost); ctx.lineWidth=el.highlight?12:8; ctx.stroke();
-        ctx.beginPath(); ctx.moveTo(cx1,cy1); ctx.lineTo(cx2,cy2);
-        ctx.strokeStyle=el.colorFn(ralpha*.65*boost); ctx.lineWidth=3; ctx.stroke();
-        ctx.beginPath(); ctx.moveTo(cx1,cy1); ctx.lineTo(cx2,cy2);
-        ctx.strokeStyle=el.colorFn(ralpha*.95*boost); ctx.lineWidth=1.5; ctx.stroke();
-        ctx.restore();
-        sphereNode(el.ax,el.ay,el.z,el.colorFn,el.colorHex,3.8,el.fade);
-        sphereNode(el.bx,el.by,el.z,el.colorFn,el.colorHex,3.8,el.fade);
-        // Label: show at high progress on front-facing rungs
-        if(dnaProgress>0.45 && el.isFront && rdepth>0.6){
-          const labelAlpha=Math.min(1,(dnaProgress-0.45)/0.2)*rdepth*el.fade;
-          const mx=CX+(el.ax+el.bx)/2+22, my=CY+(el.ay+el.by)/2;
-          ctx.save();
-          ctx.font=`600 9px 'Montserrat',sans-serif`;
-          ctx.fillStyle=el.colorFn(labelAlpha*.88);
-          ctx.textAlign='left'; ctx.fillText(el.label,mx,my+3);
-          ctx.restore();
-        }
-      }
-    });
+      var cos = Math.cos(ln.angle), sin = Math.sin(ln.angle);
 
-    applyVignette();
-    requestAnimationFrame(frame);
-  }
+      // Line stroke
+      ctx.beginPath();
+      ctx.moveTo(ln.cx - cos * hl, ln.cy - sin * hl);
+      ctx.lineTo(ln.cx + cos * hl, ln.cy + sin * hl);
+      ctx.strokeStyle = ln.hot ? oc(alpha) : tc(alpha);
+      ctx.lineWidth   = lw;
+      ctx.lineCap     = 'round';
+      ctx.stroke();
 
-  let rt; window.addEventListener('resize',()=>{ clearTimeout(rt); rt=setTimeout(init,100); });
-  init(); frame();
-})();
-
-
-// ══════════════════════════════════════════════════════════════════════
-//  NEURAL MESH — scroll-progress driven node spawn + agent labels
-// ══════════════════════════════════════════════════════════════════════
-(function(){
-  const C=document.getElementById('neural-canvas');
-  const ctx=C.getContext('2d');
-  let W,H,mx=-999,my=-999;
-  let neuralProgress=0;
-
-  // Named agent nodes at specific positions (as fractions of canvas size)
-  const AGENTS=[
-    {fx:0.52,fy:0.38,name:'Clinical Reasoner',r:5.5,col:teal,hex:'#00D4B8',spawnAt:0.15},
-    {fx:0.78,fy:0.25,name:'NLP Engine',r:5,col:teal,hex:'#00D4B8',spawnAt:0.25},
-    {fx:0.65,fy:0.6, name:'FHIR Parser',r:5,col:gold,hex:'#F5A623',spawnAt:0.35},
-    {fx:0.32,fy:0.65,name:'Risk Scorer',r:4.5,col:gold,hex:'#F5A623',spawnAt:0.45},
-    {fx:0.82,fy:0.72,name:'Drug Checker',r:4.5,col:purp,hex:'#A078FF',spawnAt:0.55},
-    {fx:0.45,fy:0.22,name:'Data Lakehouse',r:4,col:purp,hex:'#A078FF',spawnAt:0.62},
-  ];
-
-  // Background drifting nodes
-  const MAX_BG=45;
-  let bgNodes=[];
-  function mkNode(){ return {x:Math.random()*W,y:Math.random()*H,vx:(Math.random()-.5)*.3,vy:(Math.random()-.5)*.3,r:1.5+Math.random()*2,ph:Math.random()*Math.PI*2,lit:0,scale:0}; }
-
-  ScrollTrigger.create({
-    trigger:'#s-ai', start:'top bottom', end:'bottom top',
-    scrub:true, onUpdate:self=>{ neuralProgress=self.progress; }
-  });
-
-  // Text reveal via scrub
-  gsap.timeline({
-    scrollTrigger:{trigger:'#s-ai',start:'top 75%',end:'top 15%',scrub:1.2}
-  })
-  .from('#ai-tag',{opacity:0,x:18,duration:1})
-  .from('#ai-h2',{opacity:0,y:28,duration:1},0.15)
-  .from('#ai-p',{opacity:0,y:18,duration:1},0.3);
-
-  const aiFeats=['#af1','#af2','#af3','#af4'];
-  aiFeats.forEach((id,i)=>{
-    gsap.to(id,{
-      scrollTrigger:{trigger:'#s-ai',start:`${30+i*12}% top`,end:`${44+i*12}% top`,scrub:1},
-      opacity:1, x:0, duration:1
-    });
-  });
-
-  C.addEventListener('mousemove',e=>{ const r=C.getBoundingClientRect(); mx=e.clientX-r.left; my=e.clientY-r.top; });
-  C.addEventListener('mouseleave',()=>{ mx=-999; my=-999; });
-
-  function init(){
-    W=C.offsetWidth; H=C.offsetHeight;
-    C.width=W*DPR; C.height=H*DPR; ctx.scale(DPR,DPR);
-    bgNodes=Array.from({length:MAX_BG},mkNode);
-  }
-
-  function agentPos(ag){ return {x:ag.fx*W, y:ag.fy*H}; }
-
-  function frame(){
-    ctx.clearRect(0,0,W,H);
-    const t=Date.now();
-
-    // How many bg nodes to show
-    const activeBg=Math.min(MAX_BG,Math.floor(Math.max(0,(neuralProgress-0.1)/0.5)*MAX_BG));
-    // Connection opacity multiplier
-    const connAlpha=Math.max(0,(neuralProgress-0.3)/0.4);
-    const MDIST=90+connAlpha*40;
-
-    // Update + draw bg nodes
-    const sv=scrollVel();
-    for(let i=0;i<activeBg;i++){
-      const n=bgNodes[i];
-      // Fast scroll adds turbulence — nodes scatter then settle
-      if(sv>1.2){
-        n.vx+=(Math.random()-.5)*sv*0.07;
-        n.vy+=(Math.random()-.5)*sv*0.07;
-      }
-      // Speed cap + gentle damping so they don't fly off
-      const spd=Math.hypot(n.vx,n.vy);
-      if(spd>1.4){ n.vx*=1.4/spd; n.vy*=1.4/spd; }
-      n.vx*=0.992; n.vy*=0.992;
-
-      n.x+=n.vx; n.y+=n.vy; n.ph+=.018;
-      if(n.x<0||n.x>W) n.vx*=-1;
-      if(n.y<0||n.y>H) n.vy*=-1;
-      n.lit+=(Math.hypot(n.x-mx,n.y-my)<MDIST?1:0-n.lit)*.07;
-      n.scale=Math.min(1,n.scale+0.04);
+      // Centre dot
+      ctx.beginPath();
+      ctx.arc(ln.cx, ln.cy, 1.1 * DPR, 0, Math.PI * 2);
+      ctx.fillStyle = ln.hot ? oc(alpha * 0.7) : tc(alpha * 0.5);
+      ctx.fill();
     }
 
-    // All nodes array: bg + agent
-    const allNodes=bgNodes.slice(0,activeBg).map(n=>({x:n.x,y:n.y,r:n.r,lit:n.lit,ph:n.ph,agent:null,scale:n.scale}));
-    AGENTS.forEach(ag=>{
-      if(neuralProgress>=ag.spawnAt){
-        const p=agentPos(ag);
-        const spawnFrac=Math.min(1,(neuralProgress-ag.spawnAt)/0.1);
-        const agLit=Math.max(0,Math.hypot(p.x-mx,p.y-my)<(MDIST*1.5)?1:0.15);
-        allNodes.push({x:p.x,y:p.y,r:ag.r,lit:agLit,ph:t*.002+ag.spawnAt*10,agent:ag,scale:spawnFrac});
-      }
-    });
+    requestAnimationFrame(draw);
+  }
 
-    // Draw edges
-    for(let i=0;i<allNodes.length;i++){
-      for(let j=i+1;j<allNodes.length;j++){
-        const a=allNodes[i],b=allNodes[j];
-        const d=Math.hypot(a.x-b.x,a.y-b.y);
-        const maxD=a.agent||b.agent?140:110;
-        if(d>maxD) continue;
-        const fade=1-d/maxD;
-        const lit=Math.max(a.lit,b.lit);
-        const baseA=connAlpha*fade*.1;
-        const litA=lit*fade*.5;
-        const edgeA=baseA+litA;
-        if(edgeA<0.015) continue;
-        const cf=(a.agent?.col||b.agent?.col)||teal;
-        ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y);
-        ctx.strokeStyle=cf(edgeA);
-        ctx.lineWidth=lit>.1?1.4:.5;
+  // Track mouse; set over=false when cursor leaves canvas section
+  document.addEventListener('mousemove', function (e) {
+    var r = cv.getBoundingClientRect();
+    var rx = (e.clientX - r.left) * DPR;
+    var ry = (e.clientY - r.top)  * DPR;
+    mouse.over = rx >= 0 && rx <= W && ry >= 0 && ry <= H;
+    if (mouse.over) { mouse.x = rx; mouse.y = ry; }
+  });
+
+  window.addEventListener('resize', resize);
+  resize();
+  draw();
+})();
+
+/* ═══════════════════════════════════════════════════════
+   CANVAS 4 — PIPELINE / DATA FLOW
+═══════════════════════════════════════════════════════ */
+(function () {
+  var cv = document.getElementById('cvPipeline');
+  var ctx = cv.getContext('2d');
+  var W, H, frame=0, particles=[];
+  var TRACKS = [
+    {lbl:'ABDM',hot:false,ty:0.18},{lbl:'NHCX',hot:false,ty:0.30},
+    {lbl:'HL7 v2',hot:true,ty:0.46},{lbl:'FHIR R4',hot:false,ty:0.60},
+    {lbl:'EHR / HIS',hot:true,ty:0.74}
+  ];
+
+  function resize() { W=cv.width=cv.offsetWidth*DPR; H=cv.height=cv.offsetHeight*DPR; }
+
+  function draw() {
+    ctx.clearRect(0,0,W,H);
+    if(frame%16===0) {
+      var tr=TRACKS[Math.floor(Math.random()*TRACKS.length)];
+      particles.push({ty:tr.ty,x:0,spd:(0.9+Math.random()*1.4)*DPR,hot:tr.hot,sz:(1.8+Math.random()*2)*DPR});
+    }
+    var SINK=W*0.78;
+    for (var i=0;i<TRACKS.length;i++) {
+      var tr=TRACKS[i], py=tr.ty*H;
+      ctx.beginPath(); ctx.moveTo(0,py); ctx.lineTo(W,py);
+      ctx.strokeStyle=tr.hot?oc(0.10):tc(0.10); ctx.lineWidth=DPR; ctx.stroke();
+      ctx.font='bold '+(16*DPR)+'px Montserrat,sans-serif';
+      ctx.fillStyle='rgba(255,255,255,0.92)';
+      ctx.fillText(tr.lbl,8*DPR,py-7*DPR);
+    }
+    ctx.font='bold '+(16*DPR)+'px Montserrat,sans-serif';
+    ctx.fillStyle='rgba(255,255,255,0.75)';
+    ctx.fillText('Yajur Lakehouse',SINK+8*DPR,H*0.48);
+    ctx.beginPath(); ctx.moveTo(SINK,0); ctx.lineTo(SINK,H);
+    ctx.strokeStyle=tc(0.07); ctx.lineWidth=2*DPR;
+    ctx.setLineDash([5*DPR,10*DPR]); ctx.stroke(); ctx.setLineDash([]);
+    for (var j=particles.length-1;j>=0;j--) {
+      var p=particles[j]; p.x+=p.spd;
+      var py2=p.ty*H, tail=32*DPR;
+      var gr=ctx.createLinearGradient(p.x-tail,py2,p.x,py2);
+      gr.addColorStop(0,'transparent'); gr.addColorStop(1,p.hot?oc(0.85):tc(0.85));
+      ctx.beginPath(); ctx.moveTo(p.x-tail,py2); ctx.lineTo(p.x,py2);
+      ctx.strokeStyle=gr; ctx.lineWidth=p.sz*0.6; ctx.stroke();
+      ctx.beginPath(); ctx.arc(p.x,py2,p.sz,0,Math.PI*2);
+      ctx.fillStyle=p.hot?oc():tc(); ctx.fill();
+      if(p.x>W+20)particles.splice(j,1);
+    }
+    frame++; requestAnimationFrame(draw);
+  }
+  window.addEventListener('resize',resize); resize(); draw();
+})();
+
+/* ═══════════════════════════════════════════════════════
+   CANVAS 5 — TRIANGLE SHAPE GRID
+   Shape: Triangle  |  Direction: Diagonal (scroll ↘)
+   Size: 40  |  Speed: 0.5  |  Border: faint  |  Trail: 0
+   The entire grid scrolls diagonally bottom-right.
+   Mouse hover briefly flares nearby triangles; no trail.
+═══════════════════════════════════════════════════════ */
+(function () {
+  var cv  = document.getElementById('cvConvergence');
+  var ctx = cv.getContext('2d');
+  var W, H;
+  var mouse = { x: -9999, y: -9999 };
+  var off   = 0;            // diagonal scroll offset (canvas px)
+
+  var SZ      = 40;         // triangle side length (pre-DPR px)
+  var SPEED   = 0.5;        // px per frame diagonal (pre-DPR)
+  var HOVER_R = 120;        // hover influence radius (pre-DPR px)
+
+  function triPath(cx, cy, s, up) {
+    var h = s * Math.sqrt(3) / 2;
+    ctx.beginPath();
+    if (up) {
+      ctx.moveTo(cx,           cy - h * 2 / 3);
+      ctx.lineTo(cx + s * 0.5, cy + h * 1 / 3);
+      ctx.lineTo(cx - s * 0.5, cy + h * 1 / 3);
+    } else {
+      ctx.moveTo(cx,           cy + h * 2 / 3);
+      ctx.lineTo(cx + s * 0.5, cy - h * 1 / 3);
+      ctx.lineTo(cx - s * 0.5, cy - h * 1 / 3);
+    }
+    ctx.closePath();
+  }
+
+  function draw() {
+    off += SPEED * DPR;
+
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = '#05101C';
+    ctx.fillRect(0, 0, W, H);
+
+    var s   = SZ * DPR;
+    var h   = s * Math.sqrt(3) / 2;   // row height
+    var hr  = HOVER_R * DPR;
+    var pad = s * 2;                   // extra border so no gaps during scroll
+
+    // Dynamic visible range — only draw triangles that land on screen
+    var cMin = Math.floor((-pad + off) / (s * 0.5));
+    var cMax = Math.ceil((W + pad + off) / (s * 0.5));
+    var rMin = Math.floor((-pad + off) / h);
+    var rMax = Math.ceil((H + pad + off) / h);
+
+    for (var r = rMin; r <= rMax; r++) {
+      for (var c = cMin; c <= cMax; c++) {
+        var cx = c * s * 0.5 - off;
+        var cy = r * h       - off;
+
+        // Skip triangles outside viewport + padding
+        if (cx < -pad || cx > W + pad || cy < -pad || cy > H + pad) continue;
+
+        var up = (r + c) % 2 === 0;
+
+        // Mouse proximity — no trail (prox is purely instantaneous)
+        var dx   = cx - mouse.x;
+        var dy   = cy - mouse.y;
+        var dist = Math.sqrt(dx * dx + dy * dy);
+        var prox = dist < hr ? Math.pow(1 - dist / hr, 2) : 0;
+
+        triPath(cx, cy, s * 0.90, up);
+
+        // Fill: transparent at rest, subtle teal on hover
+        ctx.fillStyle = prox > 0 ? tc(prox * 0.22) : 'rgba(0,0,0,0)';
+        ctx.fill();
+
+        // Border: very faint (dark border color from screenshot)
+        triPath(cx, cy, s * 0.90, up);
+        ctx.strokeStyle = 'rgba(255,255,255,0.07)';
+        ctx.lineWidth   = 0.8 * DPR;
         ctx.stroke();
       }
     }
 
-    // Draw bg nodes
-    allNodes.filter(n=>!n.agent).forEach(n=>{
-      const sz=n.r*(1+n.lit*.9)*(0.7+0.3*Math.sin(n.ph))*n.scale;
-      const g=ctx.createRadialGradient(n.x,n.y,0,n.x,n.y,sz*3.5);
-      g.addColorStop(0,teal(.35+n.lit*.4)); g.addColorStop(1,'transparent');
-      ctx.fillStyle=g; ctx.beginPath(); ctx.arc(n.x,n.y,sz*3.5,0,Math.PI*2); ctx.fill();
-      ctx.fillStyle=n.lit>.35?'#00D4B8':teal(.45+n.lit*.5);
-      ctx.beginPath(); ctx.arc(n.x,n.y,sz,0,Math.PI*2); ctx.fill();
-    });
+    // Subtle central glow to lift the text area
+    var g = ctx.createRadialGradient(W * 0.5, H * 0.5, 0, W * 0.5, H * 0.5, Math.min(W, H) * 0.46);
+    g.addColorStop(0, tc(0.05));
+    g.addColorStop(1, 'transparent');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, W, H);
 
-    // Draw agent nodes (prominent)
-    allNodes.filter(n=>n.agent).forEach(n=>{
-      const ag=n.agent;
-      const pulse=0.85+0.15*Math.sin(n.ph);
-      const sz=ag.r*n.scale;
-      if(sz<0.1) return;
-
-      // Outer halo
-      const ha=ctx.createRadialGradient(n.x,n.y,0,n.x,n.y,sz*6);
-      ha.addColorStop(0,ag.col(0.12*pulse*n.scale));
-      ha.addColorStop(1,'transparent');
-      ctx.fillStyle=ha; ctx.beginPath(); ctx.arc(n.x,n.y,sz*6,0,Math.PI*2); ctx.fill();
-
-      // Ring
-      ctx.beginPath(); ctx.arc(n.x,n.y,sz*2.2,0,Math.PI*2);
-      ctx.strokeStyle=ag.col(0.3*n.scale); ctx.lineWidth=1; ctx.stroke();
-
-      // Core gradient sphere
-      const sg=ctx.createRadialGradient(n.x-sz*.3,n.y-sz*.3,sz*.1,n.x,n.y,sz);
-      sg.addColorStop(0,wht(0.95*n.scale));
-      sg.addColorStop(0.4,ag.hex+'EE');
-      sg.addColorStop(1,ag.hex+'55');
-      ctx.fillStyle=sg; ctx.beginPath(); ctx.arc(n.x,n.y,sz,0,Math.PI*2); ctx.fill();
-
-      // Label
-      const labelAlpha=Math.min(1,Math.max(0,(neuralProgress-ag.spawnAt)/0.12));
-      if(labelAlpha>0.05){
-        ctx.save();
-        ctx.font=`700 10px 'Montserrat',sans-serif`;
-        ctx.fillStyle=ag.col(labelAlpha);
-        ctx.textAlign='center';
-        ctx.fillText(ag.name,n.x,n.y-sz*2.5-4);
-        ctx.restore();
-      }
-    });
-
-    // Mouse cursor indicator
-    if(mx>0&&mx<W){
-      const mg=ctx.createRadialGradient(mx,my,0,mx,my,MDIST);
-      mg.addColorStop(0,teal(.04*connAlpha)); mg.addColorStop(1,'transparent');
-      ctx.fillStyle=mg; ctx.beginPath(); ctx.arc(mx,my,MDIST,0,Math.PI*2); ctx.fill();
-      ctx.fillStyle=teal(.45*connAlpha); ctx.beginPath(); ctx.arc(mx,my,3,0,Math.PI*2); ctx.fill();
-    }
-
-    // Vignette
-    const vR=ctx.createRadialGradient(W*.5,H*.5,Math.min(W,H)*.28,W*.5,H*.5,Math.min(W,H)*.75);
-    vR.addColorStop(0,'transparent'); vR.addColorStop(1,'rgba(10,15,30,0.55)');
-    ctx.fillStyle=vR; ctx.fillRect(0,0,W,H);
-    // Right edge blend into text
-    const rg=ctx.createLinearGradient(W*.72,0,W,0);
-    rg.addColorStop(0,'transparent'); rg.addColorStop(1,'#0A0F1E');
-    ctx.fillStyle=rg; ctx.fillRect(W*.72,0,W*.28,H);
-
-    requestAnimationFrame(frame);
+    requestAnimationFrame(draw);
   }
 
-  let rt; window.addEventListener('resize',()=>{ clearTimeout(rt); rt=setTimeout(init,100); });
-  init(); frame();
+  function resize() {
+    W = cv.width  = cv.offsetWidth  * DPR;
+    H = cv.height = cv.offsetHeight * DPR;
+  }
+
+  document.addEventListener('mousemove', function (e) {
+    var r   = cv.getBoundingClientRect();
+    mouse.x = (e.clientX - r.left) * DPR;
+    mouse.y = (e.clientY - r.top)  * DPR;
+  });
+
+  window.addEventListener('resize', resize);
+  resize();
+  draw();
 })();
 
+/* ═══════════════════════════════════════════════════════
+   GSAP SCROLL ANIMATIONS
+═══════════════════════════════════════════════════════ */
+window.addEventListener('load', function () {
+  if (!window.gsap || !window.ScrollTrigger) return;
+  gsap.registerPlugin(ScrollTrigger);
 
-// ══════════════════════════════════════════════════════════════════════
-//  PIPELINE — scrub-driven staged reveal
-// ══════════════════════════════════════════════════════════════════════
-(function(){
-  // Text reveal via scrub
-  gsap.timeline({
-    scrollTrigger:{trigger:'#s-interop',start:'top 75%',end:'top 15%',scrub:1.2}
-  })
-  .from('#int-tag',{opacity:0,x:-18,duration:1})
-  .from('#int-h2',{opacity:0,y:28,duration:1},0.15)
-  .from('#int-p',{opacity:0,y:18,duration:1},0.3);
+  // Hero
+  var ht = document.querySelector('.hero-text');
+  gsap.from(ht.querySelector('.eyebrow'),    { y:18, opacity:0, duration:.8, delay:.3,  ease:'power3.out' });
+  gsap.from(ht.querySelector('.h-display'),  { y:44, opacity:0, duration:1,  delay:.5,  ease:'power3.out' });
+  gsap.from(ht.querySelector('.hero-sub'),   { y:28, opacity:0, duration:.9, delay:.7,  ease:'power3.out' });
+  gsap.from(ht.querySelector('.hero-cta'),   { y:20, opacity:0, duration:.8, delay:.9,  ease:'power3.out' });
+  gsap.from(ht.querySelectorAll('.stat-val, .stat-lbl'), { y:16, opacity:0, duration:.7, delay:1.1, stagger:.08, ease:'power2.out' });
 
-  const intFeats=['#if1','#if2','#if3','#if4'];
-  intFeats.forEach((id,i)=>{
-    gsap.to(id,{
-      scrollTrigger:{trigger:'#s-interop',start:`${30+i*12}% top`,end:`${44+i*12}% top`,scrub:1},
-      opacity:1, x:0, duration:1
+  // Sections — any .eyebrow/.section-label, h2, p, list items
+  var triggers = [
+    { sel: '#s-impact',      items: '.impact-tag, .impact-title, .impact-desc' },
+    { sel: '#s-mission',     items: '.mission-title, .mission-body p' },
+    { sel: '#s-pillars',     items: '.section-label, .section-h2, .pillar-card' },
+    { sel: '#s-impact-stmt', items: '.section-label, .section-h2, .impact-item, .impact-stmt-closing p' },
+    { sel: '#s-insights',    items: '.section-label, .section-h2, .insight-card' },
+    { sel: '#s-legacy',      items: '.legacy-highlight, .legacy-title, .legacy-subtitle, .legacy-desc, .btn-primary' },
+    { sel: '#s-security',    items: '.section-label, .section-h2, .cert-card, .footer-cta' },
+    { sel: '#s-vision',      items: 'blockquote, .vision-label' },
+    { sel: '#s-contact',     items: '.section-label, .contact-title, .contact-desc, .contact-cta' }
+  ];
+
+  triggers.forEach(function (tr) {
+    var el = document.querySelector(tr.sel);
+    if (!el) return;
+    gsap.from(el.querySelectorAll(tr.items), {
+      scrollTrigger: { trigger: el, start: 'top 70%', once: true },
+      y: 30, opacity: 0, duration: .85, stagger: .09, ease: 'power3.out'
     });
   });
 
-  // Pipeline rows slide in staggered as you scroll in
-  const pipelineTl=gsap.timeline({
-    scrollTrigger:{trigger:'#s-interop',start:'top 60%',end:'top -20%',scrub:1.5}
-  });
-  pipelineTl
-    .to('#track-hl7',  {opacity:1,x:0,duration:1,ease:'power2.out'})
-    .to('#conn1',      {opacity:1,duration:.6,ease:'power2.out'},0.4)
-    .to('#track-fhir', {opacity:1,x:0,duration:1,ease:'power2.out'},0.55)
-    .to('#conn2',      {opacity:1,duration:.6,ease:'power2.out'},1.0)
-    .to('#track-ai',   {opacity:1,x:0,duration:1,ease:'power2.out'},1.1)
-    .to('#pipe-badges',{opacity:1,duration:.8,ease:'power2.out'},1.7);
-
-  // Fill widths driven by scrub
-  ScrollTrigger.create({
-    trigger:'#s-interop', start:'top top', end:'bottom bottom', scrub:1,
-    onUpdate:self=>{
-      const p=self.progress;
-      document.getElementById('fill-hl7').style.width  =Math.min(100,p/.3*100)+'%';
-      document.getElementById('fill-fhir').style.width =Math.min(100,Math.max(0,(p-.2)/.5*100))+'%';
-      document.getElementById('fill-ai').style.width   =Math.min(100,Math.max(0,(p-.4)/.6*100))+'%';
-    }
-  });
-
-  function mkPkts(wrapId,cls,count,spd){
-    const w=document.getElementById(wrapId); if(!w) return;
-    for(let i=0;i<count;i++){
-      const pk=document.createElement('div');
-      pk.className=`packet ${cls}`;
-      pk.style.width=(14+Math.random()*20)+'px';
-      pk.style.left='-30px'; pk.style.opacity='0';
-      w.appendChild(pk);
-      (function run(delay){
-        const dur=(2000+Math.random()*1600)/spd;
-        gsap.set(pk,{left:'-30px',opacity:0});
-        gsap.timeline({delay})
-          .to(pk,{opacity:1,duration:.18})
-          .to(pk,{left:'110%',duration:dur/1000,ease:'none'})
-          .to(pk,{opacity:0,duration:.12},'-=.12')
-          .call(()=>run(.15+Math.random()*.8));
-      })(i*.65);
-    }
-  }
-  mkPkts('pkts-hl7','hl7-pk',5,1);
-  mkPkts('pkts-fhir','fhir-pk',6,1.4);
-  mkPkts('pkts-ai','ai-pk',8,2);
-})();
-
-
-// ══════════════════════════════════════════════════════════════════════
-//  CONVERGENCE CTA
-// ══════════════════════════════════════════════════════════════════════
-(function(){
-  const C=document.getElementById('convergence-canvas');
-  const ctx=C.getContext('2d');
-  let W,H,ctaP=0;
-
-  function init(){
-    W=C.offsetWidth; H=C.offsetHeight;
-    C.width=W*DPR; C.height=H*DPR; ctx.scale(DPR,DPR);
-  }
-
-  ScrollTrigger.create({trigger:'#s-cta',start:'top bottom',end:'center center',scrub:1.5,
-    onUpdate:self=>{ctaP=self.progress;}});
-
-  gsap.set(['#cta-ey','#cta-h','#cta-p','#cta-btns'],{opacity:0,y:20});
-  gsap.timeline({scrollTrigger:{trigger:'#s-cta',start:'top 65%',once:true}})
-    .to('#cta-ey', {opacity:1,y:0,duration:.7,ease:'power2.out'})
-    .to('#cta-h',  {opacity:1,y:0,duration:.75,ease:'power2.out'},'-=.4')
-    .to('#cta-p',  {opacity:1,y:0,duration:.7,ease:'power2.out'},'-=.4')
-    .to('#cta-btns',{opacity:1,y:0,duration:.65,ease:'power2.out'},'-=.35');
-
-  function frame(){
-    ctx.clearRect(0,0,W,H);
-    const CX=W*.5, CY=H*.5;
-    const t=Date.now();
-
-    // Spiral streams converging
-    const STREAMS=36;
-    for(let i=0;i<STREAMS;i++){
-      const baseAngle=(i/STREAMS)*Math.PI*2;
-      const spiral=ctaP*Math.PI*1.2; // spiral inward
-      const a=baseAngle+spiral;
-      const sR=Math.max(W,H)*.78;
-      const tipR=sR*(1-ctaP*.92);
-      const sx=CX+Math.cos(baseAngle)*sR, sy=CY+Math.sin(baseAngle)*sR;
-      const tx=CX+Math.cos(a)*tipR,       ty=CY+Math.sin(a)*tipR;
-      const isAlt=i%6===0;
-      const cf=isAlt?gold:teal;
-      const g=ctx.createLinearGradient(sx,sy,tx,ty);
-      g.addColorStop(0,cf(0));
-      g.addColorStop(1,cf(ctaP*.5));
-      ctx.beginPath(); ctx.moveTo(sx,sy); ctx.lineTo(tx,ty);
-      ctx.strokeStyle=g; ctx.lineWidth=isAlt?1.8:.7; ctx.stroke();
-    }
-
-    // Particle ring orbiting the orb
-    if(ctaP>0.2){
-      const ringR=35+ctaP*80;
-      const PCOUNT=24;
-      for(let i=0;i<PCOUNT;i++){
-        const a=(i/PCOUNT)*Math.PI*2+t*.001;
-        const px=CX+Math.cos(a)*ringR, py=CY+Math.sin(a)*ringR;
-        const cf=i%4===0?gold:teal;
-        ctx.fillStyle=cf(ctaP*.7);
-        ctx.beginPath(); ctx.arc(px,py,i%3===0?2.5:1.5,0,Math.PI*2); ctx.fill();
-      }
-    }
-
-    // Orb
-    const orbR=12+ctaP*60, pulse=0.82+0.18*Math.sin(t*.004);
-    [4,3,2,1].forEach(l=>{
-      const lr=orbR*(1+l*.55);
-      const g=ctx.createRadialGradient(CX,CY,0,CX,CY,lr);
-      g.addColorStop(0,teal(ctaP*(l===1?.78:.18/l)*pulse));
-      g.addColorStop(1,'transparent');
-      ctx.fillStyle=g; ctx.beginPath(); ctx.arc(CX,CY,lr,0,Math.PI*2); ctx.fill();
+  // Scroll scene text panels — heading + paragraph only (bullets handled separately)
+  document.querySelectorAll('.scene-txt').forEach(function (panel) {
+    gsap.from(panel.querySelectorAll('.scene-tag, .scene-h, .scene-p'), {
+      scrollTrigger: { trigger: panel, start: 'top 68%', once: true },
+      y: 32, opacity: 0, duration: .85, stagger: .08, ease: 'power3.out'
     });
-    if(ctaP>.06){
-      const cg=ctx.createRadialGradient(CX-orbR*.2,CY-orbR*.2,orbR*.05,CX,CY,orbR*.5*ctaP);
-      cg.addColorStop(0,wht(ctaP*.9*pulse));
-      cg.addColorStop(0.5,teal(ctaP*.7*pulse));
-      cg.addColorStop(1,'transparent');
-      ctx.fillStyle=cg;
-      ctx.beginPath(); ctx.arc(CX,CY,orbR*.55*ctaP,0,Math.PI*2); ctx.fill();
-    }
-
-    requestAnimationFrame(frame);
-  }
-
-  let rt; window.addEventListener('resize',()=>{ clearTimeout(rt); rt=setTimeout(init,100); });
-  init(); frame();
-})();
-
-
-// ══════════════════════════════════════════════════════════════════════
-//  PHASE 1A — FILM GRAIN
-// ══════════════════════════════════════════════════════════════════════
-(function(){
-  // Generate a random 180×180 noise texture once, use as CSS background-image
-  // Regenerate every 250ms to get animated grain without per-frame canvas cost
-  const el=document.getElementById('grain-overlay');
-  const SIZE=180;
-
-  function makeGrainURL(){
-    const c=document.createElement('canvas');
-    c.width=c.height=SIZE;
-    const ctx=c.getContext('2d');
-    const id=ctx.createImageData(SIZE,SIZE);
-    const d=id.data;
-    for(let i=0;i<d.length;i+=4){
-      const v=Math.random()*255|0;
-      d[i]=d[i+1]=d[i+2]=v;
-      d[i+3]=Math.random()*80+40|0;  // varied alpha for organic feel
-    }
-    ctx.putImageData(id,0,0);
-    return c.toDataURL('image/png');
-  }
-
-  // Pre-generate 6 frames so we can cycle without per-frame generation
-  const FRAMES=6;
-  const frames=[];
-  for(let i=0;i<FRAMES;i++) frames.push(makeGrainURL());
-
-  let fi=0;
-  el.style.backgroundImage=`url(${frames[0]})`;
-
-  setInterval(()=>{
-    fi=(fi+1)%FRAMES;
-    el.style.backgroundImage=`url(${frames[fi]})`;
-  },55); // ~18fps grain rotation
-})();
-
-
-// ══════════════════════════════════════════════════════════════════════
-//  PHASE 1B — CUSTOM CURSOR with lerp lag
-// ══════════════════════════════════════════════════════════════════════
-(function(){
-  const dot=document.getElementById('cursor-dot');
-  const ring=document.getElementById('cursor-ring');
-
-  let mx=window.innerWidth/2, my=window.innerHeight/2;
-  let dx=mx, dy=my;    // dot (fast)
-  let rx=mx, ry=my;    // ring (slow)
-  let visible=false;
-
-  document.addEventListener('mousemove',e=>{
-    mx=e.clientX; my=e.clientY;
-    if(!visible){
-      visible=true;
-      document.body.classList.remove('c-hidden');
-    }
+    var gn = panel.querySelector('.ghost-num');
+    if (gn) gsap.from(gn, {
+      scrollTrigger: { trigger: panel, start: 'top 75%', once: true },
+      x: 24, opacity: 0, duration: 1, ease: 'power3.out'
+    });
   });
 
-  document.addEventListener('mouseleave',()=>{
-    document.body.classList.add('c-hidden');
+  // Per-bullet scroll-driven reveals for the three service sections
+  // Each bullet fires at an evenly-spaced scroll position within its 260vh outer container.
+  document.querySelectorAll('.scene-outer').forEach(function (outer) {
+    var items = Array.prototype.slice.call(outer.querySelectorAll('.feat-list li'));
+    var N = items.length;
+    if (!N) return;
+
+    // Initially hide all bullets (GSAP owns opacity/transform, not CSS)
+    gsap.set(items, { opacity: 0, x: -32, filter: 'blur(3px)' });
+
+    items.forEach(function (item, i) {
+      // Spread triggers from 8% → 68% of the outer's total scroll height.
+      // outer.offsetHeight ≈ 260vh; ScrollTrigger offset is from the outer's top edge.
+      var fraction = 0.08 + (i / Math.max(N - 1, 1)) * 0.60;
+      var pxOffset  = Math.round(outer.offsetHeight * fraction);
+
+      ScrollTrigger.create({
+        trigger:  outer,
+        start:    'top+=' + pxOffset + ' top',
+        once:     true,
+        onEnter:  (function (el) {
+          return function () {
+            gsap.to(el, {
+              opacity: 1, x: 0, filter: 'blur(0px)',
+              duration: 0.55, ease: 'power3.out',
+              onStart: function () { el.classList.add('bullet-in'); }
+            });
+          };
+        })(item)
+      });
+    });
   });
-  document.addEventListener('mouseenter',()=>{
-    document.body.classList.remove('c-hidden');
+
+  // Convergence
+  gsap.from(document.querySelector('.conv-inner').querySelectorAll('.conv-eyebrow, .conv-title, .conv-body, .conv-cta'), {
+    scrollTrigger: { trigger: '#s-convergence', start: 'top 70%', once: true },
+    y: 40, opacity: 0, duration: 1, stagger: .14, ease: 'power3.out'
   });
-
-  // Hover state on interactive elements
-  const hoverTargets='a,button,.btn-p,.btn-g,.nav-cta,.nav-ghost,.pillar,#dna-canvas,.badge';
-  document.querySelectorAll(hoverTargets).forEach(el=>{
-    el.addEventListener('mouseenter',()=>document.body.classList.add('c-hover'));
-    el.addEventListener('mouseleave',()=>document.body.classList.remove('c-hover'));
-  });
-
-  document.addEventListener('mousedown',()=>document.body.classList.add('c-click'));
-  document.addEventListener('mouseup',  ()=>document.body.classList.remove('c-click'));
-
-  // Lerp loop — dot is fast, ring lags behind
-  function lerp(a,b,t){ return a+(b-a)*t; }
-
-  // Start hidden
-  document.body.classList.add('c-hidden');
-
-  (function loop(){
-    // Dot: fast lerp (snappy)
-    dx=lerp(dx,mx,0.22);
-    dy=lerp(dy,my,0.22);
-    dot.style.left=dx+'px';
-    dot.style.top=dy+'px';
-
-    // Ring: slow lerp (dreamy lag)
-    rx=lerp(rx,mx,0.09);
-    ry=lerp(ry,my,0.09);
-    ring.style.left=rx+'px';
-    ring.style.top=ry+'px';
-
-    requestAnimationFrame(loop);
-  })();
-})();
+});
 </script>
+
+<div id="copilot-widget-root"></div>
+<script src="assets/js/copilot-widget.js"></script>
 </body>
 </html>
