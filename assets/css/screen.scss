@@ -121,104 +121,165 @@ section {
 }
 
 // ─── Header ──────────────────────────────────────────────────────────
-.site-header {
+// ─── NAV (matches homepage) ───────────────────────────────────────────────
+.nav {
     position: sticky;
     top: 0;
+    left: 0;
+    right: 0;
     z-index: 200;
-    padding: 1.1rem 0;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-    background-color: #fff;
-}
-
-.site-header__inner {
     display: flex;
+    align-items: center;
     justify-content: space-between;
-    align-items: center;
+    padding: 1.1rem 3.5rem;
+    backdrop-filter: blur(16px) saturate(160%);
+    -webkit-backdrop-filter: blur(16px) saturate(160%);
+    background: rgba(5, 16, 28, 0.96);
+    border-bottom: 1px solid rgba(0, 196, 162, 0.07);
+    transition: background .4s;
 }
 
-.site-header__logo {
-    text-decoration: none;
-    font-family: $font-sans;
-    font-weight: 700;
-    font-size: 20px;
-    letter-spacing: -0.02em;
-    color: $clr-text;
+.nav-logo {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: .55rem;
+    font-family: $font-sans;
+    font-weight: 900;
+    font-size: 1.05rem;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: #BF5700;
+    text-decoration: none;
 }
 
-.site-header__logo img {
-    height: 28px;
+.nav-logo img {
     width: 28px;
-    border-radius: 50%;
+    height: 28px;
     object-fit: contain;
+    display: block;
+    background: #fff;
+    border-radius: 50%;
+    padding: 3px;
 }
 
-// ─── Navigation ──────────────────────────────────────────────────────
-.site-nav {
-    font-family: $font-sans;
-    font-size: 15px;
-    font-weight: 500;
+.nav-links {
     display: flex;
+    list-style: none;
+    gap: 2.5rem;
     align-items: center;
+    line-height: 1;
+    margin: 0;
+    padding: 0;
 }
 
-.site-nav > a {
-    margin-left: 32px;
+.nav-links a {
+    font-family: $font-sans;
+    font-size: .75rem;
+    font-weight: 700;
+    letter-spacing: .09em;
+    text-transform: uppercase;
+    color: #fff;
+    position: relative;
+    padding-bottom: 3px;
+    transition: color .2s;
     text-decoration: none;
-    color: inherit;
 }
+
+.nav-links a::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: #F5D060;
+    transition: width .25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.nav-links a:hover::after { width: 100%; }
 
 // ─── Yajur Labs Dropdown ──────────────────────────────────────────────
 .nav-dropdown {
     position: relative;
-    display: inline-block;
-    margin-left: 32px;
 }
 
 .nav-dropdown__toggle {
-    text-decoration: none;
-    color: inherit;
-    cursor: default;
     font-family: $font-sans;
-    font-size: 15px;
-    font-weight: 500;
+    font-size: .75rem;
+    font-weight: 700;
+    letter-spacing: .09em;
+    text-transform: uppercase;
+    color: #fff;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0 0 3px 0;
+    margin: 0;
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: .35rem;
 }
+
+.nav-dropdown__toggle::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: #F5D060;
+    transition: width .25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.nav-dropdown.is-open .nav-dropdown__toggle::after { width: 100%; }
+
+.nav-dropdown__caret {
+    display: inline-block;
+    font-size: .6rem;
+    transition: transform .2s;
+}
+
+.nav-dropdown.is-open .nav-dropdown__caret { transform: rotate(180deg); }
 
 .nav-dropdown__menu {
     display: none;
     position: absolute;
-    top: 100%;
-    right: 0;
-    background-color: #fff;
-    border: 1px solid rgba(0, 0, 0, 0.08);
-    border-radius: 12px;
-    min-width: 220px;
-    z-index: 200;
-    padding: 12px 0 8px; /* 12px top padding bridges the visual gap — keeps hover active */
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    top: calc(100% + .8rem);
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(9, 21, 42, 0.97);
+    border: 1px solid rgba(0, 196, 162, 0.14);
+    border-radius: 4px;
+    min-width: 200px;
+    backdrop-filter: blur(16px);
+    z-index: 300;
+    padding: .5rem 0;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
 }
+
+.nav-dropdown.is-open .nav-dropdown__menu { display: block; }
 
 .nav-dropdown__menu a {
     display: block;
-    margin-left: 0;
-    padding: 11px 20px;
-    font-size: 14px;
-    color: $clr-text;
+    padding: .65rem 1.2rem;
+    font-family: $font-sans;
+    font-size: .72rem;
+    font-weight: 600;
+    letter-spacing: .07em;
+    text-transform: none;
+    color: #fff;
     text-decoration: none;
     white-space: nowrap;
-    transition: background 0.15s;
+    transition: color .15s, background .15s;
+    margin-left: 0;
 }
+
+.nav-dropdown__menu a::after { display: none !important; }
 
 .nav-dropdown__menu a:hover {
-    background-color: $clr-bg-alt;
-    opacity: 1;
-}
-
-.nav-dropdown:hover .nav-dropdown__menu,
-.nav-dropdown.is-open .nav-dropdown__menu {
-    display: block;
+    color: #00C4A2;
+    background: rgba(0, 196, 162, 0.07);
 }
 
 .nav-toggle {
@@ -227,26 +288,10 @@ section {
     border: none;
     cursor: pointer;
     padding: 8px;
-    color: $clr-text;
+    color: #fff;
 }
 
-.nav-toggle svg {
-    display: block;
-}
-
-.nav-toggle--close line:nth-child(1) {
-    transform: rotate(45deg) translate(5px, -3px);
-    transform-origin: center;
-}
-
-.nav-toggle--close line:nth-child(2) {
-    opacity: 0;
-}
-
-.nav-toggle--close line:nth-child(3) {
-    transform: rotate(-45deg) translate(5px, 3px);
-    transform-origin: center;
-}
+.nav-toggle svg { display: block; }
 
 // ─── Footer ──────────────────────────────────────────────────────────
 .site-footer {
@@ -759,78 +804,72 @@ section {
     }
 
     // Nav
+    .nav {
+        padding: 1.1rem 1.5rem;
+        flex-wrap: wrap;
+    }
+
     .nav-toggle {
         display: block;
     }
 
-    .site-header {
-        position: sticky;
-    }
-
-    .site-nav {
+    .nav-links {
         display: none;
-        position: absolute;
-        top: 100%;
-        left: 0;
-        right: 0;
-        background-color: $clr-bg;
-        border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-        padding: 0 24px;
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-        z-index: 100;
-    }
-
-    .site-nav.is-open {
-        display: block;
-    }
-
-    .site-nav {
+        width: 100%;
         flex-direction: column;
         align-items: stretch;
+        gap: 0;
+        padding: .5rem 0 1rem;
+        border-top: 1px solid rgba(0, 196, 162, 0.1);
+        margin-top: .5rem;
     }
 
-    .site-nav > a {
+    .nav-links.is-open {
+        display: flex;
+    }
+
+    .nav-links li {
+        list-style: none;
+    }
+
+    .nav-links > li > a {
         display: block;
-        margin: 0;
-        padding: 16px 0;
-        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-        font-size: 17px;
+        padding: .9rem 0;
+        font-size: .85rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
     }
 
-    .site-nav > a:last-child {
-        border-bottom: none;
-    }
-
-    // Dropdown becomes flat list on mobile
+    // Dropdown flat on mobile
     .nav-dropdown {
         display: block;
-        margin-left: 0;
     }
 
     .nav-dropdown__toggle {
         display: block;
-        padding: 16px 0;
-        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-        font-size: 17px;
-        font-weight: 600;
+        width: 100%;
+        padding: .9rem 0;
+        font-size: .85rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
     }
 
     .nav-dropdown__menu {
         display: block;
         position: static;
+        transform: none;
         box-shadow: none;
         border: none;
         border-radius: 0;
         padding: 0;
         background: transparent;
+        backdrop-filter: none;
         min-width: 0;
     }
 
     .nav-dropdown__menu a {
-        padding: 12px 0 12px 16px;
-        font-size: 15px;
-        color: $clr-text-muted;
-        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        padding: .75rem 0 .75rem 1rem;
+        font-size: .8rem;
+        color: rgba(255, 255, 255, 0.6);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.04);
         white-space: normal;
     }
 
