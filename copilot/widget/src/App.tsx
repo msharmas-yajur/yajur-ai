@@ -53,19 +53,43 @@ const App: React.FC = () => {
     useEffect(() => {
         const style = document.createElement("style");
         style.textContent = `
-            cpk-web-inspector, 
+            cpk-web-inspector,
             .announcement-preview,
             [class*="announcement"],
             .copilot-kit-announcement,
             div[class*="copilot-kit"][style*="background-color: rgb(255, 193, 7)"],
-            div[class*="copilot-kit"][style*="background-color: #ffc107"] { 
-                display: none !important; 
-                visibility: hidden !important; 
-                opacity: 0 !important; 
+            div[class*="copilot-kit"][style*="background-color: #ffc107"] {
+                display: none !important;
+                visibility: hidden !important;
+                opacity: 0 !important;
                 pointer-events: none !important;
                 height: 0 !important;
                 position: absolute !important;
                 z-index: -999 !important;
+            }
+
+            /* ── User message bubble: lightest orange ── */
+            .copilotKitUserMessage,
+            [class*="copilotKit"][class*="user" i],
+            [class*="copilot-kit"][class*="user" i] {
+                background-color: rgba(191, 87, 0, 0.10) !important;
+                border: 1px solid rgba(191, 87, 0, 0.22) !important;
+                color: #1a1a1a !important;
+            }
+
+            /* ── Assistant message bubble: navy blue text ── */
+            .copilotKitAssistantMessage,
+            [class*="copilotKit"][class*="assistant" i],
+            [class*="copilot-kit"][class*="assistant" i] {
+                background-color: #f0f4f8 !important;
+                color: #09152A !important;
+            }
+
+            /* Ensure all text inside assistant messages is navy */
+            .copilotKitAssistantMessage *,
+            [class*="copilotKit"][class*="assistant" i] *,
+            [class*="copilot-kit"][class*="assistant" i] * {
+                color: #09152A !important;
             }
         `;
         document.head.appendChild(style);
