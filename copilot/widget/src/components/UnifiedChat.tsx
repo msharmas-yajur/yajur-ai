@@ -505,8 +505,10 @@ Do NOT provide clinical medical advice. Always recommend consulting a qualified 
                                     width: "36px",
                                     height: "36px",
                                     borderRadius: "50%",
-                                    objectFit: "cover",
+                                    objectFit: "contain",
                                     display: "block",
+                                    background: "#ffffff",
+                                    padding: "4px",
                                 }}
                             />
                         ),
