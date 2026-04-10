@@ -68,27 +68,34 @@ const App: React.FC = () => {
                 z-index: -999 !important;
             }
 
-            /* ── User message bubble: lightest orange ── */
-            .copilotKitUserMessage,
-            [class*="copilotKit"][class*="user" i],
-            [class*="copilot-kit"][class*="user" i] {
-                background-color: rgba(191, 87, 0, 0.10) !important;
-                border: 1px solid rgba(191, 87, 0, 0.22) !important;
-                color: #1a1a1a !important;
+            /* ── Override CopilotKit CSS variables ── */
+            :root {
+                --copilot-kit-primary-color: rgba(191, 87, 0, 0.09) !important;
+                --copilot-kit-contrast-color: #3d1a00 !important;
             }
 
-            /* ── Assistant message bubble: navy blue text ── */
-            .copilotKitAssistantMessage,
-            [class*="copilotKit"][class*="assistant" i],
-            [class*="copilot-kit"][class*="assistant" i] {
-                background-color: #f0f4f8 !important;
+            /* ── User message: lightest burnt orange ── */
+            .copilotKitMessage.copilotKitUserMessage {
+                background: rgba(191, 87, 0, 0.09) !important;
+                border: 1px solid rgba(191, 87, 0, 0.22) !important;
+                color: #3d1a00 !important;
+            }
+
+            /* ── Assistant message: navy blue text, very light bg ── */
+            .copilotKitMessage.copilotKitAssistantMessage {
+                background: transparent !important;
                 color: #09152A !important;
             }
-
-            /* Ensure all text inside assistant messages is navy */
-            .copilotKitAssistantMessage *,
-            [class*="copilotKit"][class*="assistant" i] *,
-            [class*="copilot-kit"][class*="assistant" i] * {
+            .copilotKitMessage.copilotKitAssistantMessage,
+            .copilotKitMessage.copilotKitAssistantMessage p,
+            .copilotKitMessage.copilotKitAssistantMessage li,
+            .copilotKitMessage.copilotKitAssistantMessage h1,
+            .copilotKitMessage.copilotKitAssistantMessage h2,
+            .copilotKitMessage.copilotKitAssistantMessage h3,
+            .copilotKitMessage.copilotKitAssistantMessage span,
+            .copilotKitMessage.copilotKitAssistantMessage strong,
+            .copilotKitMessage.copilotKitAssistantMessage em,
+            .copilotKitMessage.copilotKitAssistantMessage code {
                 color: #09152A !important;
             }
         `;
