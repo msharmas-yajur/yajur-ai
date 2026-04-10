@@ -125,7 +125,7 @@ section {
     position: sticky;
     top: 0;
     z-index: 200;
-    padding: 24px 0;
+    padding: 1.1rem 0;
     border-bottom: 1px solid rgba(0, 0, 0, 0.05);
     background-color: #fff;
 }
@@ -149,9 +149,10 @@ section {
 }
 
 .site-header__logo img {
-    height: 32px;
-    width: auto;
+    height: 28px;
+    width: 28px;
     border-radius: 50%;
+    object-fit: contain;
 }
 
 // ─── Navigation ──────────────────────────────────────────────────────
