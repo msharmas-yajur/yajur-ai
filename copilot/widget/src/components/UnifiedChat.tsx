@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, createContext, useContext, useCallback } from "react";
-import { useCopilotChat, useCopilotReadable } from "@copilotkit/react-core";
+import { useCopilotChat, useCopilotReadable, useCopilotChatSuggestions } from "@copilotkit/react-core";
 import { CopilotPopup } from "@copilotkit/react-ui";
 import { TextMessage, Role } from "@copilotkit/runtime-client-gql";
 import { LiveKitRoom, RoomAudioRenderer, useVoiceAssistant } from "@livekit/components-react";
@@ -410,6 +410,18 @@ export const UnifiedChat: React.FC<UnifiedChatProps> = ({
         description:
             "Comprehensive knowledge base about Yajur Healthcare / Yajur.ai — the Medical Data Infrastructure Company",
         value: YAJUR_KNOWLEDGE,
+    });
+
+    useCopilotChatSuggestions({
+        available: "before-first-message",
+        suggestions: [
+            { title: "What does Yajur.ai do?",            message: "What does Yajur.ai do?" },
+            { title: "How does ABDM compliance work?",     message: "How does Yajur handle ABDM compliance?" },
+            { title: "What datasets do you offer?",        message: "Tell me about Yajur's disease-specific datasets." },
+            { title: "How can I build with Yajur?",        message: "How can my organisation build with Yajur?" },
+            { title: "What is the Yajur Lakehouse?",       message: "What is the Yajur data lakehouse infrastructure?" },
+            { title: "NHCX & health claims explained",     message: "Explain Yajur's role in NHCX and health claims." },
+        ],
     });
 
     // Feed LiveKit transcriptions into CopilotKit chat (display only — no LLM trigger)
