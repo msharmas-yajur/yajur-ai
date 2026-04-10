@@ -122,8 +122,12 @@ section {
 
 // ─── Header ──────────────────────────────────────────────────────────
 .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 200;
     padding: 24px 0;
     border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    background-color: #fff;
 }
 
 .site-header__inner {
@@ -759,7 +763,7 @@ section {
     }
 
     .site-header {
-        position: relative;
+        position: sticky;
     }
 
     .site-nav {
