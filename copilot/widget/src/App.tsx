@@ -74,6 +74,19 @@ const App: React.FC = () => {
                 --copilot-kit-contrast-color: #3d1a00 !important;
             }
 
+            /* ── Suggestion chips: light orange bg, navy text ── */
+            .copilotKitMessages footer .suggestions button {
+                background-color: rgba(191, 87, 0, 0.08) !important;
+                border: 1px solid rgba(191, 87, 0, 0.30) !important;
+                color: #09152A !important;
+                font-weight: 500 !important;
+            }
+            .copilotKitMessages footer .suggestions button:not(:disabled):hover {
+                background-color: rgba(191, 87, 0, 0.16) !important;
+                border-color: rgba(191, 87, 0, 0.55) !important;
+                color: #09152A !important;
+            }
+
             /* ── Header: dark navy background, white text ── */
             .copilotKitHeader {
                 background-color: #09152A !important;
