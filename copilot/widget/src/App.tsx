@@ -3,7 +3,7 @@ import { CopilotKit } from "@copilotkit/react-core";
 import "@copilotkit/react-ui/styles.css";
 import { UnifiedChat } from "./components/UnifiedChat";
 
-export const WIDGET_VERSION = "2.1.0"; // bump on every session: major.session.patch
+export const WIDGET_VERSION = "3.0.0"; // bump on every session: major.session.patch
 
 const BACKEND_BASE = "http://localhost:3330";
 const COPILOTKIT_PUBLIC_KEY = "ck_pub_3e7127dba63bdcd42c0eb65ba64c9289";
@@ -72,6 +72,17 @@ const App: React.FC = () => {
             :root {
                 --copilot-kit-primary-color: rgba(191, 87, 0, 0.09) !important;
                 --copilot-kit-contrast-color: #3d1a00 !important;
+            }
+
+            /* ── Header: dark navy background, white text ── */
+            .copilotKitHeader {
+                background-color: #09152A !important;
+                color: #ffffff !important;
+                border-bottom: 1px solid rgba(0, 196, 162, 0.18) !important;
+                border-radius: 12px 12px 0 0 !important;
+            }
+            .copilotKitHeader * {
+                color: #ffffff !important;
             }
 
             /* ── User message: lightest burnt orange ── */
