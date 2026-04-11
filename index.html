@@ -708,6 +708,125 @@
     /* ─── WORD SPLIT ─── */
     .word-wrap  { overflow: hidden; display: inline-block; }
     .word-inner { display: inline-block; }
+
+    /* ─── NAV TOGGLE (hidden on desktop) ─── */
+    .nav-toggle {
+      display: none;
+      background: none; border: none;
+      color: #fff; padding: 8px;
+      min-width: 48px; min-height: 48px;
+      align-items: center; justify-content: center;
+      cursor: pointer; flex-shrink: 0;
+    }
+    .nav-toggle svg { display: block; pointer-events: none; }
+
+    /* ─── RESPONSIVE: Tablet (≤768px) ─── */
+    @media (max-width: 768px) {
+      /* Hide custom cursor on touch */
+      #cursor, #cursor-ring { display: none; }
+      body { cursor: auto; }
+      a, button { cursor: pointer; }
+      .btn-primary, .btn-ghost, .btn-orange, .btn-nav,
+      .btn-xl, .btn-xl-ghost, .nav-dropdown__toggle { cursor: pointer; }
+
+      /* Nav */
+      .nav { padding: 1rem 1.5rem; flex-wrap: wrap; }
+      .nav-toggle { display: flex; }
+      .nav-links {
+        display: none; width: 100%;
+        flex-direction: column; align-items: stretch;
+        gap: 0; margin: 0; padding: .5rem 0 1rem;
+        border-top: 1px solid rgba(0,196,162,0.1);
+        margin-top: .5rem;
+      }
+      .nav-links.is-open { display: flex; }
+      .nav-links li { list-style: none; }
+      .nav-links > li > a {
+        display: flex; align-items: center; min-height: 48px;
+        padding: .5rem 0; font-size: .85rem;
+        border-bottom: 1px solid rgba(255,255,255,0.06);
+      }
+      .nav-dropdown { display: block; }
+      .nav-dropdown__toggle {
+        display: flex; align-items: center; min-height: 48px;
+        width: 100%; padding: .5rem 0; font-size: .85rem;
+        border-bottom: 1px solid rgba(255,255,255,0.06);
+      }
+      .nav-dropdown__menu {
+        position: static; transform: none; box-shadow: none;
+        border: none; border-radius: 0; padding: 0;
+        background: transparent; backdrop-filter: none; min-width: 0;
+      }
+      .nav-dropdown__menu a {
+        padding: .6rem 0 .6rem 1rem; font-size: .8rem;
+        color: rgba(255,255,255,0.6);
+        border-bottom: 1px solid rgba(255,255,255,0.04);
+        white-space: normal;
+      }
+
+      /* Hero */
+      #s-hero { grid-template-columns: 1fr; min-height: auto; }
+      .hero-canvas { display: none; }
+      .hero-text { padding: 7rem 1.5rem 4rem; }
+      .hero-cta { flex-wrap: wrap; gap: .75rem; }
+      .hero-divider { gap: 2rem; padding-top: 2rem; margin-top: 3rem; }
+
+      /* Section padding */
+      #s-impact      { padding: 4rem 1.5rem; }
+      #s-mission     { padding: 4rem 1.5rem; }
+      #s-pillars     { padding: 4rem 1.5rem; }
+      #s-impact-stmt { padding: 4rem 1.5rem; }
+      #s-insights    { padding: 4rem 1.5rem; }
+      #s-legacy      { padding: 4rem 1.5rem; }
+      #s-security    { padding: 4rem 1.5rem; }
+      #s-vision      { padding: 4rem 1.5rem; }
+      #s-contact     { padding: 4rem 1.5rem; }
+
+      /* Grids → single column */
+      .mission-grid     { grid-template-columns: 1fr; gap: 2rem; }
+      .pillars-grid     { grid-template-columns: 1fr; }
+      .impact-stmt-grid { grid-template-columns: 1fr; gap: 2.5rem; }
+      .insights-grid    { grid-template-columns: 1fr; }
+      .security-top     { grid-template-columns: 1fr; gap: 2.5rem; }
+      .footer-ctas-grid { grid-template-columns: 1fr; }
+      .cert-grid        { grid-template-columns: repeat(2, 1fr); }
+
+      /* Scroll scenes — disable sticky on mobile, text first */
+      .scene-outer  { height: auto; }
+      .scene-sticky {
+        position: static; height: auto;
+        grid-template-columns: 1fr;
+      }
+      .scene-txt { order: 1; padding: 3rem 1.5rem; }
+      .scene-cv  { order: 2; height: 220px; }
+      /* Flipped variant: same rule — text always first on mobile */
+      .scene-sticky--flip .scene-txt { order: 1; }
+      .scene-sticky--flip .scene-cv  { order: 2; }
+
+      /* Misc */
+      .security-cta-row { flex-wrap: wrap; }
+      .contact-cta { flex-wrap: wrap; justify-content: center; }
+      .conv-cta    { flex-wrap: wrap; justify-content: center; gap: .75rem; }
+      #s-convergence .conv-inner { padding: 4rem 1.5rem; }
+    }
+
+    /* ─── RESPONSIVE: Phone (≤480px) ─── */
+    @media (max-width: 480px) {
+      .hero-text  { padding: 6rem 1.2rem 3rem; }
+      .h-display  { font-size: clamp(2rem, 9vw, 2.6rem); }
+      .hero-sub   { font-size: .95rem; }
+      .hero-divider { flex-wrap: wrap; gap: 1.5rem; }
+
+      #s-impact, #s-mission, #s-pillars, #s-impact-stmt,
+      #s-insights, #s-legacy, #s-security, #s-vision, #s-contact {
+        padding: 3rem 1.2rem;
+      }
+
+      .cert-grid    { gap: .75rem; }
+      .pillar-card  { padding: 1.5rem 1.2rem; }
+      .insight-card { padding: 1.5rem 1.2rem; }
+      .footer-cta   { padding: 1.25rem 1.1rem; }
+    }
   </style>
 </head>
 <body>
@@ -718,10 +837,17 @@
 
 <!-- NAV -->
 <nav class="nav">
-  <a href="/" class="nav-logo">
+  <a href="index.html" class="nav-logo">
     <img src="https://yajur.ai/assets/logo.png" alt="Yajur.ai">
     YAJUR.ai
   </a>
+  <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation" aria-expanded="false">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+      <line x1="3" y1="6" x2="21" y2="6"/>
+      <line x1="3" y1="12" x2="21" y2="12"/>
+      <line x1="3" y1="18" x2="21" y2="18"/>
+    </svg>
+  </button>
   <ul class="nav-links">
     <li><a href="#s-mission">Mission</a></li>
     <li><a href="#s-pillars">Solutions</a></li>
@@ -1128,6 +1254,25 @@
   document.querySelectorAll('button, a').forEach(function (el) {
     el.addEventListener('mouseenter', function () { ring.style.width = '48px'; ring.style.height = '48px'; });
     el.addEventListener('mouseleave', function () { ring.style.width = '32px'; ring.style.height = '32px'; });
+  });
+})();
+
+/* ═══════════════════════════════════════════════════════
+   MOBILE NAV TOGGLE
+═══════════════════════════════════════════════════════ */
+(function () {
+  var toggle   = document.getElementById('navToggle');
+  var navLinks = document.querySelector('.nav-links');
+  if (!toggle || !navLinks) return;
+  toggle.addEventListener('click', function () {
+    var open = navLinks.classList.toggle('is-open');
+    toggle.setAttribute('aria-expanded', String(open));
+  });
+  navLinks.querySelectorAll('a').forEach(function (a) {
+    a.addEventListener('click', function () {
+      navLinks.classList.remove('is-open');
+      toggle.setAttribute('aria-expanded', 'false');
+    });
   });
 })();
 
@@ -1768,5 +1913,56 @@ window.addEventListener('load', function () {
 
 <div id="copilot-widget-root"></div>
 <script src="assets/js/copilot-widget.js"></script>
+
+<!-- Mobile close button for CopilotKit popup -->
+<button id="copilot-close-btn" aria-label="Close chat" style="
+  display: none;
+  position: fixed;
+  top: 14px;
+  right: 14px;
+  z-index: 10000;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #0a1f44;
+  color: #fff;
+  border: 2px solid rgba(255,255,255,0.2);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.35);
+">&#x2715;</button>
+
+<script>
+(function () {
+  if (!window.matchMedia('(max-width: 768px)').matches) return;
+
+  var closeBtn = document.getElementById('copilot-close-btn');
+  var root     = document.getElementById('copilot-widget-root');
+  if (!closeBtn || !root) return;
+
+  var isOpen = false;
+
+  // Wait for CopilotKit FAB to render, wire it once, then stop observing
+  new MutationObserver(function (_, obs) {
+    var fab = root.querySelector('button');
+    if (!fab) return;
+    obs.disconnect();
+    // FAB click toggles popup — mirror that state on our close button
+    fab.addEventListener('click', function () {
+      isOpen = !isOpen;
+      closeBtn.style.display = isOpen ? 'flex' : 'none';
+    });
+  }).observe(root, { childList: true, subtree: true });
+
+  // Our close button simply triggers the FAB — the FAB listener above handles state
+  closeBtn.addEventListener('click', function () {
+    var fab = root.querySelector('button');
+    if (fab) fab.click();
+  });
+})();
+</script>
 </body>
 </html>

@@ -254,7 +254,57 @@
 
 	<div id="copilot-widget-root"></div>
 	<script src="{{ site.baseurl }}/assets/js/copilot-widget.js"></script>
+
+	<!-- Mobile close button for CopilotKit popup -->
+	<button id="copilot-close-btn" aria-label="Close chat" style="
+		display: none;
+		position: fixed;
+		top: 14px;
+		right: 14px;
+		z-index: 10000;
+		width: 40px;
+		height: 40px;
+		border-radius: 50%;
+		background: #0a1f44;
+		color: #fff;
+		border: 2px solid rgba(255,255,255,0.2);
+		font-size: 20px;
+		line-height: 1;
+		cursor: pointer;
+		align-items: center;
+		justify-content: center;
+		box-shadow: 0 2px 12px rgba(0,0,0,0.35);
+	">&#x2715;</button>
+
 	<script>
+		// ── Mobile CopilotKit close button ──────────────────────────────
+		(function () {
+			if (!window.matchMedia('(max-width: 768px)').matches) return;
+
+			var closeBtn = document.getElementById('copilot-close-btn');
+			var root = document.getElementById('copilot-widget-root');
+			if (!closeBtn || !root) return;
+
+			var isOpen = false;
+
+			// Wire FAB once it renders, then stop observing
+			new MutationObserver(function (_, obs) {
+				var fab = root.querySelector('button');
+				if (!fab) return;
+				obs.disconnect();
+				fab.addEventListener('click', function () {
+					isOpen = !isOpen;
+					closeBtn.style.display = isOpen ? 'flex' : 'none';
+				});
+			}).observe(root, { childList: true, subtree: true });
+
+			// Our close button triggers the FAB — FAB listener handles state
+			closeBtn.addEventListener('click', function () {
+				var fab = root.querySelector('button');
+				if (fab) fab.click();
+			});
+		})();
+
 		(function () {
 			// Mobile toggle
 			var toggle = document.querySelector('.nav-toggle');
