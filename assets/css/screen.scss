@@ -763,10 +763,13 @@ section {
 
 // Keep widget clear of content on small screens
 @media (max-width: 768px) {
-    // FAB button — anchor to bottom-right, sit above the popup
+    // FAB button — force bottom-right regardless of parent stacking context
     .copilotKitButton {
+        position: fixed !important;
         bottom: 16px !important;
         right: 16px !important;
+        top: auto !important;
+        left: auto !important;
         z-index: 1002 !important;
     }
 
