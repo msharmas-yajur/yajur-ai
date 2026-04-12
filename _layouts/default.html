@@ -174,8 +174,8 @@
 
 <body>
 	<nav class="nav">
-		<a href="{{ '/' | relative_url }}" class="nav-logo">
-			<img src="/assets/logo.png" alt="Yajur.ai">
+		<a href="{{ site.url }}{{ site.baseurl }}/" class="nav-logo">
+			<img src="{{ site.url }}{{ site.baseurl }}/assets/logo.png" alt="Yajur.ai">
 			YAJUR.ai
 		</a>
 		<button class="nav-toggle" aria-label="Toggle navigation" aria-expanded="false">
@@ -187,21 +187,21 @@
 			</svg>
 		</button>
 		<ul class="nav-links">
-			<li><a href="/#s-mission">Mission</a></li>
-			<li><a href="/#s-pillars">Solutions</a></li>
-			<li><a href="/#s-insights">Insights</a></li>
-			<li><a href="/pontifex.html">Pontifex</a></li>
+			<li><a href="{{ site.url }}{{ site.baseurl }}/#s-mission">Mission</a></li>
+			<li><a href="{{ site.url }}{{ site.baseurl }}/#s-pillars">Solutions</a></li>
+			<li><a href="{{ site.url }}{{ site.baseurl }}/#s-insights">Insights</a></li>
+			<li><a href="{{ site.url }}{{ site.baseurl }}/pontifex.html">Pontifex</a></li>
 			<li class="nav-dropdown" id="navDropdown">
 				<button class="nav-dropdown__toggle" id="navDropdownBtn">
 					Yajur Labs <span class="nav-dropdown__caret">&#9660;</span>
 				</button>
 				<div class="nav-dropdown__menu">
-					<a href="/sandbox/datalakehouse-navigator.html">Datalakehouse Navigator</a>
-					<a href="/nursing-roster-v5.html">Nursing Roster</a>
-					<a href="/gcoe-patient-oncocare-v7.html">Onco-CoE Platform</a>
+					<a href="{{ site.url }}{{ site.baseurl }}/sandbox/datalakehouse-navigator.html">Datalakehouse Navigator</a>
+					<a href="{{ site.url }}{{ site.baseurl }}/nursing-roster-v5.html">Nursing Roster</a>
+					<a href="{{ site.url }}{{ site.baseurl }}/gcoe-patient-oncocare-v7.html">Onco-CoE Platform</a>
 				</div>
 			</li>
-			<li><a href="/#s-contact">Contact</a></li>
+			<li><a href="{{ site.url }}{{ site.baseurl }}/#s-contact">Contact</a></li>
 		</ul>
 	</nav>
 
