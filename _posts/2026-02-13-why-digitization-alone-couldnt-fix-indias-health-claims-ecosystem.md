@@ -5,6 +5,9 @@ date: 2026-02-13 12:00:00 +0530
 author: "NHCX Series Editorial"
 description: "India's health claims process remained broken despite digitization because every insurer built isolated automation silos. Yajur Healthcare explores the structural root causes and why NHCX is fundamentally different. Part 2 of the NHCX Series."
 keywords: "NHCX India, health claims digitization India, insurance claims ecosystem, healthcare interoperability India, Yajur Healthcare, TPA India, cashless claim failures, health insurance fragmentation India"
+reading_time: "4 min read"
+tags: [NHCX, health claims, India healthcare, insurance technology, interoperability]
+categories: [technology, "healthcare innovation"]
 ---
 
 **Article 2: Why Digitization Alone Couldn't Fix India's Health Claims Ecosystem**

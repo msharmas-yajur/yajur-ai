@@ -5,6 +5,9 @@ date: 2025-07-09 10:00:00 +0530
 author: "Manish Sharma"
 description: "Yajur Healthcare explains why clinical context quality—not model intelligence—is the real bottleneck in healthcare AI, and how they are re-architecting clinical reasoning pipelines for real-world EHR environments."
 keywords: "clinical reasoning pipelines, healthcare AI context, EHR AI challenges, Yajur Healthcare, clinical AI India, LLM healthcare hallucination, medical AI real-world, structured clinical data"
+reading_time: "5 min read"
+tags: [clinical AI, reasoning pipelines, EHR, context quality, healthcare AI]
+categories: [technology, "healthcare AI"]
 ---
 
 ### Not just models. Context. Structure. Trust.
