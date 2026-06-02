@@ -1,0 +1,1341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wardrobe Carpenter Drawing — Rev F</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Noto+Sans+Devanagari:wght@400;600&display=swap');
+
+  /* ── RESET ── */
+  *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+  html { font-size:16px; }
+
+  /* ── BASE ── */
+  body {
+    background:#e8e4dc;
+    font-family:'IBM Plex Mono',monospace;
+    padding:10px;
+    -webkit-text-size-adjust:100%;
+    text-size-adjust:100%;
+  }
+
+  /* ── LANGUAGE BAR — sticky top ── */
+  #lang-bar {
+    max-width:1100px; margin:0 auto 12px;
+    display:flex; align-items:center; gap:10px;
+    background:#1a1a1a; padding:10px 16px; border-radius:3px;
+    box-shadow:2px 2px 0 #000;
+    position:sticky; top:10px; z-index:100;
+  }
+  #lang-bar .lang-label { font-size:12px; color:#aaa; flex:1; }
+  .lang-btn {
+    font-family:'IBM Plex Mono',monospace; font-size:13px; font-weight:600;
+    padding:8px 20px; border:1.5px solid #555; background:transparent;
+    color:#aaa; cursor:pointer; border-radius:3px; transition:all .15s;
+    touch-action:manipulation; -webkit-tap-highlight-color:transparent;
+    min-height:44px; min-width:80px;
+  }
+  .lang-btn:hover, .lang-btn:focus { border-color:#fff; color:#fff; outline:none; }
+  .lang-btn.active { background:#fff; color:#1a1a1a; border-color:#fff; }
+  .lang-btn.hindi-btn { font-family:'Noto Sans Devanagari',sans-serif; font-size:15px; }
+
+  /* ── PAGE CARD ── */
+  .page {
+    max-width:1100px; margin:0 auto 20px; background:#fffef9;
+    border:1px solid #bbb; padding:16px;
+    box-shadow:3px 3px 0 #bbb;
+  }
+
+  /* ── PAGE HEADER ── */
+  .page-header {
+    border-bottom:2.5px solid #1a1a1a; padding-bottom:10px; margin-bottom:16px;
+  }
+  .page-header-inner {
+    display:flex; justify-content:space-between; align-items:flex-start;
+    gap:12px; flex-wrap:wrap;
+  }
+  .page-header h1 {
+    font-size:clamp(12px, 2.5vw, 15px); font-weight:600;
+    text-transform:uppercase; letter-spacing:.05em; line-height:1.3;
+  }
+  .page-header .sub  { font-size:clamp(9px, 1.8vw, 11px); color:#666; margin-top:4px; line-height:1.4; }
+  .page-header .meta { font-size:clamp(8px, 1.6vw, 10px); color:#555; text-align:right; line-height:1.8; }
+  .rev { display:inline-block; background:#cc0000; color:#fff; font-size:9px; padding:1px 6px; margin-left:6px; vertical-align:middle; }
+
+  /* ── SECTION BAR ── */
+  .section-bar {
+    background:#f0ede4; border-left:4px solid #1a1a1a;
+    font-size:clamp(9px, 2vw, 11px); font-weight:600;
+    text-transform:uppercase; letter-spacing:.08em;
+    padding:7px 10px; margin:20px 0 6px; line-height:1.4;
+  }
+
+  /* ── VIEW BLOCK ── */
+  .view-block { margin-bottom:24px; }
+  .view-sub {
+    font-size:clamp(8px, 1.8vw, 10px); color:#999;
+    text-align:center; margin-bottom:8px; line-height:1.5; padding:0 8px;
+  }
+
+  /* ── SVG RESPONSIVE WRAPPER ──
+     - overflow-x:auto  → horizontal scroll on mobile when svg is wider than screen
+     - SVG has viewBox  → scales proportionally
+     - width:100%       → fills available space
+     - height:auto      → maintains aspect ratio
+     - min-width        → never compressed so small labels are unreadable;
+                          user can pinch-zoom or scroll horizontally
+  */
+  .svg-wrap {
+    width:100%;
+    overflow-x:auto;
+    -webkit-overflow-scrolling:touch;
+    overflow-y:hidden;
+    border:1px solid #ccc;
+    background:#fff;
+    -ms-overflow-style:-ms-autohiding-scrollbar;
+  }
+  .svg-wrap.dark-border { border:2px solid #1a1a1a; background:#f8f8f5; }
+  .svg-wrap svg {
+    display:block;
+    width:100%;
+    min-width:320px;
+    height:auto;
+  }
+
+  /* Taller/narrower SVGs (elevations): allow extra min-width so proportions hold */
+  .svg-wrap.elevation svg  { min-width:400px; }
+  .svg-wrap.plan svg       { min-width:360px; }
+  .svg-wrap.detail svg     { min-width:440px; }
+
+  /* ── TABLE ── */
+  .table-wrap { width:100%; overflow-x:auto; -webkit-overflow-scrolling:touch; }
+  table { width:100%; border-collapse:collapse; font-size:clamp(9px,1.8vw,11px); min-width:480px; }
+  th { background:#1a1a1a; color:#fff; padding:7px 8px; text-align:left; }
+  td { padding:6px 8px; border-bottom:1px solid #ddd; vertical-align:top; line-height:1.5; }
+  tr:nth-child(even) td { background:#f5f0e8; }
+  tr.hl td { background:#fff8e0; font-weight:600; }
+
+  /* ── NOTES & FOOTER ── */
+  .note {
+    background:#fff8e1; border-left:3px solid #f0a500;
+    padding:10px 12px; margin-top:14px;
+    font-size:clamp(9px,1.8vw,11px); line-height:1.8;
+  }
+  .note strong { display:block; margin-bottom:4px; font-size:clamp(10px,2vw,12px); }
+  .footer {
+    margin-top:14px; padding-top:10px; border-top:1px solid #ccc;
+    font-size:clamp(8px,1.6vw,9px); color:#999;
+    display:flex; justify-content:space-between; flex-wrap:wrap; gap:4px;
+  }
+
+  /* ── HINDI MODE ── */
+  body.hindi { font-family:'Noto Sans Devanagari',sans-serif; }
+  body.hindi .page-header h1,
+  body.hindi .section-bar,
+  body.hindi .view-sub,
+  body.hindi .note,
+  body.hindi th,
+  body.hindi td,
+  body.hindi .footer,
+  body.hindi #lang-bar .lang-label { font-family:'Noto Sans Devanagari',sans-serif; }
+  body.hindi .page-header h1 { letter-spacing:0; text-transform:none; }
+  body.hindi .section-bar { letter-spacing:0; text-transform:none; }
+
+  /* ── RESPONSIVE BREAKPOINTS ── */
+  @media (max-width:600px) {
+    body { padding:6px; }
+    #lang-bar { padding:8px 12px; top:6px; gap:8px; }
+    .page { padding:12px 10px; }
+    .page-header .meta { text-align:left; }
+    .footer { flex-direction:column; }
+    .section-bar { white-space:normal; }
+    .lang-btn { padding:8px 14px; font-size:12px; }
+  }
+  @media (min-width:900px) {
+    body { padding:20px; }
+    #lang-bar { top:20px; }
+    .page { padding:28px; }
+  }
+
+  /* ══════════════════════════════════════════════════
+     A4 PRINT STYLES
+     A4 = 210mm × 297mm
+     At 96dpi: 794px × 1123px
+     Usable with 15mm margins: 764px × 1093px
+     Each .sheet is one A4 page on screen and in print
+  ══════════════════════════════════════════════════ */
+
+  /* Screen: show A4 sheets as white cards with shadow */
+  .sheet {
+    width: 794px;
+    min-height: 1123px;
+    margin: 0 auto 28px;
+    background: #fff;
+    box-shadow: 0 2px 12px rgba(0,0,0,.18);
+    padding: 20mm 15mm 20mm 15mm;
+    position: relative;
+    box-sizing: border-box;
+  }
+
+  /* Sheet header: drawing title + revision + page number */
+  .sheet-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    border-bottom: 2px solid #1a1a1a;
+    padding-bottom: 8px;
+    margin-bottom: 14px;
+  }
+  .sheet-header h2 {
+    font-size: 12px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: .06em;
+    line-height: 1.4;
+  }
+  .sheet-header .sh-meta {
+    font-size: 9px; color: #555; text-align: right; line-height: 1.8;
+  }
+
+  /* Sheet footer: thin rule + doc ref + page number */
+  .sheet-footer {
+    position: absolute;
+    bottom: 12mm; left: 15mm; right: 15mm;
+    border-top: 1px solid #ccc;
+    padding-top: 5px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 8px; color: #aaa;
+  }
+
+  /* Each drawing block must NOT be cut by a page break */
+  .drawing-block {
+    break-inside: avoid;
+    page-break-inside: avoid;
+    margin-bottom: 18px;
+  }
+  .drawing-block .bar {
+    background: #f0ede4;
+    border-left: 3px solid #1a1a1a;
+    font-size: 9.5px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: .07em;
+    padding: 5px 8px; margin-bottom: 5px;
+  }
+  .drawing-block .dsub {
+    font-size: 8px; color: #999;
+    text-align: center; margin-bottom: 6px; line-height: 1.4;
+  }
+  /* SVG inside drawing block fills the sheet width */
+  .drawing-block .svg-wrap {
+    width: 100%; overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border: 1px solid #ccc; background: #fff;
+  }
+  .drawing-block .svg-wrap.dark-border { border: 2px solid #1a1a1a; background: #f8f8f5; }
+  .drawing-block .svg-wrap svg {
+    display: block; width: 100%; height: auto; min-width: 280px;
+  }
+
+  /* Bill of components table inside drawing block */
+  .drawing-block table {
+    width: 100%; border-collapse: collapse;
+    font-size: 8.5px; margin-top: 4px;
+  }
+  .drawing-block th {
+    background: #1a1a1a; color: #fff; padding: 5px 7px; text-align: left;
+  }
+  .drawing-block td {
+    padding: 4px 7px; border-bottom: 1px solid #ddd;
+    vertical-align: top; line-height: 1.5;
+  }
+  .drawing-block tr:nth-child(even) td { background: #f5f0e8; }
+  .drawing-block tr.hl td { background: #fff8e0; font-weight: 600; }
+
+  /* Note box inside drawing block */
+  .drawing-block .note {
+    background: #fff8e1; border-left: 3px solid #f0a500;
+    padding: 7px 10px; margin-top: 10px;
+    font-size: 8.5px; line-height: 1.7; break-inside: avoid; page-break-inside: avoid;
+  }
+  .drawing-block .note strong { display: block; margin-bottom: 3px; font-size: 9px; }
+
+  /* Hindi mode inside sheets */
+  body.hindi .sheet-header h2,
+  body.hindi .drawing-block .bar,
+  body.hindi .drawing-block .dsub,
+  body.hindi .drawing-block th,
+  body.hindi .drawing-block td,
+  body.hindi .drawing-block .note,
+  body.hindi .sheet-footer { font-family: 'Noto Sans Devanagari', sans-serif; letter-spacing: 0; text-transform: none; }
+
+  /* ── PRINT MEDIA ── */
+  @media print {
+    /* Hide screen-only chrome */
+    body { background: white; padding: 0; margin: 0; }
+    #lang-bar { display: none !important; }
+    .page { display: none !important; }   /* hide old page cards */
+
+    /* Each sheet = one A4 page */
+    .sheet {
+      width: 100%;
+      min-height: 0;
+      margin: 0;
+      padding: 15mm 12mm 20mm 12mm;
+      box-shadow: none;
+      page-break-after: always;
+      break-after: page;
+    }
+    .sheet:last-child {
+      page-break-after: auto;
+      break-after: auto;
+    }
+
+    /* Never cut a drawing block across pages */
+    .drawing-block {
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    /* Keep note with its drawing block */
+    .drawing-block .note {
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    @page {
+      size: A4 portrait;
+      margin: 0;
+    }
+  }
+</style>
+</head>
+<body>
+
+<!-- ── LANGUAGE BAR ── -->
+<div id="lang-bar">
+  <span class="lang-label" id="lang-label">Language / भाषा:</span>
+  <button class="lang-btn active" data-lang="en" onclick="setLang('en')">English</button>
+  <button class="lang-btn hindi-btn"  data-lang="hi" onclick="setLang('hi')">हिन्दी</button>
+</div>
+
+<!--
+╔══════════════════════════════════════════════════════════════╗
+║  PROPORTIONAL SYSTEM — Rev F                                 ║
+║  All SVGs use a single consistent scale                      ║
+║                                                              ║
+║  REAL DIMENSIONS:                                            ║
+║    Width:        72"  (6 ft)                                 ║
+║    Height:       96"  (8 ft)  incl. loft                     ║
+║    Cabinet depth:28"                                         ║
+║    Shelf depth:  24"                                         ║
+║    Loft height:  18"                                         ║
+║    Hanging zone: 54"  (96-18-24 = 54)                        ║
+║    Drawer bank:  24"  (4 × 6" drawers)                       ║
+║    Hanging rod:  30" above drawer top                        ║
+║    Centre post:  4"×4" square, full height                   ║
+║    Door width:   18"  (72/4 = 18, four doors)                ║
+║                                                              ║
+║  SCALE CHOSEN: 1" = 6px  (clean integer)                     ║
+║    Width  72" = 432px                                        ║
+║    Height 96" = 576px                                        ║
+║    Depth  28" = 168px                                        ║
+║    Shelf  24" = 144px                                        ║
+║    Loft   18" = 108px                                        ║
+║    Hang   54" = 324px                                        ║
+║    Draw   24" = 144px                                        ║
+║    Rod    30" = 180px above drawer top                       ║
+║    Door   18" = 108px wide each                              ║
+║    Post    4" = 24px wide / 24px deep                        ║
+║    Each drawer 6" = 36px high                                ║
+║                                                              ║
+║  MARGIN for dim lines: 40px each side                        ║
+║  VIEW A canvas:  W=432+80=512,  H=576+80=656                 ║
+║  VIEW B canvas:  W=432+80=512,  H=576+80=656  (same scale)   ║
+║  VIEW C canvas:  W=168+80=248,  H=576+80=656  (same H scale) ║
+║  VIEW D canvas:  W=432+80=512,  H=168+100=268 (plan)         ║
+║  VIEW E canvas:  W=(18+4+18)*6+120=360+120=480, H=220        ║
+╚══════════════════════════════════════════════════════════════╝
+
+  In all elevation SVGs:
+    Drawing origin x=40, y=40
+    Cabinet left edge  x=40
+    Cabinet right edge x=40+432=472
+    Cabinet top  y=40
+    Cabinet bottom y=40+576=616
+    Loft bottom  y=40+108=148
+    Hang bottom  y=148+324=472
+    Draw bottom  y=472+144=616  ✓
+    Rod y        y=472-180=292
+    Post cx      x=40+216=256  (centre of 432px = 216px from left)
+    Post x left  x=256-12=244
+    Post x right x=256+12=268
+-->
+
+
+<!-- ════════════════════════════════════════════════════
+     A4 SHEETS — generated from page content
+     Sheet 1: Front Elevation (A)
+     Sheet 2: Interior Elevation (B)  
+     Sheet 3: Side Section (C) + Plan View (D)
+     Sheet 4: Post Detail (E) + Bill of Components + Notes
+════════════════════════════════════════════════════ -->
+
+<!-- ┌─────────────────────────────────────────────────┐
+     │  SHEET 1 — Front Elevation                      │
+     └─────────────────────────────────────────────────┘ -->
+<div class="sheet" id="sheet-1">
+  <div class="sheet-header">
+    <div>
+      <h2 id="title-p1">Wardrobe — Carpenter Drawing <span class="rev">Rev F</span></h2>
+      <div style="font-size:9px;color:#666;margin-top:3px;" id="sub-p1">Sheet 1 of 4 · Front Elevation · Doors Closed</div>
+    </div>
+    <div class="sh-meta" id="meta-p1">
+      6'-0"W × 8'-0"H × 28"D cabinet · Shelf 24"<br>
+      Loft 18" · Hanging 54" · Drawers 4×6"=24"<br>
+      Centre post 4"×4", full height, recessed<br>
+      CAB-001 Rev F · June 2026
+    </div>
+  </div>
+
+  <div class="drawing-block">
+<div class="bar" id="bar-a">A — Front Elevation · Doors Closed · 6'-0" × 8'-0"</div>
+      <div class="dsub" id="sub-a">As seen from outside · pillar hidden behind closed doors · loft shutters at top</div>
+    <div class="svg-wrap elevation"><svg viewBox="0 0 560 700">
+
+      <!-- outer carcass -->
+      <rect x="40" y="40" width="432" height="576" fill="none" stroke="#1a1a1a" stroke-width="2.5"/>
+
+      <!-- ── LOFT (y=40..148, h=108) — 2 shutters each 216px ── -->
+      <rect x="40"  y="40" width="432" height="108" fill="#ede9e0" stroke="#1a1a1a" stroke-width="1.5"/>
+      <rect x="40"  y="40" width="216" height="108" fill="#eae7df" stroke="#999" stroke-width="1"/>
+      <rect x="256" y="40" width="216" height="108" fill="#e4e1d9" stroke="#999" stroke-width="1"/>
+      <!-- loft centre seam -->
+      <line x1="256" y1="40" x2="256" y2="148" stroke="#888" stroke-width="1.2"/>
+      <!-- loft hinges -->
+      <circle cx="40"  cy="75"  r="3" fill="#888"/>
+      <circle cx="40"  cy="115" r="3" fill="#888"/>
+      <circle cx="256" cy="75"  r="3" fill="#888"/>
+      <circle cx="256" cy="115" r="3" fill="#888"/>
+      <!-- loft labels -->
+      <text x="148" y="90"  text-anchor="middle" font-size="9" fill="#777" font-family="IBM Plex Mono,monospace">LOFT LEFT</text>
+      <text x="148" y="102" text-anchor="middle" font-size="8" fill="#999" font-family="IBM Plex Mono,monospace">(36" × 18")</text>
+      <text x="364" y="90"  text-anchor="middle" font-size="9" fill="#777" font-family="IBM Plex Mono,monospace">LOFT RIGHT</text>
+      <text x="364" y="102" text-anchor="middle" font-size="8" fill="#999" font-family="IBM Plex Mono,monospace">(36" × 18")</text>
+
+      <!-- ── 4 DOORS (y=148..616, h=468) each 108px wide ── -->
+      <!-- D1: x=40..148, hinge left, opens ← -->
+      <rect x="40"  y="148" width="108" height="468" fill="#f6f4f0" stroke="#aaa" stroke-width="1"/>
+      <!-- D2: x=148..256, hinge right at x=256 (post behind), opens → -->
+      <rect x="148" y="148" width="108" height="468" fill="#efede9" stroke="#aaa" stroke-width="1"/>
+      <!-- D3: x=256..364, hinge left at x=256, opens ← -->
+      <rect x="256" y="148" width="108" height="468" fill="#f6f4f0" stroke="#aaa" stroke-width="1"/>
+      <!-- D4: x=364..472, hinge right, opens → -->
+      <rect x="364" y="148" width="108" height="468" fill="#efede9" stroke="#aaa" stroke-width="1"/>
+
+      <!-- door seam lines -->
+      <line x1="148" y1="148" x2="148" y2="616" stroke="#888" stroke-width="1.2"/>
+      <line x1="256" y1="148" x2="256" y2="616" stroke="#888" stroke-width="1.2"/>
+      <line x1="364" y1="148" x2="364" y2="616" stroke="#888" stroke-width="1.2"/>
+
+      <!-- hinges: D1 left wall, D2 right=centre, D3 left=centre, D4 right wall -->
+      <circle cx="40"  cy="260" r="3" fill="#777"/><circle cx="40"  cy="500" r="3" fill="#777"/>
+      <circle cx="256" cy="260" r="3" fill="#777"/><circle cx="256" cy="500" r="3" fill="#777"/>
+      <circle cx="256" cy="260" r="3" fill="#777"/><circle cx="256" cy="500" r="3" fill="#777"/>
+      <circle cx="472" cy="260" r="3" fill="#777"/><circle cx="472" cy="500" r="3" fill="#777"/>
+
+      <!-- handles -->
+      <circle cx="142" cy="392" r="4" fill="none" stroke="#888" stroke-width="1.5"/>
+      <circle cx="250" cy="392" r="4" fill="none" stroke="#888" stroke-width="1.5"/>
+      <circle cx="262" cy="392" r="4" fill="none" stroke="#888" stroke-width="1.5"/>
+      <circle cx="370" cy="392" r="4" fill="none" stroke="#888" stroke-width="1.5"/>
+
+      <!-- door labels -->
+      <text x="94"  y="185" text-anchor="middle" font-size="8" fill="#bbb" font-family="IBM Plex Mono,monospace">D1 ← LEFT</text>
+      <text x="202" y="185" text-anchor="middle" font-size="8" fill="#bbb" font-family="IBM Plex Mono,monospace">D2 RIGHT →</text>
+      <text x="310" y="185" text-anchor="middle" font-size="8" fill="#bbb" font-family="IBM Plex Mono,monospace">D3 ← LEFT</text>
+      <text x="418" y="185" text-anchor="middle" font-size="8" fill="#bbb" font-family="IBM Plex Mono,monospace">D4 RIGHT →</text>
+
+      <!-- note about hidden post -->
+      <rect x="158" y="430" width="156" height="28" fill="#fffbe6" stroke="#f0a500" stroke-width="0.8" rx="2"/>
+      <text x="236" y="443" text-anchor="middle" font-size="7.5" fill="#b37400" font-family="IBM Plex Mono,monospace">4"×4" post hidden</text>
+      <text x="236" y="453" text-anchor="middle" font-size="7.5" fill="#b37400" font-family="IBM Plex Mono,monospace">behind doors → see View B</text>
+
+      <!-- ── DIMENSION LINES ── -->
+      <!-- total width -->
+      <line x1="40" y1="24" x2="472" y2="24" stroke="#cc0000" stroke-width="0.8"/>
+      <line x1="40" y1="20" x2="40" y2="28" stroke="#cc0000" stroke-width="0.8"/>
+      <line x1="472" y1="20" x2="472" y2="28" stroke="#cc0000" stroke-width="0.8"/>
+      <text x="256" y="22" text-anchor="middle" font-size="9" fill="#cc0000" font-family="IBM Plex Mono,monospace">6'-0"  (72")</text>
+
+      <!-- total height right -->
+      <line x1="488" y1="40" x2="488" y2="616" stroke="#cc0000" stroke-width="0.8"/>
+      <line x1="484" y1="40"  x2="492" y2="40"  stroke="#cc0000" stroke-width="0.8"/>
+      <line x1="484" y1="616" x2="492" y2="616" stroke="#cc0000" stroke-width="0.8"/>
+      <text x="504" y="332" text-anchor="middle" font-size="9" fill="#cc0000" font-family="IBM Plex Mono,monospace" transform="rotate(90,504,332)">8'-0"  (96")</text>
+
+      <!-- zone heights left -->
+      <line x1="24" y1="40"  x2="24" y2="148" stroke="#0000aa" stroke-width="0.8"/>
+      <line x1="20" y1="40"  x2="28" y2="40"  stroke="#0000aa" stroke-width="0.8"/>
+      <line x1="20" y1="148" x2="28" y2="148" stroke="#0000aa" stroke-width="0.8"/>
+      <text x="14" y="98"  text-anchor="middle" font-size="8" fill="#0000aa" font-family="IBM Plex Mono,monospace" transform="rotate(-90,14,98)">18"</text>
+
+      <line x1="24" y1="148" x2="24" y2="616" stroke="#0000aa" stroke-width="0.8"/>
+      <line x1="20" y1="616" x2="28" y2="616" stroke="#0000aa" stroke-width="0.8"/>
+      <text x="14" y="382" text-anchor="middle" font-size="8" fill="#0000aa" font-family="IBM Plex Mono,monospace" transform="rotate(-90,14,382)">78"  (main body)</text>
+
+      <!-- door widths bottom -->
+      <line x1="40"  y1="634" x2="472" y2="634" stroke="#555" stroke-width="0.6"/>
+      <line x1="40"  y1="630" x2="40"  y2="638" stroke="#555" stroke-width="0.6"/>
+      <line x1="148" y1="630" x2="148" y2="638" stroke="#555" stroke-width="0.6"/>
+      <line x1="256" y1="630" x2="256" y2="638" stroke="#555" stroke-width="0.6"/>
+      <line x1="364" y1="630" x2="364" y2="638" stroke="#555" stroke-width="0.6"/>
+      <line x1="472" y1="630" x2="472" y2="638" stroke="#555" stroke-width="0.6"/>
+      <text x="94"  y="650" text-anchor="middle" font-size="8" fill="#555" font-family="IBM Plex Mono,monospace">18"</text>
+      <text x="202" y="650" text-anchor="middle" font-size="8" fill="#555" font-family="IBM Plex Mono,monospace">18"</text>
+      <text x="310" y="650" text-anchor="middle" font-size="8" fill="#555" font-family="IBM Plex Mono,monospace">18"</text>
+      <text x="418" y="650" text-anchor="middle" font-size="8" fill="#555" font-family="IBM Plex Mono,monospace">18"</text>
+    </svg>
+</div>
+  </div>
+</div>
+
+  <div class="sheet-footer">
+    <span>CAB-001 / Rev F / June 2026</span>
+    <span>Sheet 1 of 4 — Front Elevation (Doors Closed)</span>
+    <span>Verify all dims on site before cutting</span>
+  </div>
+</div>
+
+<!-- ┌─────────────────────────────────────────────────┐
+     │  SHEET 2 — Interior Elevation                   │
+     └─────────────────────────────────────────────────┘ -->
+<div class="sheet" id="sheet-2">
+  <div class="sheet-header">
+    <div>
+      <h2 id="title-p1b">Wardrobe — Carpenter Drawing <span class="rev">Rev F</span></h2>
+      <div style="font-size:9px;color:#666;margin-top:3px;" id="sub-p1b">Sheet 2 of 4 · Interior Elevation · Doors Removed</div>
+    </div>
+    <div class="sh-meta">
+      6'-0"W × 8'-0"H × 28"D cabinet · Shelf 24"<br>
+      CAB-001 Rev F · June 2026
+    </div>
+  </div>
+
+  <div class="drawing-block">
+<div class="bar" id="bar-b">B — Interior Elevation · Doors Removed · Shows all internal components</div>
+      <div class="dsub" id="sub-b">Loft · 4"×4" centre post (full height) · single hanging rod · drawer gap divider · 8 drawers</div>
+    <div class="svg-wrap elevation dark-border"><svg viewBox="0 0 600 700">
+
+      <!-- interior background -->
+      <rect x="60" y="40" width="432" height="576" fill="#faf8f4" stroke="#1a1a1a" stroke-width="2.5"/>
+
+      <!-- INTERIOR badge -->
+      <rect x="60" y="40" width="148" height="16" fill="#1a1a1a"/>
+      <text x="68" y="51" font-size="8" fill="#fff" font-weight="bold" font-family="IBM Plex Mono,monospace">INTERIOR — Rev F</text>
+
+      <!-- ── LOFT (y=40..148, h=108px=18") ── -->
+      <rect x="60" y="40" width="432" height="108" fill="#ede9e0" stroke="#1a1a1a" stroke-width="1.5"/>
+      <line x1="276" y1="40" x2="276" y2="148" stroke="#aaa" stroke-width="1" stroke-dasharray="4,3"/>
+      <text x="168" y="88"  text-anchor="middle" font-size="9"   fill="#555" font-family="IBM Plex Mono,monospace">LOFT — LEFT</text>
+      <text x="168" y="100" text-anchor="middle" font-size="8"   fill="#888" font-family="IBM Plex Mono,monospace">36" × 18" × 28" deep</text>
+      <text x="384" y="88"  text-anchor="middle" font-size="9"   fill="#555" font-family="IBM Plex Mono,monospace">LOFT — RIGHT</text>
+      <text x="384" y="100" text-anchor="middle" font-size="8"   fill="#888" font-family="IBM Plex Mono,monospace">36" × 18" × 28" deep</text>
+
+      <!-- ── 4"×4" CENTRE POST: x=264..288 (24px=4"), full height y=40..616 ── -->
+      <rect x="264" y="40" width="24" height="576" fill="#d4b896" stroke="#8a6a3a" stroke-width="1.8"/>
+      <!-- diagonal hatch to indicate solid section -->
+      <line x1="264" y1="48"  x2="288" y2="72"  stroke="#8a6a3a" stroke-width="0.7"/>
+      <line x1="264" y1="72"  x2="288" y2="96"  stroke="#8a6a3a" stroke-width="0.7"/>
+      <line x1="264" y1="96"  x2="288" y2="120" stroke="#8a6a3a" stroke-width="0.7"/>
+      <line x1="264" y1="120" x2="288" y2="144" stroke="#8a6a3a" stroke-width="0.7"/>
+      <line x1="264" y1="148" x2="288" y2="172" stroke="#8a6a3a" stroke-width="0.7"/>
+      <line x1="264" y1="172" x2="288" y2="196" stroke="#8a6a3a" stroke-width="0.7"/>
+      <line x1="264" y1="196" x2="288" y2="220" stroke="#8a6a3a" stroke-width="0.7"/>
+      <line x1="264" y1="220" x2="288" y2="244" stroke="#8a6a3a" stroke-width="0.7"/>
+      <line x1="264" y1="244" x2="288" y2="268" stroke="#8a6a3a" stroke-width="0.7"/>
+      <line x1="264" y1="268" x2="288" y2="292" stroke="#8a6a3a" stroke-width="0.7"/>
+      <line x1="264" y1="292" x2="288" y2="316" stroke="#8a6a3a" stroke-width="0.7"/>
+      <line x1="264" y1="316" x2="288" y2="340" stroke="#8a6a3a" stroke-width="0.7"/>
+      <line x1="264" y1="340" x2="288" y2="364" stroke="#8a6a3a" stroke-width="0.7"/>
+      <line x1="264" y1="364" x2="288" y2="388" stroke="#8a6a3a" stroke-width="0.7"/>
+      <line x1="264" y1="388" x2="288" y2="412" stroke="#8a6a3a" stroke-width="0.7"/>
+      <line x1="264" y1="412" x2="288" y2="436" stroke="#8a6a3a" stroke-width="0.7"/>
+      <line x1="264" y1="436" x2="288" y2="460" stroke="#8a6a3a" stroke-width="0.7"/>
+      <line x1="264" y1="460" x2="288" y2="484" stroke="#8a6a3a" stroke-width="0.7"/>
+      <line x1="264" y1="484" x2="288" y2="508" stroke="#8a6a3a" stroke-width="0.7"/>
+      <line x1="264" y1="508" x2="288" y2="532" stroke="#8a6a3a" stroke-width="0.7"/>
+      <line x1="264" y1="532" x2="288" y2="556" stroke="#8a6a3a" stroke-width="0.7"/>
+      <line x1="264" y1="556" x2="288" y2="580" stroke="#8a6a3a" stroke-width="0.7"/>
+      <line x1="264" y1="580" x2="288" y2="604" stroke="#8a6a3a" stroke-width="0.7"/>
+      <!-- post label -->
+      <text x="276" y="340" text-anchor="middle" font-size="7" fill="#7a5020" font-weight="bold" font-family="IBM Plex Mono,monospace" transform="rotate(90,276,340)">4"×4" CENTRE POST · FULL HEIGHT</text>
+
+      <!-- post callout -->
+      <rect x="184" y="160" width="184" height="28" fill="#fff8e8" stroke="#c80" stroke-width="1" rx="2"/>
+      <text x="276" y="172" text-anchor="middle" font-size="8.5" fill="#8a5000" font-weight="bold" font-family="IBM Plex Mono,monospace">4" × 4" SQUARE POST</text>
+      <text x="276" y="183" text-anchor="middle" font-size="7.5" fill="#8a5000" font-family="IBM Plex Mono,monospace">Full height · 4" deep only · recessed</text>
+      <line x1="276" y1="188" x2="276" y2="200" stroke="#c80" stroke-width="1"/>
+      <polygon points="272,200 280,200 276,206" fill="#c80"/>
+
+      <!-- ── HANGING ZONE labels (y=148..472, 324px=54") ── -->
+      <text x="162" y="218" text-anchor="middle" font-size="9" fill="#666" font-family="IBM Plex Mono,monospace">HANGING LEFT</text>
+      <text x="162" y="230" text-anchor="middle" font-size="8" fill="#aaa" font-family="IBM Plex Mono,monospace">(36" wide)</text>
+      <text x="390" y="218" text-anchor="middle" font-size="9" fill="#666" font-family="IBM Plex Mono,monospace">HANGING RIGHT</text>
+      <text x="390" y="230" text-anchor="middle" font-size="8" fill="#aaa" font-family="IBM Plex Mono,monospace">(36" wide)</text>
+
+      <!-- ── SINGLE HANGING ROD y=292 (30" above drawer top y=472) ── -->
+      <!-- rod: full width x=60..492 -->
+      <rect x="64"  y="289" width="424" height="6" rx="3" fill="#666" stroke="#444" stroke-width="1.2"/>
+      <!-- wall brackets -->
+      <rect x="60"  y="284" width="12"  height="16" rx="2" fill="#777" stroke="#444" stroke-width="1"/>
+      <rect x="480" y="284" width="12"  height="16" rx="2" fill="#777" stroke="#444" stroke-width="1"/>
+      <!-- rod label -->
+      <text x="510" y="296" font-size="8" fill="#333" font-family="IBM Plex Mono,monospace">ROD ⌀1"</text>
+      <!-- note: rod passes post via notch -->
+      <text x="276" y="282" text-anchor="middle" font-size="7" fill="#777" font-family="IBM Plex Mono,monospace">single rod — passes post via bracket/notch</text>
+
+      <!-- hanger symbols left (decorative) -->
+      <path d="M148,295 Q156,285 164,295" fill="none" stroke="#ddd" stroke-width="1.5"/>
+      <line x1="156" y1="295" x2="156" y2="370" stroke="#ddd" stroke-width="1"/>
+      <path d="M220,295 Q228,285 236,295" fill="none" stroke="#ddd" stroke-width="1.5"/>
+      <line x1="228" y1="295" x2="228" y2="385" stroke="#ddd" stroke-width="1"/>
+      <!-- hanger symbols right -->
+      <path d="M316,295 Q324,285 332,295" fill="none" stroke="#ddd" stroke-width="1.5"/>
+      <line x1="324" y1="295" x2="324" y2="370" stroke="#ddd" stroke-width="1"/>
+      <path d="M388,295 Q396,285 404,295" fill="none" stroke="#ddd" stroke-width="1.5"/>
+      <line x1="396" y1="295" x2="396" y2="385" stroke="#ddd" stroke-width="1"/>
+
+      <!-- ── DRAWER ZONE TOP LINE y=472 ── -->
+      <line x1="60" y1="472" x2="492" y2="472" stroke="#1a1a1a" stroke-width="2"/>
+
+      <!-- ── DRAWER GAP DIVIDER: x=264..288, y=472..616 (144px=24") ── -->
+      <!-- Darker fill to distinguish from post above -->
+      <rect x="264" y="472" width="24" height="144" fill="#7a5a28" stroke="#5a3a0a" stroke-width="1.5"/>
+      <line x1="264" y1="476" x2="288" y2="500" stroke="#5a3a0a" stroke-width="0.7"/>
+      <line x1="264" y1="500" x2="288" y2="524" stroke="#5a3a0a" stroke-width="0.7"/>
+      <line x1="264" y1="524" x2="288" y2="548" stroke="#5a3a0a" stroke-width="0.7"/>
+      <line x1="264" y1="548" x2="288" y2="572" stroke="#5a3a0a" stroke-width="0.7"/>
+      <line x1="264" y1="572" x2="288" y2="596" stroke="#5a3a0a" stroke-width="0.7"/>
+      <!-- drawer gap label -->
+      <rect x="196" y="620" width="160" height="22" fill="#fff3cd" stroke="#b37000" stroke-width="1" rx="2"/>
+      <text x="276" y="632" text-anchor="middle" font-size="8"   fill="#8a5000" font-weight="bold" font-family="IBM Plex Mono,monospace">DRAWER GAP = 4"</text>
+      <text x="276" y="640" text-anchor="middle" font-size="7.5" fill="#8a5000" font-family="IBM Plex Mono,monospace">drawer zone only</text>
+      <line x1="276" y1="616" x2="276" y2="620" stroke="#b37000" stroke-width="0.8"/>
+      <polygon points="272,620 280,620 276,624" fill="#b37000"/>
+
+      <!-- ── LEFT DRAWERS: x=60..264 (204px=34"), 4 drawers each 36px ── -->
+      <rect x="60"  y="472" width="204" height="36" fill="#ede9e0" stroke="#1a1a1a" stroke-width="1"/>
+      <rect x="60"  y="508" width="204" height="36" fill="#e5e1d8" stroke="#1a1a1a" stroke-width="1"/>
+      <rect x="60"  y="544" width="204" height="36" fill="#ede9e0" stroke="#1a1a1a" stroke-width="1"/>
+      <rect x="60"  y="580" width="204" height="36" fill="#e5e1d8" stroke="#1a1a1a" stroke-width="1"/>
+      <!-- handles left (centred in each drawer) -->
+      <rect x="120" y="481" width="84" height="6" rx="3" fill="#ccc" stroke="#aaa" stroke-width="0.8"/>
+      <rect x="120" y="517" width="84" height="6" rx="3" fill="#ccc" stroke="#aaa" stroke-width="0.8"/>
+      <rect x="120" y="553" width="84" height="6" rx="3" fill="#ccc" stroke="#aaa" stroke-width="0.8"/>
+      <rect x="120" y="589" width="84" height="6" rx="3" fill="#ccc" stroke="#aaa" stroke-width="0.8"/>
+      <text x="74" y="494"  font-size="7.5" fill="#888" font-family="IBM Plex Mono,monospace">DWR 1</text>
+      <text x="74" y="530"  font-size="7.5" fill="#888" font-family="IBM Plex Mono,monospace">DWR 2</text>
+      <text x="74" y="566"  font-size="7.5" fill="#888" font-family="IBM Plex Mono,monospace">DWR 3</text>
+      <text x="74" y="602"  font-size="7.5" fill="#888" font-family="IBM Plex Mono,monospace">DWR 4</text>
+      <text x="162" y="463" text-anchor="middle" font-size="8" fill="#555" font-family="IBM Plex Mono,monospace">LEFT BANK (~34")</text>
+
+      <!-- ── RIGHT DRAWERS: x=288..492 (204px=34") ── -->
+      <rect x="288" y="472" width="204" height="36" fill="#ede9e0" stroke="#1a1a1a" stroke-width="1"/>
+      <rect x="288" y="508" width="204" height="36" fill="#e5e1d8" stroke="#1a1a1a" stroke-width="1"/>
+      <rect x="288" y="544" width="204" height="36" fill="#ede9e0" stroke="#1a1a1a" stroke-width="1"/>
+      <rect x="288" y="580" width="204" height="36" fill="#e5e1d8" stroke="#1a1a1a" stroke-width="1"/>
+      <!-- handles right -->
+      <rect x="348" y="481" width="84" height="6" rx="3" fill="#ccc" stroke="#aaa" stroke-width="0.8"/>
+      <rect x="348" y="517" width="84" height="6" rx="3" fill="#ccc" stroke="#aaa" stroke-width="0.8"/>
+      <rect x="348" y="553" width="84" height="6" rx="3" fill="#ccc" stroke="#aaa" stroke-width="0.8"/>
+      <rect x="348" y="589" width="84" height="6" rx="3" fill="#ccc" stroke="#aaa" stroke-width="0.8"/>
+      <text x="302" y="494" font-size="7.5" fill="#888" font-family="IBM Plex Mono,monospace">DWR 1</text>
+      <text x="302" y="530" font-size="7.5" fill="#888" font-family="IBM Plex Mono,monospace">DWR 2</text>
+      <text x="302" y="566" font-size="7.5" fill="#888" font-family="IBM Plex Mono,monospace">DWR 3</text>
+      <text x="302" y="602" font-size="7.5" fill="#888" font-family="IBM Plex Mono,monospace">DWR 4</text>
+      <text x="390" y="463" text-anchor="middle" font-size="8" fill="#555" font-family="IBM Plex Mono,monospace">RIGHT BANK (~34")</text>
+
+      <!-- ── DIMENSION LINES ── -->
+      <!-- total width -->
+      <line x1="60"  y1="24" x2="492" y2="24" stroke="#cc0000" stroke-width="0.8"/>
+      <line x1="60"  y1="20" x2="60"  y2="28" stroke="#cc0000" stroke-width="0.8"/>
+      <line x1="492" y1="20" x2="492" y2="28" stroke="#cc0000" stroke-width="0.8"/>
+      <text x="276" y="22" text-anchor="middle" font-size="9" fill="#cc0000" font-family="IBM Plex Mono,monospace">6'-0"  (72")</text>
+      <!-- half widths -->
+      <line x1="60"  y1="656" x2="276" y2="656" stroke="#cc0000" stroke-width="0.8"/>
+      <line x1="60"  y1="652" x2="60"  y2="660" stroke="#cc0000" stroke-width="0.8"/>
+      <line x1="276" y1="652" x2="276" y2="660" stroke="#cc0000" stroke-width="0.8"/>
+      <text x="168" y="654.5" text-anchor="middle" font-size="8" fill="#cc0000" font-family="IBM Plex Mono,monospace">36"</text>
+      <line x1="276" y1="656" x2="492" y2="656" stroke="#cc0000" stroke-width="0.8"/>
+      <line x1="492" y1="652" x2="492" y2="660" stroke="#cc0000" stroke-width="0.8"/>
+      <text x="384" y="654.5" text-anchor="middle" font-size="8" fill="#cc0000" font-family="IBM Plex Mono,monospace">36"</text>
+      <!-- total height right -->
+      <line x1="510" y1="40"  x2="510" y2="616" stroke="#cc0000" stroke-width="0.8"/>
+      <line x1="506" y1="40"  x2="514" y2="40"  stroke="#cc0000" stroke-width="0.8"/>
+      <line x1="506" y1="616" x2="514" y2="616" stroke="#cc0000" stroke-width="0.8"/>
+      <text x="526" y="332" text-anchor="middle" font-size="9" fill="#cc0000" font-family="IBM Plex Mono,monospace" transform="rotate(90,526,332)">8'-0"  (96")</text>
+      <!-- zone heights left -->
+      <line x1="44" y1="40"  x2="44" y2="148" stroke="#0000aa" stroke-width="0.8"/>
+      <line x1="40" y1="40"  x2="48" y2="40"  stroke="#0000aa" stroke-width="0.8"/>
+      <line x1="40" y1="148" x2="48" y2="148" stroke="#0000aa" stroke-width="0.8"/>
+      <text x="34" y="98"  text-anchor="middle" font-size="8" fill="#0000aa" font-family="IBM Plex Mono,monospace" transform="rotate(-90,34,98)">18"</text>
+      <line x1="44" y1="148" x2="44" y2="472" stroke="#0000aa" stroke-width="0.8"/>
+      <line x1="40" y1="472" x2="48" y2="472" stroke="#0000aa" stroke-width="0.8"/>
+      <text x="34" y="314" text-anchor="middle" font-size="8" fill="#0000aa" font-family="IBM Plex Mono,monospace" transform="rotate(-90,34,314)">54"</text>
+      <line x1="44" y1="472" x2="44" y2="616" stroke="#0000aa" stroke-width="0.8"/>
+      <line x1="40" y1="616" x2="48" y2="616" stroke="#0000aa" stroke-width="0.8"/>
+      <text x="34" y="548" text-anchor="middle" font-size="8" fill="#0000aa" font-family="IBM Plex Mono,monospace" transform="rotate(-90,34,548)">24"</text>
+      <!-- rod height from drawer top -->
+      <line x1="510" y1="292" x2="510" y2="472" stroke="#555" stroke-width="0.8" stroke-dasharray="4,2"/>
+      <line x1="506" y1="292" x2="514" y2="292" stroke="#555" stroke-width="0.8"/>
+      <text x="526" y="386" text-anchor="middle" font-size="7.5" fill="#555" font-family="IBM Plex Mono,monospace" transform="rotate(90,526,386)">rod 30" above drawers</text>
+      <!-- post width dim -->
+      <line x1="264" y1="668" x2="288" y2="668" stroke="#8a6a3a" stroke-width="0.8"/>
+      <line x1="264" y1="664" x2="264" y2="672" stroke="#8a6a3a" stroke-width="0.8"/>
+      <line x1="288" y1="664" x2="288" y2="672" stroke="#8a6a3a" stroke-width="0.8"/>
+      <text x="276" y="682" text-anchor="middle" font-size="7.5" fill="#8a6a3a" font-family="IBM Plex Mono,monospace">4"</text>
+      <!-- each drawer height -->
+      <line x1="510" y1="472" x2="510" y2="508" stroke="#555" stroke-width="0.6" stroke-dasharray="3,2"/>
+      <text x="528" y="495" font-size="7" fill="#777" font-family="IBM Plex Mono,monospace">6"</text>
+    </svg>
+</div>
+  </div>
+</div>
+
+  <div class="sheet-footer">
+    <span>CAB-001 / Rev F / June 2026</span>
+    <span>Sheet 2 of 4 — Interior Elevation (Doors Removed)</span>
+    <span>Verify all dims on site before cutting</span>
+  </div>
+</div>
+
+<!-- ┌─────────────────────────────────────────────────┐
+     │  SHEET 3 — Side Section + Plan View             │
+     └─────────────────────────────────────────────────┘ -->
+<div class="sheet" id="sheet-3">
+  <div class="sheet-header">
+    <div>
+      <h2>Wardrobe — Carpenter Drawing <span class="rev">Rev F</span></h2>
+      <div style="font-size:9px;color:#666;margin-top:3px;">Sheet 3 of 4 · Side Section · Plan View (Top-Down)</div>
+    </div>
+    <div class="sh-meta">
+      6'-0"W × 8'-0"H × 28"D cabinet<br>
+      CAB-001 Rev F · June 2026
+    </div>
+  </div>
+
+  <div class="drawing-block">
+<div class="bar" id="bar-c">C — Side Section · 28" Cabinet Depth · 24" Shelf Depth</div>
+      <div class="dsub" id="sub-c">Cross section showing cabinet depth, shelf recess, 4"×4" post position, single rod, drawer zone</div>
+    <div class="svg-wrap elevation"><svg viewBox="0 0 280 680">
+
+      <!-- cabinet outer -->
+      <rect x="40" y="40" width="168" height="576" fill="#faf8f4" stroke="#1a1a1a" stroke-width="2"/>
+
+      <!-- back wall hatch -->
+      <rect x="40" y="40" width="8" height="576" fill="#ddd" stroke="none"/>
+      <text x="44" y="344" text-anchor="middle" font-size="6.5" fill="#999" font-family="IBM Plex Mono,monospace" transform="rotate(-90,44,344)">BACK WALL</text>
+
+      <!-- loft divider y=148 -->
+      <line x1="40" y1="148" x2="208" y2="148" stroke="#1a1a1a" stroke-width="1.5"/>
+      <text x="124" y="85"  text-anchor="middle" font-size="9"   fill="#555" font-family="IBM Plex Mono,monospace">LOFT</text>
+      <text x="124" y="97"  text-anchor="middle" font-size="8"   fill="#555" font-family="IBM Plex Mono,monospace">(18" high)</text>
+      <text x="124" y="109" text-anchor="middle" font-size="7.5" fill="#888" font-family="IBM Plex Mono,monospace">full 28" deep</text>
+
+      <!-- shelf face line at x=184 (24" from back) dashed -->
+      <line x1="184" y1="148" x2="184" y2="472" stroke="#0000aa" stroke-width="1" stroke-dasharray="5,3"/>
+      <text x="184" y="163" text-anchor="middle" font-size="7" fill="#0000aa" font-family="IBM Plex Mono,monospace" transform="rotate(90,184,163)">shelf face</text>
+
+      <!-- 4"×4" POST cross-section in side view:
+           post is 4" deep (x direction) = 24px → x=160..184
+           post is 4" wide (into page = perpendicular)
+           In side elevation, post appears as a 24px wide hatched rect at x=160..184
+           Post runs from y=148 (below loft) to y=616 (floor)
+      -->
+      <rect x="160" y="148" width="24" height="468" fill="#d4b896" stroke="#8a6a3a" stroke-width="1.5"/>
+      <line x1="160" y1="152" x2="184" y2="176" stroke="#8a6a3a" stroke-width="0.7"/>
+      <line x1="160" y1="176" x2="184" y2="200" stroke="#8a6a3a" stroke-width="0.7"/>
+      <line x1="160" y1="200" x2="184" y2="224" stroke="#8a6a3a" stroke-width="0.7"/>
+      <line x1="160" y1="224" x2="184" y2="248" stroke="#8a6a3a" stroke-width="0.7"/>
+      <line x1="160" y1="248" x2="184" y2="272" stroke="#8a6a3a" stroke-width="0.7"/>
+      <line x1="160" y1="272" x2="184" y2="296" stroke="#8a6a3a" stroke-width="0.7"/>
+      <line x1="160" y1="296" x2="184" y2="320" stroke="#8a6a3a" stroke-width="0.7"/>
+      <line x1="160" y1="320" x2="184" y2="344" stroke="#8a6a3a" stroke-width="0.7"/>
+      <line x1="160" y1="344" x2="184" y2="368" stroke="#8a6a3a" stroke-width="0.7"/>
+      <line x1="160" y1="368" x2="184" y2="392" stroke="#8a6a3a" stroke-width="0.7"/>
+      <line x1="160" y1="392" x2="184" y2="416" stroke="#8a6a3a" stroke-width="0.7"/>
+      <line x1="160" y1="416" x2="184" y2="440" stroke="#8a6a3a" stroke-width="0.7"/>
+      <line x1="160" y1="440" x2="184" y2="464" stroke="#8a6a3a" stroke-width="0.7"/>
+      <line x1="160" y1="464" x2="184" y2="488" stroke="#8a6a3a" stroke-width="0.7"/>
+      <line x1="160" y1="488" x2="184" y2="512" stroke="#8a6a3a" stroke-width="0.7"/>
+      <line x1="160" y1="512" x2="184" y2="536" stroke="#8a6a3a" stroke-width="0.7"/>
+      <line x1="160" y1="536" x2="184" y2="560" stroke="#8a6a3a" stroke-width="0.7"/>
+      <line x1="160" y1="560" x2="184" y2="584" stroke="#8a6a3a" stroke-width="0.7"/>
+      <line x1="160" y1="584" x2="184" y2="608" stroke="#8a6a3a" stroke-width="0.7"/>
+      <text x="172" y="344" text-anchor="middle" font-size="6.5" fill="#7a5020" font-weight="bold" font-family="IBM Plex Mono,monospace" transform="rotate(90,172,344)">4"×4" POST</text>
+
+      <!-- drawer zone top y=472 -->
+      <line x1="40" y1="472" x2="208" y2="472" stroke="#1a1a1a" stroke-width="1.5"/>
+
+      <!-- 4 drawers each 36px high, x=48..200 (inside cabinet walls) -->
+      <rect x="48" y="472" width="152" height="36" fill="#ede9e0" stroke="#1a1a1a" stroke-width="0.8"/>
+      <rect x="48" y="508" width="152" height="36" fill="#e5e1d8" stroke="#1a1a1a" stroke-width="0.8"/>
+      <rect x="48" y="544" width="152" height="36" fill="#ede9e0" stroke="#1a1a1a" stroke-width="0.8"/>
+      <rect x="48" y="580" width="152" height="36" fill="#e5e1d8" stroke="#1a1a1a" stroke-width="0.8"/>
+      <!-- drawer handle profiles -->
+      <rect x="90" y="480" width="68" height="5" rx="2.5" fill="#ccc" stroke="#aaa" stroke-width="0.7"/>
+      <rect x="90" y="516" width="68" height="5" rx="2.5" fill="#ccc" stroke="#aaa" stroke-width="0.7"/>
+      <rect x="90" y="552" width="68" height="5" rx="2.5" fill="#ccc" stroke="#aaa" stroke-width="0.7"/>
+      <rect x="90" y="588" width="68" height="5" rx="2.5" fill="#ccc" stroke="#aaa" stroke-width="0.7"/>
+
+      <!-- SINGLE ROD cross-section at y=292 -->
+      <circle cx="120" cy="292" r="6" fill="#666" stroke="#333" stroke-width="1.5"/>
+      <text x="120" y="283" text-anchor="middle" font-size="7.5" fill="#333" font-family="IBM Plex Mono,monospace">ROD ⌀1"</text>
+      <text x="120" y="274" text-anchor="middle" font-size="7"   fill="#888" font-family="IBM Plex Mono,monospace">single rod</text>
+      <line x1="120" y1="298" x2="120" y2="472" stroke="#e0e0e0" stroke-width="1" stroke-dasharray="3,2"/>
+      <text x="100" y="400" text-anchor="middle" font-size="7.5" fill="#999" font-family="IBM Plex Mono,monospace">HANGING</text>
+      <text x="100" y="413" text-anchor="middle" font-size="7.5" fill="#999" font-family="IBM Plex Mono,monospace">ZONE</text>
+      <text x="100" y="426" text-anchor="middle" font-size="7.5" fill="#999" font-family="IBM Plex Mono,monospace">(54" high)</text>
+
+      <!-- ── DIMENSION LINES ── -->
+      <!-- cabinet depth bottom -->
+      <line x1="40"  y1="628" x2="208" y2="628" stroke="#cc0000" stroke-width="0.8"/>
+      <line x1="40"  y1="624" x2="40"  y2="632" stroke="#cc0000" stroke-width="0.8"/>
+      <line x1="208" y1="624" x2="208" y2="632" stroke="#cc0000" stroke-width="0.8"/>
+      <text x="124" y="626" text-anchor="middle" font-size="8.5" fill="#cc0000" font-family="IBM Plex Mono,monospace">28"  cabinet depth</text>
+      <!-- shelf depth -->
+      <line x1="40"  y1="642" x2="184" y2="642" stroke="#0000aa" stroke-width="0.8"/>
+      <line x1="40"  y1="638" x2="40"  y2="646" stroke="#0000aa" stroke-width="0.8"/>
+      <line x1="184" y1="638" x2="184" y2="646" stroke="#0000aa" stroke-width="0.8"/>
+      <text x="112" y="640" text-anchor="middle" font-size="8" fill="#0000aa" font-family="IBM Plex Mono,monospace">24"  shelf depth</text>
+      <!-- post depth -->
+      <line x1="160" y1="655" x2="184" y2="655" stroke="#8a6a3a" stroke-width="0.8"/>
+      <line x1="160" y1="651" x2="160" y2="659" stroke="#8a6a3a" stroke-width="0.8"/>
+      <line x1="184" y1="651" x2="184" y2="659" stroke="#8a6a3a" stroke-width="0.8"/>
+      <text x="172" y="668" text-anchor="middle" font-size="7.5" fill="#8a6a3a" font-family="IBM Plex Mono,monospace">4" post</text>
+      <!-- total height right -->
+      <line x1="224" y1="40"  x2="224" y2="616" stroke="#cc0000" stroke-width="0.8"/>
+      <line x1="220" y1="40"  x2="228" y2="40"  stroke="#cc0000" stroke-width="0.8"/>
+      <line x1="220" y1="616" x2="228" y2="616" stroke="#cc0000" stroke-width="0.8"/>
+      <text x="240" y="332" text-anchor="middle" font-size="9" fill="#cc0000" font-family="IBM Plex Mono,monospace" transform="rotate(90,240,332)">8'-0"  (96")</text>
+      <!-- zone heights left -->
+      <line x1="24" y1="40"  x2="24" y2="148" stroke="#0000aa" stroke-width="0.8"/>
+      <line x1="20" y1="40"  x2="28" y2="40"  stroke="#0000aa" stroke-width="0.8"/>
+      <line x1="20" y1="148" x2="28" y2="148" stroke="#0000aa" stroke-width="0.8"/>
+      <text x="14" y="98"  text-anchor="middle" font-size="8" fill="#0000aa" font-family="IBM Plex Mono,monospace" transform="rotate(-90,14,98)">18"</text>
+      <line x1="24" y1="148" x2="24" y2="472" stroke="#0000aa" stroke-width="0.8"/>
+      <line x1="20" y1="472" x2="28" y2="472" stroke="#0000aa" stroke-width="0.8"/>
+      <text x="14" y="314" text-anchor="middle" font-size="8" fill="#0000aa" font-family="IBM Plex Mono,monospace" transform="rotate(-90,14,314)">54"</text>
+      <line x1="24" y1="472" x2="24" y2="616" stroke="#0000aa" stroke-width="0.8"/>
+      <line x1="20" y1="616" x2="28" y2="616" stroke="#0000aa" stroke-width="0.8"/>
+      <text x="14" y="548" text-anchor="middle" font-size="8" fill="#0000aa" font-family="IBM Plex Mono,monospace" transform="rotate(-90,14,548)">24"</text>
+      <!-- rod height dim -->
+      <line x1="224" y1="292" x2="224" y2="472" stroke="#555" stroke-width="0.8" stroke-dasharray="4,2"/>
+      <line x1="220" y1="292" x2="228" y2="292" stroke="#555" stroke-width="0.8"/>
+      <text x="240" y="386" text-anchor="middle" font-size="7.5" fill="#555" font-family="IBM Plex Mono,monospace" transform="rotate(90,240,386)">30" rod height</text>
+    </svg>
+</div>
+  </div>
+</div>
+
+  <div class="drawing-block">
+<div class="bar" id="bar-d">D — Plan View · Top-Down Cut at Mid-Height</div>
+      <div class="dsub" id="sub-d">Shows door swings · 4"×4" post at centre · shelf recess 4" · cabinet depth 28"</div>
+    <div class="svg-wrap plan"><svg viewBox="0 0 580 460">
+    <!--
+      PLAN VIEW — CORRECTED door swings (outward = AWAY from cabinet)
+      ─────────────────────────────────────────────────────────────
+      Scale: 1" = 6px  (same as elevations)
+      Width 72" = 432px   x: cabinet 40..472
+      Depth 28" = 168px
+      Cabinet front face at y=200 (doors open upward = toward y=0)
+      Cabinet back  face at y=200+168=368
+      Swing space above front face: 120px (= 20" clearance zone)
+      Total canvas height: 40(top margin) + 120(swing) + 8(door strip) + 168(cabinet) + 90(dims) = ~460
+
+      Door front face (closed position): y=192..200  (8px thick strip)
+      Hinge y = 196 (midpoint of door strip)
+
+      Door width 18" = 108px each.
+      Hinge positions (x):
+        D1: x=40  (left wall) — opens LEFT
+        D2: x=256 (post left face) — opens RIGHT
+        D3: x=256 (post right face, same x) — opens LEFT
+        D4: x=472 (right wall) — opens RIGHT
+
+      Arc logic (outward = y decreasing from 200):
+        D1 hinge x=40,  door tip at x=40+108=148 when closed
+            → opens LEFT: tip sweeps from (148,200) outward to (40,200-108)=(40,92)
+            Arc: M 148,200 A 108,108 0 0,1 40,92
+            Straight edge: line from (40,200) to (40,92)
+
+        D2 hinge x=256, door tip at x=256-108=148 when closed
+            → opens RIGHT: tip sweeps from (148,200) outward to (256,200-108)=(256,92)
+            Arc: M 148,200 A 108,108 0 0,0 256,92
+            Straight edge: line from (256,200) to (256,92)
+
+        D3 hinge x=256, door tip at x=256+108=364 when closed
+            → opens LEFT: tip sweeps from (364,200) outward to (256,200-108)=(256,92)
+            Arc: M 364,200 A 108,108 0 0,1 256,92
+            Straight edge: line from (256,200) to (256,92)
+
+        D4 hinge x=472, door tip at x=472-108=364 when closed
+            → opens RIGHT: tip sweeps from (364,200) outward to (472,200-108)=(472,92)
+            Arc: M 364,200 A 108,108 0 0,0 472,92
+            Straight edge: line from (472,200) to (472,92)
+    -->
+
+      <!-- ── CLEARANCE ZONE (outside cabinet, y=80..200) — shaded lightly ── -->
+      <rect x="40" y="92" width="432" height="108" fill="#f0f4f8" stroke="none"/>
+      <text x="256" y="148" text-anchor="middle" font-size="8" fill="#8ab" font-family="IBM Plex Mono,monospace">DOOR SWING CLEARANCE ZONE</text>
+      <text x="256" y="160" text-anchor="middle" font-size="7.5" fill="#8ab" font-family="IBM Plex Mono,monospace">(min. 20" = 120px in front of wardrobe)</text>
+
+      <!-- ── DOOR PANELS — closed position, front face y=192..200 ── -->
+      <rect x="40"  y="192" width="108" height="8" fill="#d8d4cc" stroke="#888" stroke-width="1"/>
+      <rect x="148" y="192" width="108" height="8" fill="#eae8e2" stroke="#888" stroke-width="1"/>
+      <rect x="256" y="192" width="108" height="8" fill="#d8d4cc" stroke="#888" stroke-width="1"/>
+      <rect x="364" y="192" width="108" height="8" fill="#eae8e2" stroke="#888" stroke-width="1"/>
+
+      <!-- ── HINGE DOTS at y=196 ── -->
+      <circle cx="40"  cy="196" r="4" fill="#444" stroke="#222" stroke-width="1"/>
+      <circle cx="256" cy="196" r="4" fill="#444" stroke="#222" stroke-width="1"/>
+      <circle cx="472" cy="196" r="4" fill="#444" stroke="#222" stroke-width="1"/>
+      <!-- hinge labels -->
+      <text x="40"  y="188" text-anchor="middle" font-size="6.5" fill="#555" font-family="IBM Plex Mono,monospace">H</text>
+      <text x="256" y="188" text-anchor="middle" font-size="6.5" fill="#555" font-family="IBM Plex Mono,monospace">H</text>
+      <text x="472" y="188" text-anchor="middle" font-size="6.5" fill="#555" font-family="IBM Plex Mono,monospace">H</text>
+
+      <!-- ══════════════════════════════════════════════════════
+           DOOR SWING ARCS — correct pivot logic
+           Each arc = quarter circle, radius = door width (108px = 18")
+           Door closed = horizontal strip at y=192..200
+           Arc starts at free end of closed door, sweeps 90° outward
+
+           D1: hinge x=40 (left wall), free end x=148
+               Closed free end: (148, 196)
+               Open position: door rotated 90° outward → free end at (40, 196-108) = (40, 88)
+               Arc: M 148,196  A 108,108  0  0,1  40,88
+               Door edge line (shows door thickness): x=40, y=196 to y=88
+
+           D2: hinge x=256 (post left face), free end x=148
+               Closed free end: (148, 196)
+               Open position: free end at (256, 196-108) = (256, 88)
+               Arc: M 148,196  A 108,108  0  0,0  256,88
+               Door edge line: x=256, y=196 to y=88
+
+           D3: hinge x=256 (post right face), free end x=364
+               Closed free end: (364, 196)
+               Open position: free end at (256, 196-108) = (256, 88)
+               Arc: M 364,196  A 108,108  0  0,1  256,88
+               Door edge line: x=256, y=196 to y=88
+
+           D4: hinge x=472 (right wall), free end x=364
+               Closed free end: (364, 196)
+               Open position: free end at (472, 196-108) = (472, 88)
+               Arc: M 364,196  A 108,108  0  0,0  472,88
+               Door edge line: x=472, y=196 to y=88
+      ══════════════════════════════════════════════════════ -->
+
+      <!-- D1: hinge LEFT WALL x=40, free end sweeps from (148,196) to (40,88)
+           Counter-clockwise (sweep=0) → bows LEFT outward toward left wall -->
+      <path d="M 148,196 A 108,108 0 0,0 40,88"
+            stroke="#5599cc" stroke-width="1.4" fill="rgba(85,153,204,0.07)"/>
+      <line x1="40" y1="196" x2="40" y2="88" stroke="#5599cc" stroke-width="1" stroke-dasharray="5,3"/>
+
+      <!-- D2: hinge POST LEFT x=256, free end sweeps from (148,196) to (256,88)
+           Clockwise (sweep=1) → bows RIGHT outward toward post -->
+      <path d="M 148,196 A 108,108 0 0,1 256,88"
+            stroke="#5599cc" stroke-width="1.4" fill="rgba(85,153,204,0.07)"/>
+      <line x1="256" y1="196" x2="256" y2="88" stroke="#5599cc" stroke-width="1" stroke-dasharray="5,3"/>
+
+      <!-- D3: hinge POST RIGHT x=256, free end sweeps from (364,196) to (256,88)
+           Counter-clockwise (sweep=0) → bows LEFT outward toward post -->
+      <path d="M 364,196 A 108,108 0 0,0 256,88"
+            stroke="#5599cc" stroke-width="1.4" fill="rgba(85,153,204,0.07)"/>
+      <line x1="256" y1="196" x2="256" y2="88" stroke="#5599cc" stroke-width="1" stroke-dasharray="5,3"/>
+
+      <!-- D4: hinge RIGHT WALL x=472, free end sweeps from (364,196) to (472,88)
+           Clockwise (sweep=1) → bows RIGHT outward toward right wall -->
+      <path d="M 364,196 A 108,108 0 0,1 472,88"
+            stroke="#5599cc" stroke-width="1.4" fill="rgba(85,153,204,0.07)"/>
+      <line x1="472" y1="196" x2="472" y2="88" stroke="#5599cc" stroke-width="1" stroke-dasharray="5,3"/>
+
+      <!-- ── "OUTSIDE" / "INSIDE" labels ── -->
+      <text x="10" y="148" font-size="8" fill="#5599cc" font-family="IBM Plex Mono,monospace" transform="rotate(-90,10,148)">OUTSIDE (ROOM)</text>
+      <text x="10" y="320" font-size="8" fill="#555"    font-family="IBM Plex Mono,monospace" transform="rotate(-90,10,320)">INSIDE (CABINET)</text>
+
+      <!-- ── CABINET INTERIOR (y=200..368) ── -->
+      <rect x="40" y="200" width="432" height="168" fill="#faf8f4" stroke="#1a1a1a" stroke-width="2"/>
+
+      <!-- back wall -->
+      <rect x="40" y="360" width="432" height="8" fill="#ccc" stroke="#1a1a1a" stroke-width="1"/>
+      <text x="256" y="376" text-anchor="middle" font-size="8" fill="#888" font-family="IBM Plex Mono,monospace">BACK WALL</text>
+
+      <!-- shelf face line at y=200+24=224 (4" from front, shelf 24" from back) -->
+      <line x1="40" y1="224" x2="472" y2="224" stroke="#0000aa" stroke-width="1" stroke-dasharray="5,3"/>
+      <text x="480" y="227" font-size="7.5" fill="#0000aa" font-family="IBM Plex Mono,monospace">shelf</text>
+      <text x="480" y="237" font-size="7.5" fill="#0000aa" font-family="IBM Plex Mono,monospace">face</text>
+
+      <!-- 4"×4" POST in plan: 24px wide × 24px deep, centred at x=256, at shelf face y=224 -->
+      <rect x="244" y="224" width="24" height="24" fill="#d4b896" stroke="#8a6a3a" stroke-width="2"/>
+      <line x1="244" y1="224" x2="268" y2="248" stroke="#8a6a3a" stroke-width="1.2"/>
+      <line x1="244" y1="236" x2="256" y2="248" stroke="#8a6a3a" stroke-width="1.2"/>
+      <line x1="256" y1="224" x2="268" y2="236" stroke="#8a6a3a" stroke-width="1.2"/>
+
+      <!-- post label -->
+      <rect x="220" y="252" width="72" height="20" fill="#fff8e8" stroke="#c80" stroke-width="1" rx="2"/>
+      <text x="256" y="262" text-anchor="middle" font-size="7.5" fill="#8a5000" font-weight="bold" font-family="IBM Plex Mono,monospace">4"×4" POST</text>
+      <text x="256" y="270" text-anchor="middle" font-size="7"   fill="#8a5000" font-family="IBM Plex Mono,monospace">4" deep only</text>
+      <line x1="256" y1="248" x2="256" y2="252" stroke="#c80" stroke-width="1"/>
+
+      <!-- door direction labels above door panels -->
+      <text x="94"  y="184" text-anchor="middle" font-size="8" fill="#333" font-family="IBM Plex Mono,monospace">D1  ← opens LEFT</text>
+      <text x="202" y="184" text-anchor="middle" font-size="8" fill="#333" font-family="IBM Plex Mono,monospace">D2  opens RIGHT →</text>
+      <text x="310" y="184" text-anchor="middle" font-size="8" fill="#333" font-family="IBM Plex Mono,monospace">D3  ← opens LEFT</text>
+      <text x="418" y="184" text-anchor="middle" font-size="8" fill="#333" font-family="IBM Plex Mono,monospace">D4  opens RIGHT →</text>
+
+      <!-- clearance arrow -->
+      <line x1="24" y1="200" x2="24" y2="92" stroke="#cc6600" stroke-width="1.2"/>
+      <line x1="20" y1="200" x2="28" y2="200" stroke="#cc6600" stroke-width="1.2"/>
+      <line x1="20" y1="92"  x2="28" y2="92"  stroke="#cc6600" stroke-width="1.2"/>
+      <text x="14" y="150" text-anchor="middle" font-size="7.5" fill="#cc6600" font-family="IBM Plex Mono,monospace" transform="rotate(-90,14,150)">min. 20" clearance</text>
+
+      <!-- ── DIMENSION LINES ── -->
+      <!-- total width -->
+      <line x1="40"  y1="408" x2="472" y2="408" stroke="#cc0000" stroke-width="0.8"/>
+      <line x1="40"  y1="404" x2="40"  y2="412" stroke="#cc0000" stroke-width="0.8"/>
+      <line x1="472" y1="404" x2="472" y2="412" stroke="#cc0000" stroke-width="0.8"/>
+      <text x="256" y="406" text-anchor="middle" font-size="9" fill="#cc0000" font-family="IBM Plex Mono,monospace">6'-0"  (72")</text>
+      <!-- cabinet depth right -->
+      <line x1="492" y1="200" x2="492" y2="368" stroke="#cc0000" stroke-width="0.8"/>
+      <line x1="488" y1="200" x2="496" y2="200" stroke="#cc0000" stroke-width="0.8"/>
+      <line x1="488" y1="368" x2="496" y2="368" stroke="#cc0000" stroke-width="0.8"/>
+      <text x="508" y="288" text-anchor="middle" font-size="8.5" fill="#cc0000" font-family="IBM Plex Mono,monospace" transform="rotate(90,508,288)">28"  deep</text>
+      <!-- shelf depth -->
+      <line x1="492" y1="224" x2="492" y2="368" stroke="#0000aa" stroke-width="0.8" stroke-dasharray="3,2"/>
+      <text x="528" y="300" text-anchor="middle" font-size="8" fill="#0000aa" font-family="IBM Plex Mono,monospace" transform="rotate(90,528,300)">24"  shelf</text>
+      <!-- post width -->
+      <line x1="244" y1="420" x2="268" y2="420" stroke="#8a6a3a" stroke-width="0.8"/>
+      <line x1="244" y1="416" x2="244" y2="424" stroke="#8a6a3a" stroke-width="0.8"/>
+      <line x1="268" y1="416" x2="268" y2="424" stroke="#8a6a3a" stroke-width="0.8"/>
+      <text x="256" y="436" text-anchor="middle" font-size="8" fill="#8a6a3a" font-family="IBM Plex Mono,monospace">4"  wide</text>
+      <!-- half widths -->
+      <line x1="40"  y1="448" x2="256" y2="448" stroke="#555" stroke-width="0.6"/>
+      <line x1="40"  y1="444" x2="40"  y2="452" stroke="#555" stroke-width="0.6"/>
+      <line x1="256" y1="444" x2="256" y2="452" stroke="#555" stroke-width="0.6"/>
+      <text x="148" y="446" text-anchor="middle" font-size="8" fill="#555" font-family="IBM Plex Mono,monospace">36"</text>
+      <line x1="256" y1="448" x2="472" y2="448" stroke="#555" stroke-width="0.6"/>
+      <line x1="472" y1="444" x2="472" y2="452" stroke="#555" stroke-width="0.6"/>
+      <text x="364" y="446" text-anchor="middle" font-size="8" fill="#555" font-family="IBM Plex Mono,monospace">36"</text>
+    </svg>
+</div>
+  </div>
+</div>
+
+  <div class="sheet-footer">
+    <span>CAB-001 / Rev F / June 2026</span>
+    <span>Sheet 3 of 4 — Side Section &amp; Plan View</span>
+    <span>Verify all dims on site before cutting</span>
+  </div>
+</div>
+
+<!-- ┌─────────────────────────────────────────────────┐
+     │  SHEET 4 — Post Detail + Bill of Components     │
+     └─────────────────────────────────────────────────┘ -->
+<div class="sheet" id="sheet-4">
+  <div class="sheet-header">
+    <div>
+      <h2>Wardrobe — Carpenter Drawing <span class="rev">Rev F</span></h2>
+      <div style="font-size:9px;color:#666;margin-top:3px;">Sheet 4 of 4 · Centre Post &amp; Door Detail · Bill of Components</div>
+    </div>
+    <div class="sh-meta">
+      CAB-001 Rev F · June 2026
+    </div>
+  </div>
+
+  <div class="drawing-block">
+<div class="bar" id="bar-e">E — Centre Post &amp; Door Detail · Zoomed Plan Section</div>
+      <div class="dsub" id="sub-e">How Door 2 and Door 3 hinge on the post and bolt into its front face · Scale 1"≈14px</div>
+    <div class="svg-wrap detail dark-border"><svg viewBox="0 0 660 260">
+
+      <!-- title strip -->
+      <rect x="0" y="0" width="660" height="18" fill="#1a1a1a"/>
+      <text x="330" y="12" text-anchor="middle" font-size="8.5" fill="#fff" font-weight="bold" font-family="IBM Plex Mono,monospace">VIEW E — PLAN SECTION @ CENTRE POST  (top-down, cut at mid-height)  Scale: 1" ≈ 14px</text>
+
+      <!-- cabinet front face line -->
+      <line x1="30" y1="58" x2="630" y2="58" stroke="#1a1a1a" stroke-width="2"/>
+      <text x="10" y="61" font-size="7" fill="#888" font-family="IBM Plex Mono,monospace">FRONT</text>
+
+      <!-- cabinet interior zone (show ~8" depth for context) -->
+      <rect x="30" y="58" width="600" height="112" fill="#faf8f4" stroke="#1a1a1a" stroke-width="1.5"/>
+      <!-- back context fade -->
+      <rect x="30" y="162" width="600" height="8" fill="#ddd" stroke="none"/>
+      <text x="330" y="177" text-anchor="middle" font-size="7.5" fill="#aaa" font-family="IBM Plex Mono,monospace">cabinet continues to back wall (28" total depth)</text>
+
+      <!-- 4"×4" POST: 4" wide=56px, 4" deep=56px
+           x centre = 330 → x=302..358
+           y front face=58, post back=58+56=114
+      -->
+      <rect x="302" y="58" width="56" height="56" fill="#d4b896" stroke="#8a6a3a" stroke-width="2.5"/>
+      <!-- hatch -->
+      <line x1="302" y1="62" x2="358" y2="114" stroke="#8a6a3a" stroke-width="1.2"/>
+      <line x1="302" y1="80" x2="340" y2="114" stroke="#8a6a3a" stroke-width="1.2"/>
+      <line x1="320" y1="58" x2="358" y2="94"  stroke="#8a6a3a" stroke-width="1.2"/>
+      <!-- post front face highlight -->
+      <rect x="302" y="58" width="56" height="7" fill="#f0c840" stroke="#c8a020" stroke-width="1"/>
+      <text x="330" y="64" text-anchor="middle" font-size="6.5" fill="#5a3000" font-weight="bold" font-family="IBM Plex Mono,monospace">DOOR BOLT FACE</text>
+      <!-- post label -->
+      <text x="330" y="95" text-anchor="middle" font-size="9" fill="#7a5020" font-weight="bold" font-family="IBM Plex Mono,monospace">4"×4"</text>
+      <text x="330" y="106" text-anchor="middle" font-size="8" fill="#7a5020" font-family="IBM Plex Mono,monospace">POST</text>
+
+      <!-- DOOR 2: x=30..302 (272px=~19.4"... 18"×14=252px → D2 x=50..302)
+           Hinge at x=302 (left face of post), door thickness 1.5"=21px
+           Door closed: strip at y=58..79 -->
+      <rect x="50" y="58" width="252" height="21" fill="#d8d4ca" stroke="#888" stroke-width="1.5"/>
+      <!-- hinge circle at x=302 -->
+      <circle cx="302" cy="69" r="7" fill="#555" stroke="#333" stroke-width="1.5"/>
+      <text x="302" y="72" text-anchor="middle" font-size="6" fill="#fff" font-family="IBM Plex Mono,monospace">H</text>
+      <!-- door label -->
+      <text x="176" y="50" text-anchor="middle" font-size="10" fill="#333" font-weight="bold" font-family="IBM Plex Mono,monospace">DOOR 2</text>
+      <text x="176" y="39" text-anchor="middle" font-size="9"  fill="#555" font-family="IBM Plex Mono,monospace">opens RIGHT  →</text>
+      <!-- D2 swing arc (opens right = downward from hinge at x=302) -->
+      <path d="M 50,79 A 252,252 0 0,1 302,331" stroke="#ccc" stroke-width="1.2" fill="none" stroke-dasharray="8,4"/>
+      <!-- D2 flush bolt (at left face of post) -->
+      <rect x="290" y="61" width="12" height="8" rx="2" fill="#bbb" stroke="#888" stroke-width="1"/>
+      <rect x="302" y="63" width="10" height="4" rx="1" fill="#999" stroke="#777" stroke-width="0.8"/>
+
+      <!-- DOOR 3: x=358..610 (252px=18"), hinge at x=358 (right face of post)
+           door closed strip at y=58..79 -->
+      <rect x="358" y="58" width="252" height="21" fill="#d8d4ca" stroke="#888" stroke-width="1.5"/>
+      <!-- hinge at x=358 -->
+      <circle cx="358" cy="69" r="7" fill="#555" stroke="#333" stroke-width="1.5"/>
+      <text x="358" y="72" text-anchor="middle" font-size="6" fill="#fff" font-family="IBM Plex Mono,monospace">H</text>
+      <!-- door label -->
+      <text x="484" y="50" text-anchor="middle" font-size="10" fill="#333" font-weight="bold" font-family="IBM Plex Mono,monospace">DOOR 3</text>
+      <text x="484" y="39" text-anchor="middle" font-size="9"  fill="#555" font-family="IBM Plex Mono,monospace">←  opens LEFT</text>
+      <!-- D3 swing arc (opens left = downward from hinge at x=358) -->
+      <path d="M 610,79 A 252,252 0 0,0 358,331" stroke="#ccc" stroke-width="1.2" fill="none" stroke-dasharray="8,4"/>
+      <!-- D3 flush bolt (at right face of post) -->
+      <rect x="358" y="61" width="12" height="8" rx="2" fill="#bbb" stroke="#888" stroke-width="1"/>
+      <rect x="348" y="63" width="10" height="4" rx="1" fill="#999" stroke="#777" stroke-width="0.8"/>
+
+      <!-- bolt callout -->
+      <rect x="258" y="118" width="144" height="30" fill="#fffbe6" stroke="#f0a500" stroke-width="1.2" rx="3"/>
+      <text x="330" y="131" text-anchor="middle" font-size="8.5" fill="#8a5000" font-weight="bold" font-family="IBM Plex Mono,monospace">FLUSH BOLT DETAIL</text>
+      <text x="330" y="143" text-anchor="middle" font-size="8"   fill="#333" font-family="IBM Plex Mono,monospace">Both doors bolt into post front face</text>
+      <line x1="302" y1="69" x2="286" y2="118" stroke="#f0a500" stroke-width="0.8"/>
+      <line x1="358" y1="69" x2="374" y2="118" stroke="#f0a500" stroke-width="0.8"/>
+
+      <!-- no-clash note -->
+      <rect x="200" y="155" width="260" height="34" fill="#e8f4e8" stroke="#2a8a2a" stroke-width="1" rx="3"/>
+      <text x="330" y="168" text-anchor="middle" font-size="8.5" fill="#1a5a1a" font-weight="bold" font-family="IBM Plex Mono,monospace">✓  NO DOOR CLASH</text>
+      <text x="330" y="180" text-anchor="middle" font-size="8"   fill="#1a5a1a" font-family="IBM Plex Mono,monospace">D2 opens RIGHT, D3 opens LEFT — swing away from each other</text>
+
+      <!-- DIMENSION LINES -->
+      <line x1="50"  y1="28" x2="302" y2="28" stroke="#cc0000" stroke-width="0.8"/>
+      <line x1="50"  y1="24" x2="50"  y2="32" stroke="#cc0000" stroke-width="0.8"/>
+      <line x1="302" y1="24" x2="302" y2="32" stroke="#cc0000" stroke-width="0.8"/>
+      <text x="176" y="26" text-anchor="middle" font-size="8.5" fill="#cc0000" font-family="IBM Plex Mono,monospace">18"  DOOR 2</text>
+      <line x1="302" y1="28" x2="358" y2="28" stroke="#8a6a3a" stroke-width="0.8"/>
+      <line x1="358" y1="24" x2="358" y2="32" stroke="#8a6a3a" stroke-width="0.8"/>
+      <text x="330" y="26" text-anchor="middle" font-size="8" fill="#8a6a3a" font-family="IBM Plex Mono,monospace">4"</text>
+      <line x1="358" y1="28" x2="610" y2="28" stroke="#cc0000" stroke-width="0.8"/>
+      <line x1="610" y1="24" x2="610" y2="32" stroke="#cc0000" stroke-width="0.8"/>
+      <text x="484" y="26" text-anchor="middle" font-size="8.5" fill="#cc0000" font-family="IBM Plex Mono,monospace">18"  DOOR 3</text>
+      <!-- post depth right -->
+      <line x1="635" y1="58" x2="635" y2="114" stroke="#8a6a3a" stroke-width="0.8"/>
+      <line x1="631" y1="58"  x2="639" y2="58"  stroke="#8a6a3a" stroke-width="0.8"/>
+      <line x1="631" y1="114" x2="639" y2="114" stroke="#8a6a3a" stroke-width="0.8"/>
+      <text x="650" y="90" text-anchor="middle" font-size="8" fill="#8a6a3a" font-family="IBM Plex Mono,monospace" transform="rotate(90,650,90)">4" deep</text>
+      <!-- door thickness -->
+      <line x1="635" y1="58" x2="635" y2="79" stroke="#0000aa" stroke-width="0.8"/>
+      <text x="650" y="71" text-anchor="middle" font-size="7.5" fill="#0000aa" font-family="IBM Plex Mono,monospace" transform="rotate(90,650,71)">1.5"</text>
+    </svg>
+</div>
+  </div>
+</div>
+
+  <div class="drawing-block">
+    <div class="bar" id="bar-bom">Bill of Components — Rev F</div>
+  <div class="table-wrap">
+  <table>
+    <thead>
+      <tr><th id="th-comp">Component</th><th id="th-width">Width</th><th id="th-height">Height</th><th id="th-depth">Depth</th><th id="th-qty">Qty</th><th id="th-notes">Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td id="bom-r1-c">Overall Wardrobe</td><td>6'-0" (72")</td><td>8'-0" (96")</td><td>28"</td><td>1</td><td id="bom-r1-n">Floor to ceiling</td></tr>
+      <tr><td id="bom-r2-c">Loft Cabinet</td><td>72" (2×36")</td><td>18"</td><td>28" full depth</td><td>1</td><td id="bom-r2-n">2 shutters, split at post centre line</td></tr>
+      <tr><td id="bom-r3-c">Hanging Space</td><td>72"</td><td>54"</td><td>24" shelf depth</td><td>1</td><td id="bom-r3-n">Full width, single rod end to end</td></tr>
+      <tr><td id="bom-r4-c">Single Hanging Rod</td><td>72" end to end</td><td>—</td><td>—</td><td>1</td><td id="bom-r4-n">⌀1" steel/brass · 30" above drawer top · bracket/notch at post</td></tr>
+      <tr class="hl"><td id="bom-r5-c">4"×4" Centre Post</td><td>4"</td><td>96" (full height)</td><td>4" only</td><td>1</td><td id="bom-r5-n">Square post at centreline. NOT full cabinet depth. Front face flush with shelf face. D2 &amp; D3 hinge on post and bolt into front face.</td></tr>
+      <tr class="hl"><td id="bom-r6-c">Drawer Gap Divider</td><td>4"</td><td>24"</td><td>24"</td><td>1</td><td id="bom-r6-n">Drawer zone only. Sits on post centreline. Notched into drawer base and top panel.</td></tr>
+      <tr><td id="bom-r7-c">Drawers — Left Bank</td><td>~34"</td><td>6" each</td><td>24"</td><td>4</td><td id="bom-r7-n">Soft-close full-extension slides</td></tr>
+      <tr><td id="bom-r8-c">Drawers — Right Bank</td><td>~34"</td><td>6" each</td><td>24"</td><td>4</td><td id="bom-r8-n">Soft-close full-extension slides</td></tr>
+      <tr><td id="bom-r9-c">Hinged Doors</td><td>18" each</td><td>78"</td><td>—</td><td>4</td><td id="bom-r9-n">D1 hinge left wall opens ←, D2 hinge post left opens →, D3 hinge post right opens ←, D4 hinge right wall opens →. Flush bolts on D2 &amp; D3.</td></tr>
+    </tbody>
+  </table>
+  </div><!-- /table-wrap -->
+    <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th id="th-comp">Component</th><th id="th-width">Width</th><th id="th-height">Height</th><th id="th-depth">Depth</th><th id="th-qty">Qty</th><th id="th-notes">Notes</th></tr>
+      </thead>
+      <tbody>
+        <tr><td id="bom-r1-c">Overall Wardrobe</td><td>6'-0" (72")</td><td>8'-0" (96")</td><td>28"</td><td>1</td><td id="bom-r1-n">Floor to ceiling</td></tr>
+        <tr><td id="bom-r2-c">Loft Cabinet</td><td>72" (2×36")</td><td>18"</td><td>28" full depth</td><td>1</td><td id="bom-r2-n">2 shutters, split at post centre line</td></tr>
+        <tr><td id="bom-r3-c">Hanging Space</td><td>72"</td><td>54"</td><td>24" shelf depth</td><td>1</td><td id="bom-r3-n">Full width, single rod end to end</td></tr>
+        <tr><td id="bom-r4-c">Single Hanging Rod</td><td>72" end to end</td><td>—</td><td>—</td><td>1</td><td id="bom-r4-n">⌀1" steel/brass · 30" above drawer top · bracket/notch at post</td></tr>
+        <tr class="hl"><td id="bom-r5-c">4"×4" Centre Post</td><td>4"</td><td>96" (full height)</td><td>4" only</td><td>1</td><td id="bom-r5-n">Square post at centreline. NOT full cabinet depth. Front face flush with shelf face. D2 &amp; D3 hinge on post and bolt into front face.</td></tr>
+        <tr class="hl"><td id="bom-r6-c">Drawer Gap Divider</td><td>4"</td><td>24"</td><td>24"</td><td>1</td><td id="bom-r6-n">Drawer zone only. Sits on post centreline. Notched into drawer base and top panel.</td></tr>
+        <tr><td id="bom-r7-c">Drawers — Left Bank</td><td>~34"</td><td>6" each</td><td>24"</td><td>4</td><td id="bom-r7-n">Soft-close full-extension slides</td></tr>
+        <tr><td id="bom-r8-c">Drawers — Right Bank</td><td>~34"</td><td>6" each</td><td>24"</td><td>4</td><td id="bom-r8-n">Soft-close full-extension slides</td></tr>
+        <tr><td id="bom-r9-c">Hinged Doors</td><td>18" each</td><td>78"</td><td>—</td><td>4</td><td id="bom-r9-n">D1 hinge left wall opens ←, D2 hinge post left opens →, D3 hinge post right opens ←, D4 hinge right wall opens →. Flush bolts on D2 &amp; D3.</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </div>
+
+  <div class="drawing-block note" id="note-p2">
+    <strong>⚠ CARPENTER NOTES — Rev F</strong>
+    • <b>Scale:</b> All elevation drawings use consistent 1" = 6px scale. Width:height ratios proportionally accurate (72"W × 96"H = 3:4).<br>
+    • <b>4"×4" Post:</b> Only 4" deep. Sits at shelf face line (24" from back wall). Rod passes via notch or U-bracket. Completely hidden by closed doors.<br>
+    • <b>Drawer gap divider</b> (4" wide) is a separate piece from the post — sits only in the 24" drawer zone, aligned on the same centreline as the post above it.<br>
+    • Verify all dims on site. Material: hardwood or 18mm BWR ply, laminate finish.
+  </div>
+
+  <div class="sheet-footer" id="footer-p2">
+    <span>CAB-001 / Rev F / June 2026</span>
+    <span>Sheet 4 of 4 — Post Detail &amp; Bill of Components · Bangalore</span>
+    <span>Verify all dimensions on site before cutting</span>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════
+// TRANSLATION DICTIONARY — English ↔ Hindi
+// ═══════════════════════════════════════════════════
+const T = {
+  en: {
+    // Language bar
+    "lang_label": "Language / भाषा:",
+    // Page titles
+    "title_p1":   "Wardrobe — Carpenter Drawing",
+    "sub_p1":     "Page 1 of 2 · Front Elevation · Interior Elevation · Side Section",
+    "meta_p1":    "6'-0\"W × 8'-0\"H × 28\"D cabinet · Shelf depth 24\"<br>Loft 18\" · Hanging 54\" · Drawers 4×6\"=24\"<br>Centre post 4\"×4\", full height, recessed<br>CAB-001 Rev F · June 2026",
+    "title_p2":   "Wardrobe — Carpenter Drawing",
+    "sub_p2":     "Page 2 of 2 · Plan View · Pillar & Door Detail · Bill of Components",
+    "meta_p2":    "CAB-001 Rev F · June 2026",
+    // Section bars
+    "bar_a":      "A — Front Elevation · Doors Closed · 6'-0\" × 8'-0\"",
+    "bar_b":      "B — Interior Elevation · Doors Removed · Shows all internal components",
+    "bar_c":      "C — Side Section · 28\" Cabinet Depth · 24\" Shelf Depth",
+    "bar_d":      "D — Plan View · Top-Down Cut at Mid-Height",
+    "bar_e":      "E — Centre Post & Door Detail · Zoomed Plan Section",
+    "bar_bom":    "Bill of Components — Rev F",
+    // View subs
+    "sub_a":      "As seen from outside · pillar hidden behind closed doors · loft shutters at top",
+    "sub_b":      "Loft · 4\"×4\" centre post (full height) · single hanging rod · drawer gap divider · 8 drawers",
+    "sub_c":      "Cross section showing cabinet depth, shelf recess, 4\"×4\" post position, single rod, drawer zone",
+    "sub_d":      "Shows door swings · 4\"×4\" post at centre · shelf recess 4\" · cabinet depth 28\"",
+    "sub_e":      "How Door 2 and Door 3 hinge on the post and bolt into its front face · Scale 1\"≈14px",
+    // Table headers
+    "th_comp":    "Component",
+    "th_width":   "Width",
+    "th_height":  "Height",
+    "th_depth":   "Depth",
+    "th_qty":     "Qty",
+    "th_notes":   "Notes",
+    // Table rows
+    "bom_r1_c":   "Overall Wardrobe",          "bom_r1_n": "Floor to ceiling",
+    "bom_r2_c":   "Loft Cabinet",               "bom_r2_n": "2 shutters, split at post centre line",
+    "bom_r3_c":   "Hanging Space",              "bom_r3_n": "Full width, single rod end to end",
+    "bom_r4_c":   "Single Hanging Rod",         "bom_r4_n": "⌀1\" steel/brass · 30\" above drawer top · bracket/notch at post",
+    "bom_r5_c":   "4\"×4\" Centre Post",        "bom_r5_n": "Square post at centreline. NOT full cabinet depth. Front face flush with shelf face. D2 & D3 hinge on post and bolt into front face.",
+    "bom_r6_c":   "Drawer Gap Divider",         "bom_r6_n": "Drawer zone only. Sits on post centreline. Notched into drawer base and top panel.",
+    "bom_r7_c":   "Drawers — Left Bank",        "bom_r7_n": "Soft-close full-extension slides",
+    "bom_r8_c":   "Drawers — Right Bank",       "bom_r8_n": "Soft-close full-extension slides",
+    "bom_r9_c":   "Hinged Doors",               "bom_r9_n": "D1 hinge left wall opens ←, D2 hinge post left opens →, D3 hinge post right opens ←, D4 hinge right wall opens →. Flush bolts on D2 & D3.",
+    // Notes
+    "note_p1":    "<strong>⚠ CARPENTER NOTES — Rev F (Page 1)</strong>• All drawings use consistent scale: 1\" = 6px. Width:height ratios are proportionally accurate.<br>• <b>Centre Post:</b> 4\"×4\" square timber/ply, full height 96\", positioned at shelf face (24\" from back). Only 4\" deep — does NOT span full cabinet depth. Completely hidden when doors are closed.<br>• <b>Single Hanging Rod:</b> One ⌀1\" rod, full 72\" width, wall bracket to wall bracket at 30\" above drawer top. Rod passes post via a notch or small U-bracket fixed to post.<br>• <b>Doors:</b> D1 hinges on left wall (opens ←). D2 hinges on left face of post (opens →). D3 hinges on right face of post (opens ←). D4 hinges on right wall (opens →). D2 & D3 flush-bolt into post front face.",
+    "note_p2":    "<strong>⚠ CARPENTER NOTES — Rev F</strong>• <b>Scale:</b> All elevation drawings use consistent 1\" = 6px scale. Width to height ratios are proportionally accurate (72\"W × 96\"H = 3:4 ratio).<br>• <b>4\"×4\" Post:</b> Only 4\" deep. Sits at the shelf face line (24\" from back wall). Rod passes it via a notch or U-bracket. Completely hidden by closed doors.<br>• <b>Drawer gap divider</b> (4\" wide) is a separate piece from the post — sits only in the 24\" drawer zone, aligned on the same centreline as the post above it.<br>• Verify all dims on site. Material: hardwood or 18mm BWR ply, laminate finish.",
+    // Footers
+    "footer_p1":  ["CAB-001 / Rev F / June 2026", "Page 1 of 2", "Verify all dims on site before cutting"],
+    "footer_p2":  ["CAB-001 / Rev F / June 2026", "Page 2 of 2 — Bangalore", "Verify all dimensions on site before cutting"],
+  },
+  hi: {
+    "lang_label": "Language / भाषा:",
+    "title_p1":   "अलमारी — बढ़ई का चित्र",
+    "sub_p1":     "पृष्ठ 1 / 2 · सामने का दृश्य · आंतरिक दृश्य · साइड सेक्शन",
+    "meta_p1":    "चौड़ाई 6'-0\" × ऊँचाई 8'-0\" × गहराई 28\" · शेल्फ गहराई 24\"<br>लॉफ्ट 18\" · हैंगिंग 54\" · दराज 4×6\"=24\"<br>केंद्र स्तंभ 4\"×4\", पूरी ऊँचाई, अंदर छुपा<br>CAB-001 Rev F · जून 2026",
+    "title_p2":   "अलमारी — बढ़ई का चित्र",
+    "sub_p2":     "पृष्ठ 2 / 2 · ऊपर से दृश्य · स्तंभ व दरवाज़ा विवरण · सामग्री सूची",
+    "meta_p2":    "CAB-001 Rev F · जून 2026",
+    "bar_a":      "क — सामने का दृश्य · दरवाज़े बंद · 6'-0\" × 8'-0\"",
+    "bar_b":      "ख — आंतरिक दृश्य · दरवाज़े हटाए गए · सभी घटक दर्शाए गए",
+    "bar_c":      "ग — साइड सेक्शन · कैबिनेट गहराई 28\" · शेल्फ गहराई 24\"",
+    "bar_d":      "घ — ऊपर से दृश्य · मध्य ऊँचाई पर काट",
+    "bar_e":      "ङ — केंद्र स्तंभ और दरवाज़ा विवरण · ज़ूम किया हुआ प्लान",
+    "bar_bom":    "सामग्री सूची — Rev F",
+    "sub_a":      "बाहर से जैसा दिखता है · स्तंभ बंद दरवाज़ों के पीछे छुपा · ऊपर लॉफ्ट शटर",
+    "sub_b":      "लॉफ्ट · 4\"×4\" केंद्र स्तंभ (पूरी ऊँचाई) · एकल हैंगिंग रॉड · दराज विभाजक · 8 दराज",
+    "sub_c":      "कैबिनेट गहराई, शेल्फ रिसेस, स्तंभ स्थान, रॉड और दराज क्षेत्र दर्शाता क्रॉस-सेक्शन",
+    "sub_d":      "दरवाज़ों का घुमाव · केंद्र में 4\"×4\" स्तंभ · शेल्फ रिसेस 4\" · कैबिनेट गहराई 28\"",
+    "sub_e":      "दरवाज़ा 2 और दरवाज़ा 3 स्तंभ पर टिका कैसे लगते हैं और बोल्ट कैसे करते हैं",
+    "th_comp":    "घटक",
+    "th_width":   "चौड़ाई",
+    "th_height":  "ऊँचाई",
+    "th_depth":   "गहराई",
+    "th_qty":     "संख्या",
+    "th_notes":   "टिप्पणी",
+    "bom_r1_c":   "पूरी अलमारी",              "bom_r1_n": "फर्श से छत तक",
+    "bom_r2_c":   "लॉफ्ट कैबिनेट",           "bom_r2_n": "2 शटर, स्तंभ की केंद्र रेखा पर विभाजित",
+    "bom_r3_c":   "हैंगिंग स्थान",            "bom_r3_n": "पूरी चौड़ाई, एकल रॉड सिरे से सिरे तक",
+    "bom_r4_c":   "एकल हैंगिंग रॉड",          "bom_r4_n": "⌀1\" स्टील/पीतल · दराज से 30\" ऊपर · स्तंभ पर ब्रैकेट/नॉच",
+    "bom_r5_c":   "4\"×4\" केंद्र स्तंभ",     "bom_r5_n": "केंद्र रेखा पर चौकोर स्तंभ। पूरी कैबिनेट गहराई नहीं। अगला चेहरा शेल्फ फेस से फ्लश। दरवाज़ा 2 और 3 स्तंभ पर टिके और सामने बोल्ट होते हैं।",
+    "bom_r6_c":   "दराज विभाजक",             "bom_r6_n": "केवल दराज क्षेत्र में। स्तंभ की केंद्र रेखा पर। आधार और ऊपरी पैनल में नॉच किया।",
+    "bom_r7_c":   "दराज — बाईं तरफ",         "bom_r7_n": "सॉफ्ट-क्लोज़ फुल-एक्सटेंशन स्लाइड",
+    "bom_r8_c":   "दराज — दाईं तरफ",         "bom_r8_n": "सॉफ्ट-क्लोज़ फुल-एक्सटेंशन स्लाइड",
+    "bom_r9_c":   "टिका वाले दरवाज़े",        "bom_r9_n": "द1 बाईं दीवार पर टिका, बाईं ओर खुलता ←; द2 स्तंभ बाईं ओर टिका, दाईं ओर खुलता →; द3 स्तंभ दाईं ओर टिका, बाईं ओर खुलता ←; द4 दाईं दीवार पर टिका, दाईं ओर खुलता →। द2 और द3 पर फ्लश बोल्ट।",
+    "note_p1":    "<strong>⚠ बढ़ई के लिए नोट — Rev F (पृष्ठ 1)</strong>• सभी चित्र एक समान स्केल पर: 1\" = 6px। चौड़ाई और ऊँचाई का अनुपात सटीक है।<br>• <b>केंद्र स्तंभ:</b> 4\"×4\" चौकोर लकड़ी/प्लाई, पूरी ऊँचाई 96\", शेल्फ फेस पर (पीछे से 24\")। केवल 4\" गहरा — पूरी कैबिनेट गहराई नहीं। बंद दरवाज़ों से पूरी तरह छुपा।<br>• <b>एकल हैंगिंग रॉड:</b> ⌀1\" एक ही रॉड, पूरी 72\" चौड़ाई, दीवार से दीवार तक, दराज से 30\" ऊपर। स्तंभ पर नॉच या U-ब्रैकेट से गुज़रता है।<br>• <b>दरवाज़े:</b> द1 बाईं दीवार पर टिका (←)। द2 स्तंभ के बाईं फेस पर टिका (→)। द3 स्तंभ के दाईं फेस पर टिका (←)। द4 दाईं दीवार पर टिका (→)। द2 और द3 स्तंभ के अगले चेहरे में फ्लश-बोल्ट।",
+    "note_p2":    "<strong>⚠ बढ़ई के लिए नोट — Rev F</strong>• <b>स्केल:</b> सभी एलिवेशन चित्र 1\" = 6px स्केल पर। चौड़ाई-ऊँचाई अनुपात सटीक (72\"W × 96\"H = 3:4)।<br>• <b>4\"×4\" स्तंभ:</b> केवल 4\" गहरा। पीछे की दीवार से 24\" पर शेल्फ फेस पर। रॉड नॉच या ब्रैकेट से गुज़रती है। बंद दरवाज़ों से पूरी तरह छुपा।<br>• <b>दराज विभाजक</b> (4\" चौड़ा) स्तंभ से अलग टुकड़ा है — केवल 24\" दराज क्षेत्र में, उसी केंद्र रेखा पर।<br>• काटने से पहले सभी माप साइट पर जाँचें। सामग्री: दृढ़ लकड़ी या 18mm BWR प्लाई, लेमिनेट फिनिश।",
+    "footer_p1":  ["CAB-001 / Rev F / जून 2026", "पृष्ठ 1 / 2", "काटने से पहले सभी माप साइट पर जाँचें"],
+    "footer_p2":  ["CAB-001 / Rev F / जून 2026", "पृष्ठ 2 / 2 — बैंगलोर", "काटने से पहले सभी माप साइट पर जाँचें"],
+  }
+};
+
+// ─── IDs to translate ─────────────────────────────
+const IDS = [
+  "lang-label",
+  "title-p1","sub-p1","meta-p1",
+  "title-p2","sub-p2","meta-p2",
+  "bar-a","bar-b","bar-c","bar-d","bar-e","bar-bom",
+  "sub-a","sub-b","sub-c","sub-d","sub-e",
+  "th-comp","th-width","th-height","th-depth","th-qty","th-notes",
+  "bom-r1-c","bom-r1-n","bom-r2-c","bom-r2-n","bom-r3-c","bom-r3-n",
+  "bom-r4-c","bom-r4-n","bom-r5-c","bom-r5-n","bom-r6-c","bom-r6-n",
+  "bom-r7-c","bom-r7-n","bom-r8-c","bom-r8-n","bom-r9-c","bom-r9-n",
+  "note-p1","note-p2",
+];
+
+function setLang(lang) {
+  const t = T[lang];
+  // Text/HTML elements
+  IDS.forEach(id => {
+    const el = document.getElementById(id.replace(/-/g, '-'));
+    if (!el) return;
+    const key = id.replace(/-/g, '_');
+    if (t[key] !== undefined) el.innerHTML = t[key];
+  });
+  // Footers (arrays)
+  ["p1","p2"].forEach(pg => {
+    const spans = document.querySelectorAll(`#footer-${pg} span`);
+    const arr = t[`footer_${pg}`];
+    spans.forEach((s,i) => { if (arr[i]) s.textContent = arr[i]; });
+  });
+  // Toggle Hindi font class
+  document.body.classList.toggle('hindi', lang === 'hi');
+  // Toggle active button
+  document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.dataset.lang === lang));
+}
+</script>
+</body>
+</html>
