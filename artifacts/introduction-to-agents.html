@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Introduction to Agents — Google Whitepaper Synthesis</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:#f8fafc; --surface:#ffffff; --subtle:#f1f5f9; --muted:#e2e8f0;
+      --fg:#0f172a; --fg-muted:#475569; --fg-subtle:#64748b;
+      --border:#e2e8f0; --border-strong:#cbd5e1;
+      --accent:#0284c7; --accent-hover:#0369a1; --accent-soft:#f0f9ff;
+      --success:#059669; --success-soft:#ecfdf5;
+      --ai:#7c3aed; --ai-soft:#f5f3ff;
+      --amber:#d97706; --amber-soft:#fef9c3; --amber-fg:#78350f;
+      --r-md:8px; --r-lg:10px; --r-xl:12px; --r-full:9999px;
+      --shadow-xs:0 1px 2px 0 rgb(0 0 0/.05);
+      --shadow-sm:0 1px 3px 0 rgb(0 0 0/.1),0 1px 2px -1px rgb(0 0 0/.1);
+      --shadow-md:0 4px 6px -1px rgb(0 0 0/.1),0 2px 4px -2px rgb(0 0 0/.1);
+      --font:"Inter",system-ui,-apple-system,sans-serif;
+      --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,monospace;
+    }
+    html { scroll-behavior:smooth; }
+    body { font-family:var(--font); background:var(--bg); color:var(--fg); font-size:15px; line-height:1.6; -webkit-font-smoothing:antialiased; }
+
+    /* Top bar */
+    .topbar { height:56px; background:rgba(255,255,255,.85); backdrop-filter:blur(8px); border-bottom:1px solid var(--border); display:flex; align-items:center; padding:0 32px; gap:11px; position:sticky; top:0; z-index:100; box-shadow:var(--shadow-xs); }
+    .logo { width:30px; height:30px; border-radius:var(--r-md); background:linear-gradient(135deg,var(--accent),var(--ai)); display:flex; align-items:center; justify-content:center; color:#fff; font-size:13px; font-weight:800; flex-shrink:0; box-shadow:var(--shadow-sm); }
+    .topbar-title { font-size:14px; font-weight:700; letter-spacing:-.2px; }
+    .topbar-sep { color:var(--border-strong); }
+    .topbar-sub { font-size:12.5px; color:var(--fg-subtle); }
+    .topbar-chip { margin-left:auto; display:inline-flex; align-items:center; gap:6px; padding:4px 11px; border-radius:var(--r-full); font-size:11px; font-weight:600; background:var(--ai-soft); color:var(--ai); border:1px solid color-mix(in srgb,var(--ai) 20%,transparent); }
+    @media (max-width:680px){ .topbar-sub,.topbar-sep{display:none;} }
+
+    /* Layout */
+    .wrap { max-width:960px; margin:0 auto; padding:0 32px 96px; }
+
+    /* Hero */
+    .hero { padding:56px 0 36px; border-bottom:1px solid var(--border); margin-bottom:8px; }
+    .hero-kicker { font-size:11px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--accent); margin-bottom:14px; }
+    .hero h1 { font-size:38px; line-height:1.12; font-weight:800; letter-spacing:-1px; margin-bottom:18px; }
+    .hero .thesis { font-size:19px; line-height:1.45; font-weight:500; color:var(--fg-muted); max-width:760px; }
+    .hero .thesis strong { color:var(--fg); font-weight:700; }
+    .hero-meta { margin-top:24px; display:flex; flex-wrap:wrap; gap:8px; }
+    .meta-pill { font-size:11.5px; font-weight:500; color:var(--fg-muted); background:var(--surface); border:1px solid var(--border); border-radius:var(--r-full); padding:5px 12px; }
+    .meta-pill b { color:var(--fg); font-weight:600; }
+
+    /* Section */
+    .section { padding:40px 0 8px; }
+    .sec-hd { display:flex; align-items:baseline; gap:14px; margin-bottom:18px; padding-left:16px; border-left:3px solid var(--accent); }
+    .sec-num { font-family:var(--mono); font-size:13px; font-weight:600; color:var(--accent); flex-shrink:0; }
+    .sec-hd h2 { font-size:24px; font-weight:700; letter-spacing:-.4px; }
+
+    p { margin:0 0 14px; color:var(--fg); }
+    .section p, .section li { color:#1e293b; }
+    a { color:var(--accent); text-decoration:none; }
+    a:hover { color:var(--accent-hover); text-decoration:underline; }
+    strong { font-weight:700; }
+    code { font-family:var(--mono); font-size:.86em; background:var(--subtle); border:1px solid var(--border); border-radius:5px; padding:1px 6px; color:var(--accent-hover); }
+    ul,ol { margin:0 0 16px; padding-left:22px; }
+    li { margin-bottom:8px; }
+    li::marker { color:var(--fg-subtle); }
+    h3 { font-size:17px; font-weight:700; margin:26px 0 12px; letter-spacing:-.2px; }
+    h3 .h3-tag { font-family:var(--mono); font-size:11px; font-weight:600; color:var(--fg-subtle); background:var(--subtle); border:1px solid var(--border); border-radius:5px; padding:1px 7px; margin-right:8px; vertical-align:1px; }
+
+    /* Pull quote */
+    .pull { margin:22px 0; padding:18px 24px; background:linear-gradient(135deg,var(--accent-soft),var(--ai-soft)); border:1px solid color-mix(in srgb,var(--ai) 14%,transparent); border-left:4px solid var(--ai); border-radius:var(--r-lg); font-size:18px; line-height:1.45; font-weight:600; color:var(--fg); letter-spacing:-.2px; }
+    .pull.accent { background:var(--accent-soft); border-color:color-mix(in srgb,var(--accent) 18%,transparent); border-left-color:var(--accent); }
+    blockquote { margin:18px 0; padding:12px 20px; border-left:3px solid var(--border-strong); background:var(--subtle); border-radius:0 var(--r-md) var(--r-md) 0; color:var(--fg-muted); font-style:italic; }
+
+    /* Tables */
+    .tbl-wrap { overflow-x:auto; margin:18px 0 22px; border:1px solid var(--border); border-radius:var(--r-lg); box-shadow:var(--shadow-xs); }
+    table { width:100%; border-collapse:collapse; font-size:13.5px; background:var(--surface); }
+    thead th { text-align:left; font-weight:700; font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:var(--fg-subtle); padding:11px 14px; background:var(--subtle); border-bottom:1px solid var(--border-strong); white-space:nowrap; }
+    tbody td { padding:11px 14px; border-bottom:1px solid var(--border); vertical-align:top; line-height:1.5; }
+    tbody tr:last-child td { border-bottom:none; }
+    tbody tr:hover { background:var(--subtle); }
+    td code, th code { background:transparent; border:none; padding:0; }
+
+    /* Level cards */
+    .levels { display:flex; flex-direction:column; gap:12px; margin:20px 0 24px; }
+    .lvl { display:flex; gap:16px; background:var(--surface); border:1px solid var(--border); border-left:4px solid var(--lc,var(--border-strong)); border-radius:var(--r-lg); padding:16px 18px; box-shadow:var(--shadow-xs); transition:box-shadow .15s,transform .15s; }
+    .lvl:hover { box-shadow:var(--shadow-md); transform:translateY(-1px); }
+    .lvl-badge { width:48px; height:48px; border-radius:var(--r-md); flex-shrink:0; display:flex; flex-direction:column; align-items:center; justify-content:center; font-weight:800; color:#fff; background:var(--lc,var(--fg-subtle)); line-height:1; }
+    .lvl-badge .lvl-l { font-size:9px; font-weight:700; letter-spacing:.08em; opacity:.85; margin-bottom:2px; }
+    .lvl-badge .lvl-n { font-size:20px; }
+    .lvl-body h4 { font-size:15px; font-weight:700; margin-bottom:3px; }
+    .lvl-body .lvl-cap { font-size:12px; font-weight:600; color:var(--lc,var(--fg-subtle)); margin-bottom:6px; text-transform:uppercase; letter-spacing:.03em; }
+    .lvl-body p { font-size:13.5px; color:var(--fg-muted); margin:0; line-height:1.55; }
+    .l0{--lc:#64748b;} .l1{--lc:#0284c7;} .l2{--lc:#d97706;} .l3{--lc:#7c3aed;} .l4{--lc:#059669;}
+
+    /* Architecture trio */
+    .arch { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin:18px 0 24px; }
+    .arch-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--r-lg); padding:16px; box-shadow:var(--shadow-xs); }
+    .arch-card .ac-ico { font-size:20px; margin-bottom:8px; }
+    .arch-card h4 { font-size:14px; font-weight:700; margin-bottom:2px; }
+    .arch-card .ac-sub { font-size:11px; font-weight:600; color:var(--accent); text-transform:uppercase; letter-spacing:.04em; margin-bottom:7px; }
+    .arch-card p { font-size:12.5px; color:var(--fg-muted); margin:0; line-height:1.5; }
+    @media (max-width:680px){ .arch{grid-template-columns:1fr;} }
+
+    /* Footer */
+    .footer { margin-top:56px; padding-top:24px; border-top:1px solid var(--border); font-size:12.5px; color:var(--fg-subtle); line-height:1.6; }
+    .footer code { font-size:11px; }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="logo">A</div>
+    <span class="topbar-title">Introduction to Agents</span>
+    <span class="topbar-sep">·</span>
+    <span class="topbar-sub">Google · Agents Whitepaper Series · May 2026</span>
+    <span class="topbar-chip">KB Synthesis</span>
+  </header>
+
+  <main class="wrap">
+    <section class="hero">
+      <div class="hero-kicker">Reading Synthesis · Caladrius Health KB</div>
+      <h1>Introduction to Agents</h1>
+      <p class="thesis"><strong>An agent is not an AI model in a static workflow — it is a complete application that reasons, acts, and observes in a loop to achieve goals.</strong> This is the readable synthesis of Google's foundational paper: the anatomy of an agent, a taxonomy of capability, and the production discipline to scale from prototype to an enterprise fleet.</p>
+      <div class="hero-meta">
+        <span class="meta-pill"><b>Source</b> Google · <i>Introduction to Agents</i> (54 pp)</span>
+        <span class="meta-pill"><b>Authors</b> Blount · Gulli · Saboo · Zimmermann · Vuskovic</span>
+        <span class="meta-pill"><b>Updated</b> May 2026</span>
+        <span class="meta-pill"><b>Series</b> Day 1 of 5</span>
+      </div>
+      <div class="pull" style="margin-top:28px;">"Agents are the natural evolution of Language Models, made useful in software."</div>
+    </section>
+
+    <section class="section" id="s1">
+      <div class="sec-hd"><span class="sec-num">01</span><h2>From Predictive AI to Autonomous Agents</h2></div>
+      <p>For years AI focused on <strong>passive, discrete tasks</strong> — answer a question, translate text, generate an image — each demanding constant human direction. We are now in a <strong>paradigm shift</strong>: from AI that merely predicts or creates content to a new class of software capable of <strong>autonomous problem-solving and task execution</strong>.</p>
+      <div class="pull accent">An agent is not an AI model in a static workflow — it is a <em>complete application</em> that makes plans and takes actions to achieve goals.</div>
+      <p>It fuses a Language Model's ability to <strong>reason</strong> with the practical ability to <strong>act</strong>, handling multi-step tasks a model alone cannot. The defining capability is autonomy: agents figure out the next steps toward a goal <strong>without a person guiding every turn</strong>.</p>
+      <p>The developer's role changes too. The traditional developer is a <strong>bricklayer</strong>, defining every logical step. The agent developer is a <strong>director</strong>: set the scene (instructions, prompts), select the cast (tools, APIs), supply the context (data), then guide an autonomous "actor." An LM's greatest strength — its flexibility, the capacity to do <em>anything</em> — is also the biggest headache: it is hard to compel it to do <em>one</em> thing reliably. What we called "prompt engineering" is now <strong>context engineering</strong>.</p>
+      <blockquote>In essence, an agent is a system dedicated to the art of context-window curation: a relentless loop of assembling context, prompting the model, observing the result, and re-assembling context for the next step.</blockquote>
+      <p>This is the first of a five-part series — a formal guide for moving from proofs-of-concept to <strong>production-grade</strong> systems. A prototype is easy; ensuring <strong>security, quality, and reliability</strong> is the real challenge.</p>
+    </section>
+
+    <section class="section" id="s2">
+      <div class="sec-hd"><span class="sec-num">02</span><h2>The Agentic Problem-Solving Process</h2></div>
+      <p>The short definition: <strong>"LMs in a loop with tools to accomplish an objective."</strong> The core loop breaks into five fundamental steps.</p>
+      <div class="tbl-wrap"><table>
+        <thead><tr><th>Step</th><th>Name</th><th>What happens</th></tr></thead>
+        <tbody>
+          <tr><td><strong>1</strong></td><td><strong>Get the Mission</strong></td><td>A high-level goal arrives — from a user ("Organize my team's travel") or an automated trigger ("A high-priority ticket arrived").</td></tr>
+          <tr><td><strong>2</strong></td><td><strong>Scan the Scene</strong></td><td><em>Perceive</em> the environment: read the request, consult memory ("Did I try this before?"), inventory accessible tools (calendars, DBs, APIs).</td></tr>
+          <tr><td><strong>3</strong></td><td><strong>Think It Through</strong></td><td>The reasoning model analyzes Mission vs. Scene and devises a plan — often a <em>chain</em> of reasoning, not a single thought.</td></tr>
+          <tr><td><strong>4</strong></td><td><strong>Take Action</strong></td><td>The orchestration layer executes the first concrete step — invoke a tool, call an API, run code, query a DB.</td></tr>
+          <tr><td><strong>5</strong></td><td><strong>Observe &amp; Iterate</strong></td><td>Observe the outcome, fold it into context/memory, loop back to Step 3 until the plan is complete.</td></tr>
+        </tbody>
+      </table></div>
+      <p>This <strong>"Think, Act, Observe"</strong> cycle is <em>managed by the Orchestration Layer, reasoned by the Model, executed by the Tools.</em></p>
+      <p><strong>Worked example — a Customer Support Agent.</strong> For <em>"Where is my order #12345?"</em> the agent first plans: (1) <strong>Identify</strong> the order in the internal DB; (2) <strong>Track</strong> via the carrier's API; (3) <strong>Report</strong> a clear answer. It executes <code>find_order("12345")</code> → observes record + tracking <code>ZYX987</code> → <code>get_shipping_status("ZYX987")</code> → observes <code>"Out for Delivery"</code> → replies <em>"Your order #12345 is 'Out for Delivery'!"</em></p>
+    </section>
+
+    <section class="section" id="s3">
+      <div class="sec-hd"><span class="sec-num">03</span><h2>The 5-Level Taxonomy of Agentic Systems</h2></div>
+      <p>The same loop can be <strong>scaled in complexity</strong> into different classes of agent — each building on the last. Scoping <em>which</em> level you need is a key early architectural decision.</p>
+      <div class="levels">
+        <div class="lvl l0">
+          <div class="lvl-badge"><span class="lvl-l">LVL</span><span class="lvl-n">0</span></div>
+          <div class="lvl-body"><h4>Core Reasoning System</h4><div class="lvl-cap">The "Brain" alone</div><p>An LM in isolation — no tools, memory, or live environment. Deep at explaining concepts and planning approaches, but <strong>blind</strong> to anything after its training cutoff (can't tell you last night's game score).</p></div>
+        </div>
+        <div class="lvl l1">
+          <div class="lvl-badge"><span class="lvl-l">LVL</span><span class="lvl-n">1</span></div>
+          <div class="lvl-body"><h4>Connected Problem-Solver</h4><div class="lvl-cap">Reasoning + Tools</div><p>Connecting external tools makes it a functional agent. It recognizes a real-time need, calls Search / a financial API / a database via RAG, observes, and synthesizes. <strong>Interacting with the world</strong> is the defining capability.</p></div>
+        </div>
+        <div class="lvl l2">
+          <div class="lvl-badge"><span class="lvl-l">LVL</span><span class="lvl-n">2</span></div>
+          <div class="lvl-body"><h4>Strategic Problem-Solver</h4><div class="lvl-cap">Context engineering</div><p>From simple tasks to <strong>strategically planning</strong> multi-part goals. The emergent skill is curating focused, high-quality context per step — building new, focused queries from prior output. Enables proactive assistance (flight email → calendar).</p></div>
+        </div>
+        <div class="lvl l3">
+          <div class="lvl-badge"><span class="lvl-l">LVL</span><span class="lvl-n">3</span></div>
+          <div class="lvl-body"><h4>Collaborative Multi-Agent System</h4><div class="lvl-cap">A team of specialists</div><p>The paradigm shifts from a "super-agent" to a <strong>team</strong> mirroring a human org; agents treat other agents as tools. A Project Manager agent delegates sub-missions to research / marketing / web-dev specialists. The frontier of workflow automation.</p></div>
+        </div>
+        <div class="lvl l4">
+          <div class="lvl-badge"><span class="lvl-l">LVL</span><span class="lvl-n">4</span></div>
+          <div class="lvl-body"><h4>Self-Evolving System</h4><div class="lvl-cap">Autonomous creation</div><p>From delegation to <strong>creation</strong>: the system identifies gaps in its own capabilities and dynamically builds new tools or agents (meta-reasons → invokes <code>AgentCreator</code> → a new specialist appears on the fly). A truly learning, evolving organization.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="s4">
+      <div class="sec-hd"><span class="sec-num">04</span><h2>Core Agent Architecture: Model, Tools, Orchestration</h2></div>
+      <p>An AI agent is the combination of a <strong>Model</strong>, <strong>Tools</strong>, an <strong>Orchestration Layer</strong>, and <strong>runtime services</strong> that use the LM in a loop to accomplish a goal.</p>
+      <div class="arch">
+        <div class="arch-card"><div class="ac-ico">🧠</div><div class="ac-sub">The Brain</div><h4>Model</h4><p>The reasoning core. Selection dictates cognition, cost, and speed.</p></div>
+        <div class="arch-card"><div class="ac-ico">🖐️</div><div class="ac-sub">The Hands</div><h4>Tools</h4><p>Connect reasoning to reality — retrieve information and take actions.</p></div>
+        <div class="arch-card"><div class="ac-ico">⚙️</div><div class="ac-sub">The Nervous System</div><h4>Orchestration</h4><p>Runs the Think-Act-Observe loop; state, memory, design choices.</p></div>
+      </div>
+
+      <h3><span class="h3-tag">BRAIN</span>Model</h3>
+      <p>The core LM is the reasoning engine. <strong>Picking the highest benchmark score is a common path to failure</strong> — production success is rarely set by generic academic benchmarks. Instead:</p>
+      <ul>
+        <li><strong>Test agentic fundamentals</strong> — superior multi-step reasoning and reliable tool use, mapped to <em>your</em> business problem (test code on your codebase; claims extraction on your document formats).</li>
+        <li><strong>Cross-reference cost &amp; latency.</strong> The "best" model is the optimal intersection of <em>quality, speed, price</em>.</li>
+        <li><strong>Team of specialists / model routing</strong> — a frontier model (Gemini 3.2 Pro) for heavy planning, a fast/cheap one (Gemini 3.2 Flash, open Gemma 4) for high-volume tasks.</li>
+        <li><strong>Multimodality</strong> — a natively multimodal model (Gemini live mode) or specialized tools (Cloud Vision, Speech-to-Text) that convert the world to text first.</li>
+        <li><strong>Plan for churn</strong> — today's model is superseded in ~6 months. An AgentOps CI/CD pipeline that continuously re-evaluates new models against business metrics de-risks upgrades.</li>
+      </ul>
+
+      <h3><span class="h3-tag">HANDS</span>Tools</h3>
+      <p>Tools connect reasoning to reality through a three-part loop: <strong>define</strong> · <strong>invoke</strong> · <strong>observe</strong>.</p>
+      <ul>
+        <li><strong>Retrieving information (grounding).</strong> <strong>RAG</strong> gives a "library card" to external knowledge (vector DBs, knowledge graphs, web via Search); <strong>NL2SQL</strong> queries structured data. Looking things up before speaking <strong>dramatically reduces hallucinations</strong>.</li>
+        <li><strong>Executing actions (changing the world).</strong> Wrap APIs/code as tools to send email, schedule meetings, update a CRM, or <strong>write &amp; execute code in a secure sandbox</strong>. Includes <strong>HITL</strong> tools (<code>ask_for_confirmation()</code>, <code>ask_for_date_input()</code>) for critical decisions.</li>
+        <li><strong>Function calling (connecting tools).</strong> The <strong>OpenAPI spec</strong> gives a structured contract; <strong>MCP</strong> simplifies discovery; some models have <strong>native tools</strong> (Gemini's native Search) where invocation happens inside the LM call.</li>
+      </ul>
+
+      <h3><span class="h3-tag">NERVOUS SYSTEM</span>Orchestration Layer</h3>
+      <p>The engine that runs the <em>Think, Act, Observe</em> loop — the conductor deciding when to reason, which tool acts, and how results inform the next step.</p>
+      <ul>
+        <li><strong>Core design choices.</strong> The <strong>degree of autonomy</strong> (a spectrum from "a sprinkle of AI" to the LM fully in the driver's seat) and the <strong>implementation method</strong> (no-code builders vs. code-first frameworks like Google's <strong>ADK</strong>). A production framework must be <strong>open</strong>, offer <strong>precise control</strong>, and above all be built for <strong>observability</strong> — traces exposing the full reasoning trajectory.</li>
+        <li><strong>Instruct with domain knowledge &amp; persona.</strong> The <strong>system prompt</strong> is the agent's <em>constitution</em>: identity, constraints, output schema, rules of engagement, tone, and explicit guidance on when/why to use tools. A few example scenarios are highly effective.</li>
+        <li><strong>Augment with context (memory).</strong> <strong>Short-term</strong> memory is the active scratchpad — running (Action, Observation) history. <strong>Long-term</strong> memory is persistence across sessions, almost always a RAG system over a vector DB.</li>
+      </ul>
+      <p><strong>Multi-agent design patterns</strong> — a team of specialists beats one super-agent:</p>
+      <div class="tbl-wrap"><table>
+        <thead><tr><th>Pattern</th><th>Use it for</th><th>How it works</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Coordinator</strong></td><td>Dynamic / non-linear tasks</td><td>A "manager" segments a request, routes sub-tasks to specialists (researcher, writer, coder), then aggregates.</td></tr>
+          <tr><td><strong>Sequential</strong></td><td>Linear workflows</td><td>A digital assembly line — one agent's output is the next's input.</td></tr>
+          <tr><td><strong>Iterative Refinement</strong></td><td>Quality</td><td>A "generator" creates content; a "critic" evaluates it against standards in a feedback loop.</td></tr>
+          <tr><td><strong>Human-in-the-Loop</strong></td><td>High-stakes / safety</td><td>A deliberate pause to get human approval before a significant action.</td></tr>
+        </tbody>
+      </table></div>
+    </section>
+
+    <section class="section" id="s5">
+      <div class="sec-hd"><span class="sec-num">05</span><h2>Agent Deployment &amp; Services</h2></div>
+      <p>Deployment is the agent's <strong>"body and legs"</strong> — from a laptop prototype to an always-on server reachable by people <em>and</em> other agents. Production agents need <strong>session-history and memory persistence</strong>, plus the builder's decisions on <strong>logging, data privacy, data residency, and compliance</strong>. Two paths:</p>
+      <ul>
+        <li><strong>Managed — the Gemini Enterprise Agent Platform:</strong> one destination to build, scale, govern, optimize. Includes <strong>Agent Studio</strong> (prompting → deployment), a revamped <strong>Agent Runtime</strong> (sub-second cold starts, autonomous multi-day workflows), and <strong>Memory Bank</strong> (persistent long-term context).</li>
+        <li><strong>DIY / DevOps:</strong> package any agent into a <strong>Docker container</strong> on standard runtimes like <strong>Cloud Run</strong> or <strong>GKE</strong>.</li>
+      </ul>
+      <p>Quick <code>deploy</code> commands suit early exploration; a secure, production-ready environment requires real investment in CI/CD and automated testing.</p>
+    </section>
+
+    <section class="section" id="s6">
+      <div class="sec-hd"><span class="sec-num">06</span><h2>AgentOps: Structuring the Unpredictable</h2></div>
+      <p>Traditional unit tests assert <code>output == expected</code> — useless when an agent's response is <strong>probabilistic by design</strong>. Judging "quality" (did it do all it should, nothing it shouldn't, with proper tone?) usually requires an LM. <strong>AgentOps</strong> is the disciplined evolution of DevOps and MLOps — turning unpredictability into a <em>managed, measurable, reliable</em> feature.</p>
+      <ul>
+        <li><strong>Measure what matters — instrument like an A/B experiment.</strong> Define "better" <em>for the business</em> first. Track goal-completion, satisfaction, latency, cost per interaction, and — most importantly — <strong>business impact</strong> (revenue, conversion, retention).</li>
+        <li><strong>Quality over pass/fail — use an LM judge.</strong> A powerful model scores outputs against a <strong>rubric</strong> over a <strong>golden dataset</strong> sampled from real interactions. <strong>A domain expert must review results before they're accepted.</strong></li>
+        <li><strong>Metrics-driven development — your go/no-go.</strong> Run a new version against the full eval set and compare to production; add A/B deployments for safe, gradual rollout.</li>
+        <li><strong>Debug with OpenTelemetry traces — answer "why?"</strong> A trace records the full trajectory: exact prompt, internal reasoning, tool chosen, parameters, raw observation. For root-cause debugging, not overviews.</li>
+        <li><strong>Cherish human feedback.</strong> A "thumbs down" is a <strong>gift</strong> — a missed edge case. <em>Close the loop:</em> capture it, replicate it, convert it into a permanent test case — <strong>vaccinating</strong> against that whole class of error.</li>
+      </ul>
+    </section>
+
+    <section class="section" id="s7">
+      <div class="sec-hd"><span class="sec-num">07</span><h2>Agent Interoperability</h2></div>
+      <p>High-quality agents must interconnect — the <strong>"face"</strong> of the agent. Note: <em>agents are not tools</em>.</p>
+      <ul>
+        <li><strong>Agents &amp; Humans.</strong> A chatbot at its simplest, or structured JSON powering rich UIs. HITL patterns: <strong>intent refinement, goal expansion, confirmation, clarification</strong>. <strong>Computer use</strong> lets the LM drive a UI under oversight; <strong>MCP UI / AG UI / A2UI</strong> let the agent reshape or generate the UI. <strong>Live mode</strong> (Gemini Live API) adds bidirectional voice — speak, interrupt, with camera/mic so the agent sees and hears in real time.</li>
+        <li><strong>Agents &amp; Agents — A2A.</strong> Without a standard, connecting many agents means brittle integrations. The twin challenges are <strong>discovery</strong> and <strong>communication</strong>. <strong>Agent2Agent (A2A)</strong> is the open "universal handshake": each agent publishes an <strong>Agent Card</strong> (JSON "business card" — capabilities, endpoint, credentials). Communication is <strong>task-oriented and asynchronous</strong>. Where MCP solves <em>transactional</em> requests, A2A is for <em>collaborative problem-solving</em> — enabling Level-3 systems.</li>
+        <li><strong>Agents &amp; Money — AP2 (+ x402).</strong> An autonomous "buy" creates a <strong>crisis of trust</strong>. The <strong>Agent Payments Protocol (AP2)</strong> extends A2A with cryptographically-signed <strong>"mandates"</strong> — verifiable proof of user intent and a non-repudiable audit trail. <strong>x402</strong> uses HTTP <strong>402 "Payment Required"</strong> for frictionless machine-to-machine micropayments. Together they form the trust layer for the agentic web.</li>
+      </ul>
+    </section>
+
+    <section class="section" id="s8">
+      <div class="sec-hd"><span class="sec-num">08</span><h2>Security, Identity &amp; Governance</h2></div>
+      <h3>Securing a single agent — the trust trade-off</h3>
+      <p>Utility requires power; every ounce of power adds risk — primarily <strong>rogue actions</strong> and <strong>sensitive-data disclosure</strong>. Give the agent <em>a leash long enough to do its job, short enough to keep it out of traffic</em>. You can't trust the model's judgment alone (it's vulnerable to <strong>prompt injection</strong>). Use <strong>defense-in-depth</strong>: (1) <strong>deterministic guardrails</strong> — hardcoded rules outside the model (block any purchase over $100); (2) <strong>reasoning-based defenses</strong> — small "guard models" that inspect a proposed plan <em>before</em> execution.</p>
+
+      <h3>Agent Identity — a new class of principal</h3>
+      <p>Agents are a <strong>third principal</strong> beyond humans and services — autonomous actors needing their own verifiable <strong>"digital passport"</strong>, distinct from the user who invoked them and the developer who built them. With a cryptographic identity (e.g. <strong>SPIFFE</strong>) they get <strong>least-privilege</strong> permissions, containing the <strong>blast radius</strong> if one is compromised.</p>
+      <div class="tbl-wrap"><table>
+        <thead><tr><th>Principal</th><th>Authentication / Verification</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Users</strong></td><td>OAuth or SSO</td><td>Human actors, full autonomy and responsibility.</td></tr>
+          <tr><td><strong>Agents</strong> <em>(new)</em></td><td>Verified with SPIFFE</td><td>Delegated authority — act <em>on behalf of</em> users.</td></tr>
+          <tr><td><strong>Service accounts</strong></td><td>Integrated into IAM</td><td>Apps/containers, deterministic, not responsible for actions.</td></tr>
+        </tbody>
+      </table></div>
+      <p><strong>Policy = authorization (AuthZ)</strong>, distinct from authentication (AuthN). Apply <strong>least privilege</strong> while staying contextually relevant.</p>
+
+      <h3>Securing an ADK agent</h3>
+      <p>A layered exercise: define identities → enforce <strong>access policies</strong> at the API-governance layer → build <strong>in-tool guardrails</strong> that refuse unsafe actions regardless of LM reasoning → add <strong>dynamic defenses</strong> (ADK <strong>Callbacks &amp; Plugins</strong>; a <code>before_tool_callback</code>; a <strong>"Gemini as a Judge"</strong> screen). The <strong>Agent Gateway</strong> is "air traffic control," natively enforcing <strong>Model Armor</strong> (prompt injection, jailbreaks, PII leakage, malicious URLs).</p>
+
+      <h3>Scaling to an enterprise fleet</h3>
+      <p>One or two agents → a <em>security</em> problem. Hundreds → an <em>architecture</em> problem (<strong>"agent sprawl"</strong>).</p>
+      <ul>
+        <li><strong>Security &amp; privacy.</strong> The agent is a new attack vector (injection, data poisoning, leakage). Ensure proprietary data <strong>never trains base models</strong>, protect with <strong>VPC Service Controls</strong>, apply <strong>input/output filtering</strong>, and secure <strong>IP indemnity</strong>.</li>
+        <li><strong>Governance — a control plane, not sprawl.</strong> A <strong>central gateway</strong> becomes the mandatory entry point for all agentic traffic: <strong>(1) Runtime Policy Enforcement</strong> via the <strong>Agent Gateway</strong> (AuthN + AuthZ + single pane of glass); <strong>(2) Centralized Governance</strong> via the <strong>Agent Registry</strong> — an enterprise "app store" indexing every agent, tool, and Skill, with security review, versioning, and fine-grained policies.</li>
+        <li><strong>Cost &amp; reliability.</strong> <strong>Scale-to-zero</strong> for irregular traffic; <strong>Provisioned Throughput</strong> / <strong>99.9% SLAs</strong> for mission-critical workloads.</li>
+      </ul>
+    </section>
+
+    <section class="section" id="s9">
+      <div class="sec-hd"><span class="sec-num">09</span><h2>How Agents Evolve &amp; Learn</h2></div>
+      <p>In dynamic environments, performance <strong>"ages"</strong> and decays; manually updating a fleet is slow and uneconomical. The scalable answer: agents that <strong>learn and evolve autonomously</strong>.</p>
+      <ul>
+        <li><strong>Sources of learning</strong> — <strong>runtime experience</strong> (logs, traces, memory, and authoritative <strong>HITL feedback</strong>) and <strong>external signals</strong> (new policies, regulations, peer critiques).</li>
+        <li><strong>Adaptation techniques</strong> — <strong>enhanced context engineering</strong> (refine prompts, few-shot examples, retrieved memory) and <strong>tool optimization &amp; creation</strong> (gain, craft, or modify tools). RLHF and dynamic pattern reconfiguration are active research.</li>
+      </ul>
+      <p><strong>Worked example — learning compliance guidelines.</strong> A multi-agent loop: a <strong>Querying Agent</strong> fetches data → a <strong>Reporting Agent</strong> drafts → a <strong>Critiquing Agent</strong> reviews against rules and escalates ambiguity to a human → a <strong>Learning Agent</strong> generalizes the expert's correction into a new reusable guideline the Critiquing Agent applies automatically next time.</p>
+      <p><strong>Simulation &amp; Agent Gym — the next frontier.</strong> Beyond <em>in-line</em> learning, a dedicated <strong>Agent Gym</strong> optimizes the system <strong>offline</strong>: (1) <strong>not in the execution path</strong>; (2) a <strong>simulation environment</strong> for trial-and-error; (3) <strong>synthetic data generators</strong> for realistic pressure-testing (red-teaming, critiquing-agent families); (4) a <strong>non-fixed optimization arsenal</strong> that can adopt or craft tools; (5) a bridge to <strong>human experts</strong> for "tribal knowledge" edge cases.</p>
+    </section>
+
+    <section class="section" id="s10">
+      <div class="sec-hd"><span class="sec-num">10</span><h2>Advanced Examples</h2></div>
+      <h3>Google Co-Scientist</h3>
+      <p>A virtual research collaborator that accelerates discovery by systematically exploring complex problem spaces. A researcher defines a goal and grounds the agent in chosen knowledge; the system <strong>generates and evaluates a landscape of novel hypotheses</strong>. It spawns a <em>whole ecosystem</em> of agents: a <strong>"Supervisor"</strong> acts as project manager, delegating to specialists and distributing compute. Agents run for <strong>hours or days</strong>, with loops and meta-loops improving both the hypotheses and <em>the way ideas are judged and created</em>.</p>
+      <h3>AlphaEvolve</h3>
+      <p>An AI agent that <strong>discovers and optimizes algorithms</strong>, pairing Gemini's code generation with an <strong>automated evaluator</strong> in an <strong>evolutionary loop</strong>: generate → score → use the best as inspiration for the next generation. Breakthroughs include <strong>more efficient data centers / chip design / AI training</strong>, <strong>faster matrix multiplication</strong>, and <strong>new solutions to open math problems</strong>. It excels where <em>verifying</em> a solution is far easier than <em>finding</em> it, and is built for human–AI partnership: <strong>transparent</strong> human-readable code and <strong>expert guidance</strong> that steers exploration and prevents loophole-exploitation.</p>
+    </section>
+
+    <section class="section" id="s11">
+      <div class="sec-hd"><span class="sec-num">11</span><h2>Conclusion</h2></div>
+      <div class="pull">Agents are the natural evolution of language models, made useful in software.</div>
+      <p>Generative AI agents shift AI from a passive content tool to an <strong>active, autonomous problem-solving partner</strong>. The anatomy is three parts — the reasoning <strong>Model</strong> (Brain), actionable <strong>Tools</strong> (Hands), and the governing <strong>Orchestration Layer</strong> (Nervous System) — integrated in a continuous <strong>Think, Act, Observe</strong> loop. The 5-level taxonomy lets architects scope ambition to the task.</p>
+      <p>The central shift is in the <strong>developer paradigm</strong>: no longer <em>bricklayers</em> defining explicit logic, but <em>architects and directors</em> who guide, constrain, and debug an autonomous entity. The flexibility that makes LMs powerful is also the source of their unreliability — so <strong>success lives not in the initial prompt but in engineering rigor</strong> across the whole system: robust tool contracts, resilient error handling, sophisticated context management, and comprehensive evaluation. Applied with discipline, these patterns build not mere "workflow automation" but <strong>collaborative, capable, adaptable new members of the team</strong>.</p>
+    </section>
+
+    <footer class="footer">
+      Synthesized for the Caladrius Health KB from Google's <em>Introduction to Agents</em> (Agents Whitepaper Series · May 2026). Source PDF and full extraction in <code>raw/ai-ml-research/harness-engineering/</code>.<br>
+      Authors: Alan Blount · Antonio Gulli · Shubham Saboo · Michael Zimmermann · Vladimir Vuskovic. · Synthesis generated 2026-06-19.
+    </footer>
+  </main>
+</body>
+</html>
