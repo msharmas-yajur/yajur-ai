@@ -1,4 +1,4 @@
-name: Auto-create and merge Pull Request
+name: Auto-merge agent branches into dev
 
 on:
   push:
@@ -7,10 +7,9 @@ on:
 
 permissions:
   contents: write
-  actions: write
 
 jobs:
-  create-and-merge-pr:
+  merge-to-dev:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -19,7 +18,7 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Merge branch into main
+      - name: Merge branch into dev
         env:
           BRANCH: ${{ github.ref_name }}
         run: |
@@ -27,17 +26,9 @@ jobs:
           git config user.email "actions@github.com"
           git config user.name "GitHub Actions"
 
-          echo "Merging $BRANCH into main..."
-          git fetch origin main
-          git checkout main
-          git merge --no-ff -X theirs "origin/$BRANCH" -m "Auto-merge: $BRANCH into main"
-          git push origin main
+          echo "Merging $BRANCH into dev..."
+          git fetch origin dev
+          git checkout dev
+          git merge --no-ff -X theirs "origin/$BRANCH" -m "Auto-merge: $BRANCH into dev"
+          git push origin dev
           echo "Done."
-
-      - name: Trigger deploy
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          REPO: ${{ github.repository }}
-        run: |
-          gh workflow run deploy.yml --repo "$REPO" --ref main
-          echo "Deploy triggered."

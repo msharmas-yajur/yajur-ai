@@ -735,6 +735,49 @@ The agent connects to LiveKit Cloud using `LIVEKIT_URL/API_KEY/API_SECRET`. It j
 
 ---
 
+## Branch: `dev` (Session: Git Workflow Infrastructure)
+
+**Session:** 2026-04-05
+**Base branch:** `dev`
+
+### Changes Made
+
+| File | Description |
+|------|-------------|
+| `.github/workflows/auto-pr.yml` | Changed merge target from `main` → `dev`; removed deploy trigger step |
+| `.github/workflows/deploy.yml` | Restricted trigger to `main` only (was `dev` + `main`); added health-check job with auto-rollback |
+| `.github/workflows/promote-to-main.yml` | NEW: manual `workflow_dispatch` — merges `dev` into `main` and auto-generates `CHANGELOG.md` entry |
+| `.github/workflows/rollback.yml` | NEW: manual + auto revert of last `main` commit; amends message with `[rollback]` circuit breaker |
+| `scripts/preview.sh` | NEW: local Jekyll preview server with optional port arg (for simultaneous worktree previews) |
+| `AGENTS.md` | NEW: documents branching model, worktree conventions, automation, and promotion flow |
+
+### Workflow Architecture
+
+```
+Agent worktree (claude/xxx)
+  → push → auto-pr.yml → auto-merge into dev
+  → human reviews on dev
+  → promote-to-main.yml (manual) → dev merged into main + CHANGELOG updated
+  → deploy.yml → GitHub Pages builds + health check
+  → on failure → rollback.yml auto-triggered (circuit breaker: [rollback] tag prevents loop)
+```
+
+### Key Design Decisions
+
+- `main` is now a gate — only `promote-to-main.yml` can update it
+- Health check curls homepage + a blog post + sitemap.xml after every deploy; auto-rollback on failure
+- Circuit breaker: rollback commits tagged `[rollback]` — health check sees this and fails loudly instead of re-rolling back
+- `scripts/preview.sh` accepts port arg so multiple worktrees can preview simultaneously
+- Worktrees live under `/home/msharma/worktrees/`
+- AGENTS.md is the canonical reference for agents on how to create branches, worktrees, and promote
+
+### Status
+
+- [x] All 6 files committed to `dev` (commit `ec87fd4`)
+- [ ] Push `dev` to remote to activate the new workflows on GitHub
+
+---
+
 ## Branch: `claude/convergence-healthcare-post-2026` (Session 7: Agent Deploy + Local Stack — v2.0.1)
 
 **Session:** 2026-03-03
