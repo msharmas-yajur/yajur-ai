@@ -52,16 +52,24 @@ jobs:
     needs: deploy
     steps:
       - name: Wait for deployment to propagate
-        run: sleep 30
+        run: sleep 45
 
-      - name: Check homepage
-        run: curl -sSf -o /dev/null -w "%{http_code}" https://yajur.ai/ | grep -q 200
-
-      - name: Check blog post
-        run: curl -sSf -o /dev/null -w "%{http_code}" https://yajur.ai/2026/03/11/building-a-data-lakehouse-for-your-hospital.html | grep -q 200
-
-      - name: Check sitemap
-        run: curl -sSf -o /dev/null -w "%{http_code}" https://yajur.ai/sitemap.xml | grep -q 200
+      - name: Smoke-test live site (retries for CDN propagation)
+        run: |
+          check() {
+            url="$1"; n=0
+            while [ "$n" -lt 6 ]; do
+              code=$(curl -s -o /dev/null -w "%{http_code}" "$url")
+              if [ "$code" = "200" ]; then echo "OK   $url"; return 0; fi
+              n=$((n+1)); echo "retry $n ($code): $url"; sleep 15
+            done
+            echo "::error::health check FAILED ($code) for $url"; return 1
+          }
+          # NOTE: blog-post URLs include the category path (/:categories/:y/:m/:d/:title.html)
+          check "https://yajur.ai/"
+          check "https://yajur.ai/technology/healthcare%20innovation/2026/03/11/building-a-data-lakehouse-for-your-hospital.html"
+          check "https://yajur.ai/artifacts/introduction-to-agents.html"
+          check "https://yajur.ai/sitemap.xml"
 
       - name: Auto-rollback on failure
         if: failure()
