@@ -65,9 +65,10 @@ jobs:
             done
             echo "::error::health check FAILED ($code) for $url"; return 1
           }
-          # NOTE: blog-post URLs include the category path (/:categories/:y/:m/:d/:title.html)
+          # Clean post URLs (/:y/:m/:d/:title.html) — set via _config.yml permalink
           check "https://yajur.ai/"
-          check "https://yajur.ai/technology/healthcare%20innovation/2026/03/11/building-a-data-lakehouse-for-your-hospital.html"
+          check "https://yajur.ai/2026/03/11/building-a-data-lakehouse-for-your-hospital.html"
+          check "https://yajur.ai/2026/06/20/from-models-to-agents-a-healthcare-reading-of-googles-introduction-to-agents.html"
           check "https://yajur.ai/artifacts/introduction-to-agents.html"
           check "https://yajur.ai/sitemap.xml"
 
