@@ -117,6 +117,17 @@ Read through a healthcare lens, the paper is less a tutorial and more a maturity
 
 Our own stance lines up with the paper's conclusion: generation is largely solved; **verification, judgment, and direction are the new craft.** In medicine that craft has a name — it is clinical governance, applied to software that now acts. The teams that win will not be the ones with the biggest model. They will be the ones who built the harness, the evals, and the identity model around it — and who kept a clinician firmly in the loop.
 
+## How We Build Understanding: The Caladrius Knowledge Base
+
+Frameworks like Google's only become useful when a team can actually *reason over* them against its own product. At Caladrius Health we do exactly that through a living **knowledge base** — an Obsidian vault where every concept, workflow, and feature is its own page, and every relationship is an explicit link. NHCX use cases, FHIR profiles, ABDM flows, payor-plan schemas, agent-harness patterns, pricing strategy — each is a *node*; each cross-reference is an *edge*.
+
+The result is the graph below: hundreds of interlinked notes that let us trace how a single idea — say, one claim-adjudication step — connects to the workflows that implement it and the product features that expose it. It is the very thesis of this article, turned inward: **context as a first-class asset**, applied to how we analyse and build the application itself. When a new concept arrives (this whitepaper included), it gets ingested, cross-referenced, and wired into the graph — so understanding compounds instead of scattering.
+
+<figure style="margin:30px 0;">
+  <img src="/assets/caladrius-kb-graph-view.png" alt="The Caladrius Health knowledge base visualised as an Obsidian graph — hundreds of interlinked concept, workflow, and feature notes clustered by domain (NHCX, agent-concepts, FHIR, ABDM, payor plans, pricing strategy)." loading="lazy" style="width:100%;height:auto;display:block;border:1px solid var(--border);border-radius:12px;" />
+  <figcaption style="margin-top:11px;font-size:.88rem;line-height:1.55;color:rgba(220,232,245,0.68);text-align:center;">The Caladrius Health knowledge base, in Obsidian's graph view. Each node is a concept, workflow, or feature note; the clusters map to domains — NHCX claims, agent-concepts, FHIR, ABDM, payor plans, pricing strategy — wired together by wikilinks, so a question can traverse from concept → workflow → feature in a single connected web.</figcaption>
+</figure>
+
 ## Frequently Asked Questions
 
 ### What is Google's "Introduction to Agents" whitepaper?
