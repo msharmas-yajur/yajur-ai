@@ -38,7 +38,14 @@ mentions:
 
 > **About this article — source and attribution.** This is a structured summary of, and healthcare commentary on, Google's whitepaper **_Introduction to Agents_** (Updated May 2026), authored by **Alan Blount, Antonio Gulli, Shubham Saboo, Michael Zimmermann, and Vladimir Vuskovic**, part of Google's *Agents Whitepaper Series*. **The definitions, the five-level taxonomy, the Model–Tools–Orchestration architecture, AgentOps, and the interoperability protocols described below are the original authors' work, credited to them throughout.** What Yajur adds is the lens: how each idea lands in Indian healthcare, on ABDM and FHIR, and in clinical workflows. Direct quotes from the paper appear in quotation marks. Full citation in the [References](#references).
 
-> 📄 **Companion artifact —** a one-page visual synthesis of the whitepaper (the five-level taxonomy, the Model–Tools–Orchestration architecture, AgentOps, and the A2A/AP2 interoperability protocols, on a single styled page): **[open the visual synthesis →](/artifacts/introduction-to-agents.html)**
+<div style="margin:34px 0;padding:22px 24px;border:1px solid var(--teal);border-radius:14px;background:linear-gradient(135deg, rgba(0,196,162,0.12), rgba(0,196,162,0.03));box-shadow:0 6px 22px rgba(0,196,162,0.10);">
+  <div style="display:flex;align-items:center;gap:11px;margin-bottom:9px;">
+    <span style="font-size:1.7rem;line-height:1;">📄</span>
+    <strong style="font-size:1.08rem;color:var(--teal);letter-spacing:.3px;text-transform:uppercase;">Companion Visual Artifact</strong>
+  </div>
+  <p style="margin:0 0 16px;line-height:1.65;color:var(--text);">A one-page visual synthesis of Google's whitepaper — the five-level agent taxonomy, the Model–Tools–Orchestration architecture, AgentOps, and the A2A/AP2 interoperability protocols, laid out on a single styled page.</p>
+  <a href="/artifacts/introduction-to-agents.html" style="display:inline-flex;align-items:center;gap:8px;background:var(--teal);color:#05101C;font-weight:700;text-decoration:none;padding:11px 20px;border-radius:9px;font-size:.94rem;">Open the visual synthesis <span style="font-size:1.15em;line-height:1;">→</span></a>
+</div>
 
 For two years the conversation in healthcare AI was about *models* — which one scores highest, which one hallucinates least. Google's *Introduction to Agents* makes the case that the model was never the interesting part. The interesting part is what you wrap around it. As the paper puts it, **"agents are the natural evolution of Language Models, made useful in software."**
 
