@@ -741,6 +741,28 @@ section {
             }
         }
     }
+
+    // Collaboration / editorial disclosure
+    .disclosure {
+        margin: 3em 0 0;
+        padding: 22px 26px;
+        background: $clr-bg-alt;
+        border: 1px solid rgba($clr-accent, 0.3);
+        border-left: 4px solid $clr-accent;
+        border-radius: 0 8px 8px 0;
+
+        p {
+            margin: 0;
+            font-size: 0.95rem;
+            line-height: 1.7;
+            color: $clr-text-muted;
+            font-family: $font-sans;
+        }
+
+        strong {
+            color: $clr-text;
+        }
+    }
 }
 
 // ─── Responsive: Tablet (<=768px) ───────────────────────────────────
