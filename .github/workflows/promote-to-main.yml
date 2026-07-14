@@ -5,6 +5,7 @@ on:
 
 permissions:
   contents: write
+  actions: write
 
 jobs:
   promote:
@@ -59,3 +60,12 @@ jobs:
 
           git push origin main
           echo "Promoted dev to main with changelog entry for $DATE"
+
+      - name: Trigger production deploy
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # A push made with GITHUB_TOKEN does not trigger deploy.yml's
+          # `on: push` event, so dispatch the deploy explicitly here.
+          gh workflow run "Deploy to GitHub Pages" --ref main
+          echo "Dispatched Deploy to GitHub Pages on main"
