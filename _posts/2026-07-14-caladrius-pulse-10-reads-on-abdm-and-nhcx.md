@@ -3,8 +3,8 @@ layout: post
 title: "Reading Caladrius Pulse: 10 Essential Explainers on ABDM, NHCX & India's Health Data Stack"
 date: 2026-07-14 10:00:00 +0530
 author: "Yajur Healthcare"
-description: "A curated reading list of the 10 latest Caladrius Pulse articles — in-depth explainers on ABHA, ABDM, NHCX, HFR/HPR registries, and how clinical and claims data actually move across India's digital health network."
-keywords: "Caladrius Pulse, Caladrius Health, ABDM, NHCX, ABHA, HFR, HPR, India digital health, health claims exchange, medical data infrastructure, Yajur Healthcare, GPracta Technology, health data interoperability, FHIR India, RCM, HIE-CM"
+description: "A curated reading list of the 10 latest Caladrius Pulse articles from Caladrius Health AI Studio — in-depth explainers on ABHA, ABDM, NHCX, HFR/HPR registries, and how clinical and claims data actually move across India's digital health network."
+keywords: "Caladrius, Caladrius Health, Caladrius Health AI Studio, Caladrius Pulse, Caladrius Health blog, Caladrius Health ABDM, Caladrius Health NHCX, ABDM, NHCX, ABHA, HFR, HPR, India digital health, health claims exchange, medical data infrastructure, Yajur Healthcare, GPracta Technology Services, health data interoperability, FHIR India, RCM, HIE-CM"
 tags:
   - ABDM
   - NHCX
