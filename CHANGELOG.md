@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-09-16
+
+- post: Caladrius Pulse — August 2026 roundup + monthly automation
+- chore: ignore .claude/ directory
+
+
 ## 2026-07-14
 
 - ci(promote): dispatch Pages deploy after promoting dev to main

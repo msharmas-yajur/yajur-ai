@@ -1,0 +1,77 @@
+# Caladrius Pulse — coverage ledger
+# ---------------------------------------------------------------------------
+# State file for the monthly "Caladrius Pulse" roundup automation.
+# Every Caladrius Health blog post that has ALREADY been summarised in a Yajur
+# Pontifex edition is listed here. The monthly routine fetches
+# https://caladriushealth.ai/feed.xml, drops any URL already present below,
+# and only writes up the remainder. After publishing an edition, the routine
+# appends the newly-covered URLs here so they are never summarised twice.
+#
+# `url` is matched case-insensitively with any trailing slash stripped.
+# See scripts/caladrius-pulse-runbook.md for the full procedure.
+# ---------------------------------------------------------------------------
+
+covered:
+  # --- Edition 1: 2026-07-14 — "Reading Caladrius Pulse: 10 Essential Explainers" ---
+  - url: https://caladriushealth.ai/blog/2026/07/06/Your-Health-Your-Data
+    title: "What Happens to Your Health Records When You Leave a Hospital?"
+    date: 2026-07-06
+    edition: 2026-07-14
+  - url: https://caladriushealth.ai/blog/2026/06/19/How-Records-Move
+    title: "How Clinical Data Actually Flows Under ABDM: A Guide for Health IT Teams"
+    date: 2026-06-19
+    edition: 2026-07-14
+  - url: https://caladriushealth.ai/blog/2026/06/18/HFR-and-HPR
+    title: "HFR and HPR: The Unsung Registries That Make Every ABDM Transaction Possible"
+    date: 2026-06-18
+    edition: 2026-07-14
+  - url: https://caladriushealth.ai/what-is-nhcx
+    title: "What Is NHCX? The National Health Claims Exchange Explained"
+    date: 2026-06-14
+    edition: 2026-07-14
+  - url: https://caladriushealth.ai/what-is-abdm
+    title: "What Is ABDM? The Ayushman Bharat Digital Mission Explained"
+    date: 2026-06-14
+    edition: 2026-07-14
+  - url: https://caladriushealth.ai/blog/2026/06/12/ABHA-Unpacked
+    title: "ABHA Unpacked: What It Is, What It Isn't, and Why It Matters"
+    date: 2026-06-12
+    edition: 2026-07-14
+  - url: https://caladriushealth.ai/blog/2026/06/05/India's-Health-Data-Problem
+    title: "India's Health Data Problem: The Fragmentation That ABDM Was Built to Solve"
+    date: 2026-06-05
+    edition: 2026-07-14
+  - url: https://caladriushealth.ai/blog/2026/05/26/Beyond-Intermediation
+    title: "Beyond Intermediation: How NHCX Is Reshaping the TPA's Role in Indian Health Insurance"
+    date: 2026-05-26
+    edition: 2026-07-14
+  - url: https://caladriushealth.ai/blog/2026/05/15/The-ABDM-Stack
+    title: "The ABDM Stack: How NHCX Fits Into India's Digital Health Architecture"
+    date: 2026-05-15
+    edition: 2026-07-14
+  - url: https://caladriushealth.ai/blog/2026/04/24/From-Friction-to-Flow
+    title: "From Friction to Flow: How NHCX Will Rebuild India's Insurance Plumbing"
+    date: 2026-04-24
+    edition: 2026-07-14
+
+  # --- Edition 2: 2026-09-16 — "Caladrius Pulse — August 2026" ---
+  - url: https://caladriushealth.ai/blog/2026/08/25/Where-ABDM-Adoption-Stands
+    title: "Where ABDM Adoption Stands, State by State"
+    date: 2026-08-25
+    edition: 2026-09-16
+  - url: https://caladriushealth.ai/blog/2026/08/07/Why-Insurance-Claim-Takes-So-Long
+    title: "Why Your Insurance Claim Takes So Long And What's Changing"
+    date: 2026-08-07
+    edition: 2026-09-16
+  - url: https://caladriushealth.ai/blog/2026/08/03/where-indias-health-claims-money-went
+    title: "Where India's Health Claims Money Went: A Verified Data Reference"
+    date: 2026-08-03
+    edition: 2026-09-16
+  - url: https://caladriushealth.ai/blog/2026/07/30/how-to-use-abha-at-a-hospital
+    title: "Your ABHA Is Ready. Here's What Changes the Next Time You Visit a Hospital"
+    date: 2026-07-30
+    edition: 2026-09-16
+  - url: https://caladriushealth.ai/blog/2026/07/22/Consent-By-Design
+    title: "Consent by Design: How ABDM Puts Patients in Control of Their Health Data"
+    date: 2026-07-22
+    edition: 2026-09-16
