@@ -18,8 +18,11 @@
 	<meta property="og:description"
 		content="{{ page.og_description | default: page.description | default: site.description | escape }}">
 	<meta property="og:url" content="{{ site.url }}{{ page.url }}">
-	<meta property="og:type" content="{{ page.og_type | default: 'website' }}">
+	<meta property="og:type" content="{% if page.layout == 'post' or page.date %}article{% else %}{{ page.og_type | default: 'website' }}{% endif %}">
 	<meta property="og:image" content="{{ page.og_image | default: '/assets/logo.png' | prepend: site.url }}">
+	<meta property="og:image:width" content="512">
+	<meta property="og:image:height" content="512">
+	<meta property="og:image:alt" content="{{ page.title | default: site.title | escape }}">
 	<meta property="og:locale" content="en_IN">
 
 	<!-- Twitter Card -->
@@ -173,36 +176,37 @@
 </head>
 
 <body>
-	<header class="site-header">
-		<div class="container site-header__inner">
-			<a href="{{ '/' | relative_url }}" class="site-header__logo">
-				<img src="/assets/logo.png" alt="Yajur.ai — The Medical Data Infrastructure Company">
-				<span>YAJUR.ai</span>
-			</a>
-			<button class="nav-toggle" aria-label="Toggle navigation" aria-expanded="false">
-				<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-					stroke-linecap="round">
-					<line x1="3" y1="6" x2="21" y2="6" />
-					<line x1="3" y1="12" x2="21" y2="12" />
-					<line x1="3" y1="18" x2="21" y2="18" />
-				</svg>
-			</button>
-			<nav class="site-nav">
-				<a href="#mission">Mission</a>
-				<a href="#solutions">Solutions</a>
-				<a href="/pontifex.html">Pontifex</a>
-				<div class="nav-dropdown">
-					<a href="#" class="nav-dropdown__toggle" onclick="return false;">Yajur Labs &#9662;</a>
-					<div class="nav-dropdown__menu">
-						<a href="/sandbox/datalakehouse-navigator.html">Datalakehouse Navigator</a>
-						<a href="/nursing-roster-v5.html">Nursing Roster</a>
-						<a href="/gcoe-patient-oncocare-v7.html">Onco-CoE Platform</a>
-					</div>
+	<nav class="nav">
+		<a href="{{ site.url }}{{ site.baseurl }}/" class="nav-logo">
+			<img src="{{ site.url }}{{ site.baseurl }}/assets/logo.png" alt="Yajur.ai">
+			YAJUR.ai
+		</a>
+		<button class="nav-toggle" aria-label="Toggle navigation" aria-expanded="false">
+			<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+				stroke-linecap="round">
+				<line x1="3" y1="6" x2="21" y2="6" />
+				<line x1="3" y1="12" x2="21" y2="12" />
+				<line x1="3" y1="18" x2="21" y2="18" />
+			</svg>
+		</button>
+		<ul class="nav-links">
+			<li><a href="{{ site.url }}{{ site.baseurl }}/#s-mission">Mission</a></li>
+			<li><a href="{{ site.url }}{{ site.baseurl }}/#s-pillars">Solutions</a></li>
+			<li><a href="{{ site.url }}{{ site.baseurl }}/#s-insights">Insights</a></li>
+			<li><a href="{{ site.url }}{{ site.baseurl }}/pontifex.html">Pontifex</a></li>
+			<li class="nav-dropdown" id="navDropdown">
+				<button class="nav-dropdown__toggle" id="navDropdownBtn">
+					Yajur Labs <span class="nav-dropdown__caret">&#9660;</span>
+				</button>
+				<div class="nav-dropdown__menu">
+					<a href="{{ site.url }}{{ site.baseurl }}/sandbox/datalakehouse-navigator.html">Datalakehouse Navigator</a>
+					<a href="{{ site.url }}{{ site.baseurl }}/nursing-roster-v5.html">Nursing Roster</a>
+					<a href="{{ site.url }}{{ site.baseurl }}/gcoe-patient-oncocare-v7.html">Onco-CoE Platform</a>
 				</div>
-				<a href="#contact">Contact</a>
-			</nav>
-		</div>
-	</header>
+			</li>
+			<li><a href="{{ site.url }}{{ site.baseurl }}/#s-contact">Contact</a></li>
+		</ul>
+	</nav>
 
 	<main aria-label="Content">
 		{{ content }}
@@ -253,34 +257,80 @@
 
 	<div id="copilot-widget-root"></div>
 	<script src="{{ site.baseurl }}/assets/js/copilot-widget.js"></script>
+
+	<!-- Mobile close button for CopilotKit popup -->
+	<button id="copilot-close-btn" aria-label="Close chat" style="
+		display: none;
+		position: fixed;
+		top: 14px;
+		right: 14px;
+		z-index: 10000;
+		width: 40px;
+		height: 40px;
+		border-radius: 50%;
+		background: #0a1f44;
+		color: #fff;
+		border: 2px solid rgba(255,255,255,0.2);
+		font-size: 20px;
+		line-height: 1;
+		cursor: pointer;
+		align-items: center;
+		justify-content: center;
+		box-shadow: 0 2px 12px rgba(0,0,0,0.35);
+	">&#x2715;</button>
+
 	<script>
+		// ── Mobile CopilotKit close button ──────────────────────────────
 		(function () {
-			var toggle = document.querySelector('.nav-toggle');
-			var nav = document.querySelector('.site-nav');
-			if (!toggle || !nav) return;
+			if (!window.matchMedia('(max-width: 768px)').matches) return;
 
-			toggle.addEventListener('click', function () {
-				var open = nav.classList.toggle('is-open');
-				toggle.classList.toggle('nav-toggle--close', open);
-				toggle.setAttribute('aria-expanded', open);
-			});
+			var closeBtn = document.getElementById('copilot-close-btn');
+			var root = document.getElementById('copilot-widget-root');
+			if (!closeBtn || !root) return;
 
-			// Close menu when a nav link is clicked
-			var links = nav.querySelectorAll('a');
-			for (var i = 0; i < links.length; i++) {
-				links[i].addEventListener('click', function () {
-					nav.classList.remove('is-open');
-					toggle.classList.remove('nav-toggle--close');
-					toggle.setAttribute('aria-expanded', 'false');
+			var isOpen = false;
+
+			// Wire FAB once it renders, then stop observing
+			new MutationObserver(function (_, obs) {
+				var fab = root.querySelector('button');
+				if (!fab) return;
+				obs.disconnect();
+				fab.addEventListener('click', function () {
+					isOpen = !isOpen;
+					closeBtn.style.display = isOpen ? 'flex' : 'none';
 				});
-			}
+			}).observe(root, { childList: true, subtree: true });
 
-			// Yajur Labs dropdown — click toggle (reliable on touch + fast mouse movement)
-			var dropdownToggle = document.querySelector('.nav-dropdown__toggle');
-			var dropdown = document.querySelector('.nav-dropdown');
-			if (dropdownToggle && dropdown) {
-				dropdownToggle.addEventListener('click', function (e) {
-					e.preventDefault();
+			// Our close button triggers the FAB — FAB listener handles state
+			closeBtn.addEventListener('click', function () {
+				var fab = root.querySelector('button');
+				if (fab) fab.click();
+			});
+		})();
+
+		(function () {
+			// Mobile toggle
+			var toggle = document.querySelector('.nav-toggle');
+			var navLinks = document.querySelector('.nav-links');
+			if (toggle && navLinks) {
+				toggle.addEventListener('click', function () {
+					var open = navLinks.classList.toggle('is-open');
+					toggle.setAttribute('aria-expanded', open);
+				});
+				var links = navLinks.querySelectorAll('a');
+				for (var i = 0; i < links.length; i++) {
+					links[i].addEventListener('click', function () {
+						navLinks.classList.remove('is-open');
+						toggle.setAttribute('aria-expanded', 'false');
+					});
+				}
+			}
+			// Yajur Labs dropdown
+			var dropdown = document.getElementById('navDropdown');
+			var btn = document.getElementById('navDropdownBtn');
+			if (dropdown && btn) {
+				btn.addEventListener('click', function (e) {
+					e.stopPropagation();
 					dropdown.classList.toggle('is-open');
 				});
 				document.addEventListener('click', function (e) {

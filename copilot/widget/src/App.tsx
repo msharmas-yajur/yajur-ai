@@ -3,7 +3,7 @@ import { CopilotKit } from "@copilotkit/react-core";
 import "@copilotkit/react-ui/styles.css";
 import { UnifiedChat } from "./components/UnifiedChat";
 
-export const WIDGET_VERSION = "2.1.0"; // bump on every session: major.session.patch
+export const WIDGET_VERSION = "3.0.0"; // bump on every session: major.session.patch
 
 const BACKEND_BASE = "http://localhost:3330";
 const COPILOTKIT_PUBLIC_KEY = "ck_pub_3e7127dba63bdcd42c0eb65ba64c9289";
@@ -53,19 +53,74 @@ const App: React.FC = () => {
     useEffect(() => {
         const style = document.createElement("style");
         style.textContent = `
-            cpk-web-inspector, 
+            cpk-web-inspector,
             .announcement-preview,
             [class*="announcement"],
             .copilot-kit-announcement,
             div[class*="copilot-kit"][style*="background-color: rgb(255, 193, 7)"],
-            div[class*="copilot-kit"][style*="background-color: #ffc107"] { 
-                display: none !important; 
-                visibility: hidden !important; 
-                opacity: 0 !important; 
+            div[class*="copilot-kit"][style*="background-color: #ffc107"] {
+                display: none !important;
+                visibility: hidden !important;
+                opacity: 0 !important;
                 pointer-events: none !important;
                 height: 0 !important;
                 position: absolute !important;
                 z-index: -999 !important;
+            }
+
+            /* ── Override CopilotKit CSS variables ── */
+            :root {
+                --copilot-kit-primary-color: rgba(191, 87, 0, 0.09) !important;
+                --copilot-kit-contrast-color: #3d1a00 !important;
+            }
+
+            /* ── Suggestion chips: light orange bg, navy text ── */
+            .copilotKitMessages footer .suggestions button {
+                background-color: rgba(191, 87, 0, 0.08) !important;
+                border: 1px solid rgba(191, 87, 0, 0.30) !important;
+                color: #09152A !important;
+                font-weight: 500 !important;
+            }
+            .copilotKitMessages footer .suggestions button:not(:disabled):hover {
+                background-color: rgba(191, 87, 0, 0.16) !important;
+                border-color: rgba(191, 87, 0, 0.55) !important;
+                color: #09152A !important;
+            }
+
+            /* ── Header: dark navy background, white text ── */
+            .copilotKitHeader {
+                background-color: #09152A !important;
+                color: #ffffff !important;
+                border-bottom: 1px solid rgba(0, 196, 162, 0.18) !important;
+                border-radius: 12px 12px 0 0 !important;
+            }
+            .copilotKitHeader * {
+                color: #ffffff !important;
+            }
+
+            /* ── User message: lightest burnt orange ── */
+            .copilotKitMessage.copilotKitUserMessage {
+                background: rgba(191, 87, 0, 0.09) !important;
+                border: 1px solid rgba(191, 87, 0, 0.22) !important;
+                color: #3d1a00 !important;
+            }
+
+            /* ── Assistant message: navy blue text, very light bg ── */
+            .copilotKitMessage.copilotKitAssistantMessage {
+                background: transparent !important;
+                color: #09152A !important;
+            }
+            .copilotKitMessage.copilotKitAssistantMessage,
+            .copilotKitMessage.copilotKitAssistantMessage p,
+            .copilotKitMessage.copilotKitAssistantMessage li,
+            .copilotKitMessage.copilotKitAssistantMessage h1,
+            .copilotKitMessage.copilotKitAssistantMessage h2,
+            .copilotKitMessage.copilotKitAssistantMessage h3,
+            .copilotKitMessage.copilotKitAssistantMessage span,
+            .copilotKitMessage.copilotKitAssistantMessage strong,
+            .copilotKitMessage.copilotKitAssistantMessage em,
+            .copilotKitMessage.copilotKitAssistantMessage code {
+                color: #09152A !important;
             }
         `;
         document.head.appendChild(style);

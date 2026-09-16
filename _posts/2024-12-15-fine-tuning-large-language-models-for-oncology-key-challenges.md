@@ -5,6 +5,9 @@ date: 2024-12-15 10:00:00 +0530
 author: "Manish Sharma"
 description: "Explore the key challenges and 13 essential recommendations for fine-tuning Large Language Models (LLMs) in oncology. Learn about data-centric AI and clinical knowledge integration."
 keywords: "Oncology LLM, Fine-tuning Large Language Models, Healthcare AI, Clinical Decision Support, Medical AI Framework, Data-centric AI Oncology, Precision Medicine AI, Cancer Care AI Ethics"
+reading_time: "12 min read"
+tags: [LLM, oncology, fine-tuning, clinical AI, healthcare AI]
+categories: [technology, "healthcare AI"]
 ---
 
 ### 1. The Role Of Data Centric AI In Health Systems

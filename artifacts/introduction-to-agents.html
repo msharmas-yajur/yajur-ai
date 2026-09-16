@@ -1,0 +1,39 @@
+---
+layout: default
+title: "Introduction to Agents — A Visual Synthesis of Google's Whitepaper"
+description: "A one-page visual synthesis of Google's Introduction to Agents whitepaper (May 2026): the 5-level agent taxonomy, Model+Tools+Orchestration, AgentOps, and A2A/AP2 interoperability."
+og_type: article
+sitemap: false
+---
+
+<div style="max-width:1100px;margin:0 auto;padding:20px 16px 6px;">
+  <p style="font-size:0.95rem;line-height:1.6;color:#475569;margin:0;">
+    A one-page visual synthesis of Google's <em>Introduction to Agents</em> whitepaper (May 2026).
+    Frameworks credited to the original authors; full source &amp; attribution in the
+    <a href="/2026/06/20/from-models-to-agents-a-healthcare-reading-of-googles-introduction-to-agents.html">companion article</a>.
+  </p>
+</div>
+
+<iframe id="ia-frame"
+        src="/artifacts/introduction-to-agents-doc.html"
+        title="Introduction to Agents — visual synthesis"
+        loading="lazy"
+        scrolling="no"
+        style="display:block;width:100%;border:0;margin:0;min-height:600px;"></iframe>
+
+<script>
+  (function () {
+    var f = document.getElementById('ia-frame');
+    function resize() {
+      try {
+        var d = f.contentWindow.document;
+        var h = Math.max(d.documentElement.scrollHeight, d.body ? d.body.scrollHeight : 0);
+        if (h) { f.style.height = h + 'px'; }
+      } catch (e) { /* same-origin; ignore transient errors */ }
+    }
+    f.addEventListener('load', resize);
+    window.addEventListener('resize', resize);
+    // a few delayed passes to catch web-font reflow
+    [300, 800, 1500].forEach(function (t) { setTimeout(resize, t); });
+  })();
+</script>

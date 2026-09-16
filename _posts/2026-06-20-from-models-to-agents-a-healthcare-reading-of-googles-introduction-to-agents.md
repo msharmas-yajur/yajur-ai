@@ -38,6 +38,15 @@ mentions:
 
 > **About this article — source and attribution.** This is a structured summary of, and healthcare commentary on, Google's whitepaper **_Introduction to Agents_** (Updated May 2026), authored by **Alan Blount, Antonio Gulli, Shubham Saboo, Michael Zimmermann, and Vladimir Vuskovic**, part of Google's *Agents Whitepaper Series*. **The definitions, the five-level taxonomy, the Model–Tools–Orchestration architecture, AgentOps, and the interoperability protocols described below are the original authors' work, credited to them throughout.** What Yajur adds is the lens: how each idea lands in Indian healthcare, on ABDM and FHIR, and in clinical workflows. Direct quotes from the paper appear in quotation marks. Full citation in the [References](#references).
 
+<div style="margin:34px 0;padding:22px 24px;border:1px solid var(--teal);border-radius:14px;background:linear-gradient(135deg, rgba(0,196,162,0.12), rgba(0,196,162,0.03));box-shadow:0 6px 22px rgba(0,196,162,0.10);">
+  <div style="display:flex;align-items:center;gap:11px;margin-bottom:9px;">
+    <span style="font-size:1.7rem;line-height:1;">📄</span>
+    <strong style="font-size:1.08rem;color:var(--teal);letter-spacing:.3px;text-transform:uppercase;">Companion Visual Artifact</strong>
+  </div>
+  <p style="margin:0 0 16px;line-height:1.65;color:var(--text);">A one-page visual synthesis of Google's whitepaper — the five-level agent taxonomy, the Model–Tools–Orchestration architecture, AgentOps, and the A2A/AP2 interoperability protocols, laid out on a single styled page.</p>
+  <a href="/artifacts/introduction-to-agents.html" style="display:inline-flex;align-items:center;gap:8px;background:var(--teal);color:#05101C;font-weight:700;text-decoration:none;padding:11px 20px;border-radius:9px;font-size:.94rem;">Open the visual synthesis <span style="font-size:1.15em;line-height:1;">→</span></a>
+</div>
+
 For two years the conversation in healthcare AI was about *models* — which one scores highest, which one hallucinates least. Google's *Introduction to Agents* makes the case that the model was never the interesting part. The interesting part is what you wrap around it. As the paper puts it, **"agents are the natural evolution of Language Models, made useful in software."**
 
 That single reframing matters more in healthcare than almost anywhere else. A model that drafts a discharge summary is a demo. An *agent* that retrieves the patient's longitudinal record over [ABDM](/2026/02/15/need-for-a-robust-abdm-healthcare-network-enabling-cancer-care-without-walls.html), checks eligibility on the claims network, drafts the summary, files it as a FHIR document, and stops to ask a clinician when it is unsure — that is infrastructure. This article walks Google's framework end to end and translates each layer into what it means for the people building that infrastructure.
@@ -107,6 +116,17 @@ Level 4 is the frontier: agents that learn and improve themselves, including thr
 Read through a healthcare lens, the paper is less a tutorial and more a maturity model. Most "AI in healthcare" today is stuck at Level 0 — clever models with no grounded access to the patient in front of them. The value is unlocked at Levels 1–3, and it is gated almost entirely by the unglamorous layers: tools that reach FHIR and ABDM safely, orchestration that knows when to stop and ask a clinician, AgentOps that can prove reliability, and an identity-and-governance model a hospital's risk office will accept.
 
 Our own stance lines up with the paper's conclusion: generation is largely solved; **verification, judgment, and direction are the new craft.** In medicine that craft has a name — it is clinical governance, applied to software that now acts. The teams that win will not be the ones with the biggest model. They will be the ones who built the harness, the evals, and the identity model around it — and who kept a clinician firmly in the loop.
+
+## How We Build Understanding: The Caladrius Knowledge Base
+
+Frameworks like Google's only become useful when a team can actually *reason over* them against its own product. At Caladrius Health we do exactly that through a living **knowledge base** — an Obsidian vault where every concept, workflow, and feature is its own page, and every relationship is an explicit link. NHCX use cases, FHIR profiles, ABDM flows, payor-plan schemas, agent-harness patterns, pricing strategy — each is a *node*; each cross-reference is an *edge*.
+
+The result is the graph below: hundreds of interlinked notes that let us trace how a single idea — say, one claim-adjudication step — connects to the workflows that implement it and the product features that expose it. It is the very thesis of this article, turned inward: **context as a first-class asset**, applied to how we analyse and build the application itself. When a new concept arrives (this whitepaper included), it gets ingested, cross-referenced, and wired into the graph — so understanding compounds instead of scattering.
+
+<figure style="margin:30px 0;">
+  <img src="/assets/caladrius-kb-graph-view.png" alt="The Caladrius Health knowledge base visualised as an Obsidian graph — hundreds of interlinked concept, workflow, and feature notes clustered by domain (NHCX, agent-concepts, FHIR, ABDM, payor plans, pricing strategy)." loading="lazy" style="width:100%;height:auto;display:block;border:1px solid var(--border);border-radius:12px;" />
+  <figcaption style="margin-top:11px;font-size:.88rem;line-height:1.55;color:rgba(220,232,245,0.68);text-align:center;">The Caladrius Health knowledge base, in Obsidian's graph view. Each node is a concept, workflow, or feature note; the clusters map to domains — NHCX claims, agent-concepts, FHIR, ABDM, payor plans, pricing strategy — wired together by wikilinks, so a question can traverse from concept → workflow → feature in a single connected web.</figcaption>
+</figure>
 
 ## Frequently Asked Questions
 

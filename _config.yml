@@ -6,6 +6,12 @@ keywords: "Yajur, Yajur.ai, Yajur Healthcare, medical data infrastructure, healt
 url: "https://yajur.ai"
 baseurl: ""
 
+# Clean, category-free post URLs (/:year/:month/:day/:title.html).
+# Every post's internal links use this form; the Jekyll default
+# (/:categories/...) produced /technology/agentic%20engineering/... URLs that
+# 404'd all internal links. jekyll-archives still generates category pages.
+permalink: /:year/:month/:day/:title:output_ext
+
 # Hydra Theme Configuration (Manual)
 logo: /assets/logo.png
 
