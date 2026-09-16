@@ -2,6 +2,11 @@
 
 ## 2026-09-16
 
+- style: remove em/en dashes from Caladrius Pulse and Frontier Signal editions
+
+
+## 2026-09-16
+
 - No individual commits (fast-forward or empty merge)
 
 
