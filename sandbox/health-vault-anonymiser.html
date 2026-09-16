@@ -800,7 +800,21 @@ function go(i){
   // keep the active chip visible in the sticky stepper
   const chip=stepper.children[stage];
   if(chip && chip.scrollIntoView) chip.scrollIntoView({block:"nearest",inline:"center",behavior:"smooth"});
-  window.scrollTo({top:0,behavior:"smooth"});
+  // Bring the new stage's content to just under the sticky nav + stepper,
+  // instead of flinging the whole page to the top (which buried the step
+  // below the intro and forced the reader to scroll back down each time).
+  const nav=document.querySelector(".nav");
+  const navH=nav?nav.getBoundingClientRect().height:52;
+  const stepperH=stepper.getBoundingClientRect().height;
+  const panel=document.querySelector(".panel.active");
+  if(panel){
+    const target=window.scrollY+panel.getBoundingClientRect().top-navH-stepperH-10;
+    // Only reposition when the stage top isn't already comfortably in view,
+    // so small Next/Prev hops between short stages don't jump at all.
+    if(Math.abs(target-window.scrollY)>4){
+      window.scrollTo({top:Math.max(0,target),behavior:"auto"});
+    }
+  }
 }
 
 // arrow keys move between stages, except while typing
