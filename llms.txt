@@ -82,6 +82,12 @@ Yajur operates at the intersection of:
 - [From Vibe Coding to Agentic Engineering: Everyone Can Now Build for Healthcare](https://yajur.ai/2026/02/21/from-vibe-coding-to-agentic-engineering-everyone-can-now-build-for-healthcare.html)
   How the democratization of AI coding tools is enabling a new class of healthcare builders.
 
+- [The Yajur Health Vault: Anonymisation by Architecture](https://yajur.ai/2026/09/16/the-yajur-health-vault-anonymisation-by-architecture.html)
+  Concept paper (whitepaper) on building a hospital health data vault where patient identity is structurally separated from clinical content — the secret is not kept, it is not present. Draws on MIMIC-IV's de-identification pipeline and the SAIL Databank's split-file architecture, built entirely on open source, with no path by which data can reach an external model. Covers random (never hashed) identifiers, date shifting, break-glass re-identification, DPDP Act 2023 and ABDM alignment, and local on-premise inference. An interactive companion sandbox is at https://yajur.ai/sandbox/health-vault-anonymiser.html.
+
+- [Caladrius Pulse — August 2026: Consent, Claims Economics, and ABDM on the Ground](https://yajur.ai/2026/09/16/caladrius-pulse-august-2026-consent-claims-and-abdm-on-the-ground.html)
+  Monthly roundup summarising new articles from Caladrius Health AI Studio (https://caladriushealth.ai) — patient consent under HIE-CM and the DPDP Act, using an ABHA at a hospital, where India's ₹1.17 lakh crore of health claims went, why claims take so long, and ABDM adoption state by state. Yajur Healthcare builds the medical data infrastructure for Caladrius Health AI Studio.
+
 ## About Yajur Healthcare
 
 - **Company:** Yajur Healthcare (operating as Yajur.ai)

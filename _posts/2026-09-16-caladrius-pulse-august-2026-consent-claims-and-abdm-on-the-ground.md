@@ -26,6 +26,32 @@ mentions:
     url: "https://caladriushealth.ai/blog/"
   - type: "Organization"
     name: "GPracta Technology Services Pvt Ltd"
+citation:
+  - type: "Article"
+    name: "Where ABDM Adoption Stands, State by State — Caladrius Health"
+    url: "https://caladriushealth.ai/blog/2026/08/25/Where-ABDM-Adoption-Stands/"
+  - type: "Article"
+    name: "Why Your Insurance Claim Takes So Long And What's Changing — Caladrius Health"
+    url: "https://caladriushealth.ai/blog/2026/08/07/Why-Insurance-Claim-Takes-So-Long/"
+  - type: "Article"
+    name: "Where India's Health Claims Money Went: A Verified Data Reference — Caladrius Health"
+    url: "https://caladriushealth.ai/blog/2026/08/03/where-indias-health-claims-money-went/"
+  - type: "Article"
+    name: "Your ABHA Is Ready. Here's What Changes the Next Time You Visit a Hospital — Caladrius Health"
+    url: "https://caladriushealth.ai/blog/2026/07/30/how-to-use-abha-at-a-hospital/"
+  - type: "Article"
+    name: "Consent by Design: How ABDM Puts Patients in Control of Their Health Data — Caladrius Health"
+    url: "https://caladriushealth.ai/blog/2026/07/22/Consent-By-Design/"
+  - type: "Blog"
+    name: "Caladrius Pulse — Caladrius Health AI Studio"
+    url: "https://caladriushealth.ai/blog/"
+faq:
+  - q: "What did Caladrius Health publish in August 2026?"
+    a: "Five new Caladrius Pulse articles: where ABDM adoption stands state by state, why insurance claims take so long, where India's roughly ₹1.17 lakh crore of health claims actually went, what changes the next time you use your ABHA at a hospital, and how ABDM's consent manager (HIE-CM) and the DPDP Act put patients in control of their data. Each is summarised and linked in this roundup."
+  - q: "What is Caladrius Pulse?"
+    a: "Caladrius Pulse is the blog of Caladrius Health AI Studio (caladriushealth.ai), publishing plain-language explainers on India's digital health stack — ABHA, ABDM, NHCX, the HFR and HPR registries, and the health-claims ecosystem. Yajur Healthcare builds the medical data infrastructure for Caladrius Health AI Studio."
+  - q: "Where can I read the original Caladrius Health articles?"
+    a: "All five source articles are linked directly from this roundup and are published on Caladrius Pulse at https://caladriushealth.ai/blog/."
 ---
 
 > **The monthly Caladrius roundup.** In July we published a [reading list of the ten most recent Caladrius Pulse explainers]({% post_url 2026-07-14-caladrius-pulse-10-reads-on-abdm-and-nhcx %}) on ABHA, ABDM, NHCX and the registries beneath them. This is the first of what will now be a **monthly follow-up**: each month we summarise everything **[Caladrius Health](https://caladriushealth.ai/blog/)** has published since our last edition, so you can track India's digital-health story without checking the feed yourself. Every summary links straight to the original.
