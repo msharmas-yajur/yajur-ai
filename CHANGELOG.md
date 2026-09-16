@@ -2,6 +2,11 @@
 
 ## 2026-09-16
 
+- fix(sandbox): stop Health Vault stepper flinging page to top on Prev/Next
+
+
+## 2026-09-16
+
 - style: remove em dashes, add authorship, pin stage navigation
 
 
