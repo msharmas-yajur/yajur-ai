@@ -1,5 +1,31 @@
 # Changelog
 
+## 2026-09-16
+
+- fix(sandbox): stop Health Vault stepper flinging page to top on Prev/Next
+
+
+## 2026-09-16
+
+- style: remove em dashes, add authorship, pin stage navigation
+
+
+## 2026-09-16
+
+- feat: add Yajur Health Vault concept paper and anonymisation sandbox
+
+
+## 2026-09-16
+
+- post: Frontier Signal — inaugural edition + 5-day automation
+
+
+## 2026-09-16
+
+- post: Caladrius Pulse — August 2026 roundup + monthly automation
+- chore: ignore .claude/ directory
+
+
 ## 2026-07-14
 
 - ci(promote): dispatch Pages deploy after promoting dev to main
