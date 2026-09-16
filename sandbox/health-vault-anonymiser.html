@@ -1,0 +1,1082 @@
+---
+sitemap: false
+---
+{% raw %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>YAJUR.ai — Health Vault Anonymisation Sandbox</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    /* Anthropic Ivory/Slate palette — matches _sass/variables.scss */
+    --bg-void:#faf9f5;      /* page            $clr-bg      */
+    --bg-deep:#f0eee6;      /* inset / code    $clr-bg-alt  */
+    --bg-surface:#ffffff;
+    --bg-elevated:#f7f5f0;
+    --bg-card:#ffffff;
+    --bg-card-hover:#faf9f5;
+
+    --border-dim:#e8e6df; --border-mid:#d9d6cc; --border-bright:#c4bfb2;
+
+    /* clay is the brand accent */
+    --clay:#d97757; --clay-dark:#c4633f; --clay-ghost:#fbf0ec;
+
+    /* green reserved for "safe / passes" semantics */
+    --green-core:#2f8f57; --green-bright:#26794a; --green-dim:#4a9e6e;
+    --green-ghost:#eaf5ee; --green-text:#2a7d4d;
+
+    --amber:#a36a08; --amber-dim:#fdf3e3;
+    --red:#c0392b;   --red-dim:#fbecea;
+    --blue:#1f6f9c;  --blue-dim:#eaf3f9;
+    --violet:#6d4aa8; --violet-dim:#f2edfa;
+
+    --text-primary:#010101; --text-secondary:#3a3936;
+    --text-dim:#5e5d59; --text-muted:#8a8880;
+
+    --font-display:'Inter',system-ui,-apple-system,sans-serif;
+    --font-body:'Inter',system-ui,-apple-system,sans-serif;
+    --font-prose:Georgia,'Times New Roman',serif;
+    --font-mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    --radius:24px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{background:var(--bg-void);color:var(--text-primary);font-family:var(--font-body);
+       font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased;
+       padding-bottom:env(safe-area-inset-bottom,0px)}
+  a{color:var(--clay)}
+  code,pre,.mono{font-family:var(--font-mono)}
+
+  .nav{position:sticky;top:0;z-index:100;background:rgba(250,249,245,.92);backdrop-filter:blur(12px);
+       border-bottom:1px solid var(--border-dim);padding:14px 20px;
+       padding-top:calc(14px + env(safe-area-inset-top,0px));
+       display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+  .nav-brand{font-weight:800;letter-spacing:-.02em;font-size:1rem;color:var(--text-primary)}
+  .nav-brand span{color:var(--clay)}
+  .nav-back{font-size:.85rem;color:var(--text-dim);text-decoration:none;font-weight:600}
+  .nav-back:hover{color:var(--clay)}
+
+  .wrap{max-width:1180px;margin:0 auto;padding:0 20px}
+
+  .hero{padding:64px 0 32px;border-bottom:1px solid var(--border-dim)}
+  .eyebrow{font-family:var(--font-body);font-size:.75rem;font-weight:700;letter-spacing:.1em;
+           text-transform:uppercase;color:var(--clay);margin-bottom:14px}
+  h1{font-family:var(--font-display);font-size:clamp(1.9rem,4.6vw,3rem);font-weight:800;
+     line-height:1.12;letter-spacing:-.03em;margin-bottom:18px;color:var(--text-primary)}
+  .lede{font-family:var(--font-prose);color:#333;font-size:1.2rem;line-height:1.65;max-width:70ch}
+  @media(max-width:700px){.lede{font-size:1.08rem}}
+  .pills{display:flex;flex-wrap:wrap;gap:8px;margin-top:24px}
+  .pill{font-size:.75rem;font-weight:600;padding:5px 12px;border-radius:6px;
+        background:var(--clay-ghost);color:var(--clay-dark);border:1px solid rgba(217,119,87,.28)}
+
+  .stepper{display:flex;gap:7px;overflow-x:auto;padding:22px 0;margin-bottom:6px;
+           scrollbar-width:thin;-webkit-overflow-scrolling:touch}
+  .step{flex:0 0 auto;font-family:var(--font-body);font-size:.8rem;font-weight:600;padding:9px 15px;
+        border-radius:10px;background:var(--bg-card);border:1px solid var(--border-dim);
+        color:var(--text-dim);cursor:pointer;white-space:nowrap;transition:.15s}
+  .step:hover{background:var(--bg-card-hover);color:var(--text-primary);border-color:var(--border-mid)}
+  .step.active{background:var(--clay);border-color:var(--clay);color:#fff}
+  .step.done{color:var(--clay-dark);border-color:rgba(217,119,87,.4);background:var(--clay-ghost)}
+  .step-n{font-family:var(--font-mono);opacity:.65;margin-right:6px}
+
+  .panel{display:none;padding:12px 0 60px}
+  .panel.active{display:block;animation:fade .28s ease}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  .zone-tag{display:inline-block;font-family:var(--font-mono);font-size:.7rem;font-weight:700;
+            letter-spacing:.07em;text-transform:uppercase;padding:4px 10px;border-radius:6px;
+            background:var(--bg-deep);border:1px solid var(--border-mid);color:var(--text-dim);
+            margin-bottom:12px}
+  h2{font-family:var(--font-display);font-size:1.9rem;font-weight:800;letter-spacing:-.025em;
+     margin-bottom:10px;line-height:1.2;color:var(--text-primary)}
+  @media(max-width:700px){h2{font-size:1.5rem}}
+  .sub{font-family:var(--font-prose);color:#333;max-width:70ch;margin-bottom:26px;font-size:1.05rem;
+       line-height:1.6}
+
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+  @media(max-width:860px){.grid2{grid-template-columns:1fr}}
+
+  .card{background:var(--bg-card);border:1px solid var(--border-dim);border-radius:var(--radius);
+        padding:26px;box-shadow:0 10px 30px rgba(0,0,0,.05)}
+  @media(max-width:700px){.card{padding:20px;border-radius:18px}}
+  .card.vault{border-color:rgba(163,106,8,.3);background:#fffdf8}
+  .card-h{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:16px;
+          flex-wrap:wrap}
+  .card-t{font-family:var(--font-body);font-size:.75rem;font-weight:700;letter-spacing:.09em;
+          text-transform:uppercase;color:var(--text-dim)}
+  .badge{font-family:var(--font-mono);font-size:.68rem;font-weight:700;padding:4px 9px;border-radius:5px;
+         letter-spacing:.03em}
+  .b-green{background:var(--green-ghost);color:var(--green-text);border:1px solid rgba(47,143,87,.3)}
+  .b-amber{background:var(--amber-dim);color:var(--amber);border:1px solid rgba(163,106,8,.3)}
+  .b-red{background:var(--red-dim);color:var(--red);border:1px solid rgba(192,57,43,.3)}
+  .b-blue{background:var(--blue-dim);color:var(--blue);border:1px solid rgba(31,111,156,.3)}
+  .b-violet{background:var(--violet-dim);color:var(--violet);border:1px solid rgba(109,74,168,.3)}
+
+  .frow{display:grid;grid-template-columns:124px 1fr;gap:12px;padding:9px 0;
+        border-bottom:1px solid var(--border-dim);font-size:.88rem;align-items:start}
+  .frow:last-child{border-bottom:none}
+  @media(max-width:520px){.frow{grid-template-columns:1fr;gap:3px}}
+  .fk{color:var(--text-muted);font-family:var(--font-mono);font-size:.72rem;text-transform:uppercase;
+      letter-spacing:.04em;padding-top:2px}
+  .fv{font-family:var(--font-mono);font-size:.84rem;word-break:break-word;color:var(--text-primary)}
+  .fv.phi{color:var(--amber);font-weight:700}
+  .fv.safe{color:var(--green-text)}
+  .fv.cipher{color:var(--text-muted);font-size:.72rem;line-height:1.5}
+  .fv.gone{color:var(--text-muted);font-style:italic;font-family:var(--font-prose)}
+
+  textarea,input[type=text]{width:100%;background:var(--bg-deep);border:1px solid var(--border-mid);
+       border-radius:12px;color:var(--text-primary);font-family:var(--font-mono);font-size:.84rem;
+       padding:14px;line-height:1.65;resize:vertical}
+  textarea:focus,input:focus{outline:2px solid rgba(217,119,87,.4);outline-offset:1px;border-color:var(--clay)}
+
+  .btn{font-family:var(--font-body);font-size:.875rem;font-weight:700;letter-spacing:.02em;
+       padding:12px 24px;border-radius:10px;background:var(--clay);color:#fff;border:1px solid var(--clay);
+       cursor:pointer;transition:.15s}
+  .btn:hover{background:var(--clay-dark);border-color:var(--clay-dark)}
+  .btn:disabled{background:var(--bg-deep);color:var(--text-muted);border-color:var(--border-mid);
+                cursor:not-allowed}
+  .btn-ghost{background:transparent;border:1px solid var(--border-mid);color:var(--text-primary)}
+  .btn-ghost:hover{background:var(--bg-deep);border-color:var(--border-bright);color:var(--text-primary)}
+  .btn-danger{background:var(--red);border-color:var(--red);color:#fff}
+  .btn-danger:hover{background:#a5301f;border-color:#a5301f}
+  .btn-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px}
+
+  .toggles{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:16px}
+  .tg{font-family:var(--font-body);font-size:.78rem;font-weight:600;padding:8px 14px;border-radius:9px;
+      background:var(--bg-card);border:1px solid var(--border-mid);color:var(--text-dim);cursor:pointer;
+      transition:.15s}
+  .tg:hover{color:var(--text-primary);background:var(--bg-deep)}
+  .tg.on{background:var(--clay);border-color:var(--clay);color:#fff}
+  .tg.bad.on{background:var(--red);border-color:var(--red);color:#fff}
+
+  .note{background:var(--bg-deep);border:1px solid var(--border-dim);border-radius:14px;padding:16px;
+        font-family:var(--font-mono);font-size:.78rem;line-height:1.8;white-space:pre-wrap;
+        max-height:340px;overflow-y:auto;color:var(--text-primary)}
+  mark{border-radius:3px;padding:1px 3px;font-weight:700}
+  .m-name{background:#fbe8c8;color:#7a4e04}
+  .m-org{background:#d8ebf7;color:#14536f}
+  .m-id{background:#f8d6d1;color:#8f2418}
+  .m-abha{background:#f0c4bd;color:#7a1d13}
+  .m-contact{background:#e4daf7;color:#4b2f7a}
+  .m-date{background:#cfe9d9;color:#1d5c39}
+  .m-loc{background:#d5ece2;color:#18604a}
+
+  .legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:14px;font-size:.75rem;color:var(--text-dim)}
+  .legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;
+            vertical-align:baseline;border:1px solid rgba(0,0,0,.1)}
+
+  .callout{border-left:3px solid var(--clay);background:var(--bg-deep);padding:16px 18px;
+           border-radius:0 12px 12px 0;margin:20px 0;font-family:var(--font-prose);font-size:1rem;
+           line-height:1.6;color:#333}
+  .callout.warn{border-left-color:var(--amber);background:var(--amber-dim)}
+  .callout.bad{border-left-color:var(--red);background:var(--red-dim)}
+  .callout strong{color:var(--text-primary)}
+  .callout code{font-family:var(--font-mono);font-size:.85em;background:rgba(0,0,0,.05);
+                padding:1px 5px;border-radius:4px}
+
+  .meter{height:10px;background:var(--bg-deep);border-radius:6px;overflow:hidden;margin:12px 0 8px;
+         border:1px solid var(--border-dim)}
+  .meter-fill{height:100%;transition:width .5s ease,background .5s ease;border-radius:6px}
+
+  table{width:100%;border-collapse:collapse;font-size:.85rem}
+  th,td{text-align:left;padding:11px 12px;border-bottom:1px solid var(--border-dim)}
+  th{font-family:var(--font-body);font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;
+     color:var(--text-dim);font-weight:700;background:var(--bg-deep)}
+  td{font-family:var(--font-mono);font-size:.8rem}
+  .tbl-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--border-dim);
+              border-radius:12px}
+
+  .slider{width:100%;accent-color:var(--clay);margin:12px 0}
+  .timeline{display:flex;align-items:center;gap:0;margin:18px 0 6px;overflow-x:auto;padding-bottom:8px}
+  .tl-ev{flex:0 0 auto;text-align:center;min-width:96px}
+  .tl-dot{width:11px;height:11px;border-radius:50%;background:var(--clay);margin:0 auto 8px}
+  .tl-lbl{font-size:.7rem;color:var(--text-dim);line-height:1.3;font-weight:600}
+  .tl-date{font-family:var(--font-mono);font-size:.7rem;color:var(--green-text);margin-top:4px}
+  .tl-gap{flex:1 1 auto;min-width:28px;height:2px;background:var(--border-mid);position:relative;top:-18px}
+  .tl-gap::after{content:attr(data-d);position:absolute;top:-17px;left:50%;transform:translateX(-50%);
+                 font-family:var(--font-mono);font-size:.62rem;color:var(--text-muted);white-space:nowrap}
+
+  .audit{font-family:var(--font-mono);font-size:.72rem;line-height:1.65}
+  .audit-e{background:var(--bg-deep);border:1px solid var(--border-dim);border-radius:10px;
+           padding:12px 14px;margin-bottom:9px;border-left:3px solid var(--green-core)}
+  .audit-e.broken{border-left-color:var(--red);background:var(--red-dim)}
+  .audit-k{color:var(--text-muted)}
+  .audit-v{color:var(--text-primary)}
+  .hash{color:var(--green-text);word-break:break-all;font-size:.66rem}
+  .hash.bad{color:var(--red)}
+
+  .totp{font-family:var(--font-mono);font-size:2rem;font-weight:700;letter-spacing:.22em;
+        color:var(--clay-dark);text-align:center;padding:14px 0}
+  .totp-bar{height:4px;background:var(--bg-deep);border-radius:2px;overflow:hidden}
+  .totp-bar div{height:100%;background:var(--clay);transition:width 1s linear}
+
+  .pkt{font-family:var(--font-mono);font-size:.76rem;padding:12px 14px;border-radius:10px;
+       margin-bottom:9px;border:1px solid var(--border-dim);background:var(--bg-deep);transition:.3s}
+  .pkt.drop{border-color:rgba(192,57,43,.4);background:var(--red-dim);color:var(--red)}
+  .pkt.pass{border-color:rgba(47,143,87,.4);background:var(--green-ghost);color:var(--green-text)}
+
+  .split-view{display:grid;grid-template-columns:1fr 52px 1fr;gap:0;align-items:stretch}
+  @media(max-width:860px){.split-view{grid-template-columns:1fr;gap:14px}
+    .barrier{min-height:52px;flex-direction:row!important}}
+  .barrier{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;
+           position:relative}
+  .barrier-line{flex:1;width:2px;
+    background:repeating-linear-gradient(to bottom,var(--red) 0 6px,transparent 6px 12px)}
+  @media(max-width:860px){.barrier-line{width:100%;height:2px;
+    background:repeating-linear-gradient(to right,var(--red) 0 6px,transparent 6px 12px)}}
+  .barrier-lbl{font-family:var(--font-mono);font-size:.6rem;color:var(--red);text-transform:uppercase;
+               letter-spacing:.08em;writing-mode:vertical-rl;text-orientation:mixed;font-weight:700}
+  @media(max-width:860px){.barrier-lbl{writing-mode:horizontal-tb}}
+
+  .foot{border-top:1px solid var(--border-dim);padding:36px 0 56px;color:var(--text-dim);
+        font-family:var(--font-prose);font-size:.95rem}
+  .foot a{color:var(--clay)}
+  .nav-btns{display:flex;justify-content:space-between;gap:10px;padding:26px 0;
+            border-top:1px solid var(--border-dim);margin-top:30px}
+</style>
+</head>
+<body>
+
+<div class="nav">
+  <div class="nav-brand">YAJUR<span>.ai</span> — Health Vault Sandbox</div>
+  <a class="nav-back" href="/2026/09/16/the-yajur-health-vault-anonymisation-by-architecture.html">← Back to the concept paper</a>
+</div>
+
+<div class="wrap">
+  <div class="hero">
+    <div class="eyebrow">Interactive Demonstration</div>
+    <h1>Watch a patient record become un-identifiable — then watch it come back</h1>
+    <p class="lede">This runs the full Health Vault pipeline in your browser on a synthetic patient. The cryptography is real —
+    AES-256-GCM for the Identity Vault, HMAC-based TOTP for the second factor, SHA-256 for the audit chain. Nothing is sent anywhere,
+    because there is nowhere for it to be sent. That is rather the point.</p>
+    <div class="pills">
+      <span class="pill">7 stages</span>
+      <span class="pill">Real WebCrypto</span>
+      <span class="pill">Fully client-side</span>
+      <span class="pill">Synthetic data only</span>
+    </div>
+  </div>
+
+  <div class="stepper" id="stepper"></div>
+
+  <!-- ══════════ STAGE 0 ══════════ -->
+  <div class="panel" data-p="0">
+    <div class="zone-tag">Source system</div>
+    <h2>What arrives from the hospital information system</h2>
+    <p class="sub">A discharge record for a synthetic patient. Every identifier here is invented. Edit the note if you like —
+    the anonymisation engine in Stage 3 will process whatever you type.</p>
+    <div class="grid2">
+      <div class="card">
+        <div class="card-h"><span class="card-t">Structured record</span><span class="badge b-red">Fully identified</span></div>
+        <div id="src-fields"></div>
+      </div>
+      <div class="card">
+        <div class="card-h"><span class="card-t">Discharge summary — free text</span><span class="badge b-red">Contains PHI</span></div>
+        <textarea id="src-note" rows="15"></textarea>
+      </div>
+    </div>
+    <div class="callout warn"><strong>Note what makes this identifying.</strong> Not just the name and the ABHA number.
+    The pin code, the date of birth and the sex together identify most people in a single hospital's catchment — and the
+    narrative names a relative, a referring doctor and a hospital. Removing the name field alone would accomplish very little.</div>
+  </div>
+
+  <!-- ══════════ STAGE 1 ══════════ -->
+  <div class="panel" data-p="1">
+    <div class="zone-tag">Zone 0 — Archive</div>
+    <h2>The immutable record of receipt</h2>
+    <p class="sub">Before anything is processed, a byte-exact copy is written to object storage under a WORM lock and hashed.
+    This is a legal record that a particular payload arrived at a particular time. It is never queried, never joined, and never read
+    by an analyst.</p>
+    <div class="card">
+      <div class="card-h"><span class="card-t">archive/2026/09/16/enc_a7f3.json</span>
+        <span><span class="badge b-amber">WORM locked</span> <span class="badge b-red">No read grant</span></span></div>
+      <div class="frow"><div class="fk">SHA-256</div><div class="fv cipher" id="arc-hash">computing…</div></div>
+      <div class="frow"><div class="fk">Size</div><div class="fv" id="arc-size">—</div></div>
+      <div class="frow"><div class="fk">Received</div><div class="fv" id="arc-time">—</div></div>
+      <div class="frow"><div class="fk">Retention</div><div class="fv">7 years — object lock, no delete grant issued</div></div>
+      <div class="frow"><div class="fk">Readers</div><div class="fv gone">none — ingestion service has write-only credentials</div></div>
+    </div>
+    <div class="callout"><strong>Why keep it at all?</strong> Because anonymisation is lossy and occasionally wrong. If the
+    de-identification engine mangles a record, or a regulator asks what was actually received, the archive is the only authoritative
+    answer. It is the thing you hope never to open.</div>
+  </div>
+
+  <!-- ══════════ STAGE 2 ══════════ -->
+  <div class="panel" data-p="2">
+    <div class="zone-tag">Zone 1 — Bronze</div>
+    <h2>The split</h2>
+    <p class="sub">Direct identifiers are extracted out of the clinical record and encrypted into a separate database on a separate
+    host with separate credentials. What remains on the clinical side is a random integer. This is the move that everything else
+    depends on.</p>
+    <div class="btn-row" style="margin-top:0;margin-bottom:18px">
+      <button class="btn" id="btn-split">Run the split →</button>
+      <button class="btn btn-ghost" id="btn-split-reset">Reset</button>
+    </div>
+    <div class="split-view">
+      <div class="card vault">
+        <div class="card-h"><span class="card-t">Instance A — identity_vault</span><span class="badge b-amber">AES-256-GCM</span></div>
+        <div id="vault-fields"><div class="fv gone">empty — run the split</div></div>
+      </div>
+      <div class="barrier">
+        <div class="barrier-line"></div>
+        <div class="barrier-lbl">no join path</div>
+        <div class="barrier-line"></div>
+      </div>
+      <div class="card">
+        <div class="card-h"><span class="card-t">Instance B — lakehouse</span><span class="badge b-green">No identity</span></div>
+        <div id="bronze-fields"></div>
+      </div>
+    </div>
+    <div class="callout warn"><strong>Why <code>subject_id</code> is random and not a hash of the MRN.</strong>
+    Hashing feels safe, but a hash is only one-way over an unpredictable input. Hospital MRNs are short, structured and sequential —
+    <code id="mrn-echo">APL/2024/08812</code> tells you the format. An attacker hashes every plausible MRN in the issuing range in
+    seconds and builds a complete reverse lookup. A random integer from a look-up table has no relationship to the input at all.</div>
+  </div>
+
+  <!-- ══════════ STAGE 3 ══════════ -->
+  <div class="panel" data-p="3">
+    <div class="zone-tag">Zone 2 — Silver</div>
+    <h2>Anonymisation</h2>
+    <p class="sub">Three transformations run here: dates are shifted, the clinical narrative is de-identified, and indirect
+    identifiers are generalised.</p>
+
+    <div class="card" style="margin-bottom:16px">
+      <div class="card-h"><span class="card-t">1 · Date shifting</span><span class="badge b-blue" id="shift-badge">offset +0 days</span></div>
+      <p style="font-size:.85rem;color:var(--text-secondary);margin-bottom:6px">
+        One random offset per patient, applied to every date in their record. Drag it — and watch the intervals below stay
+        exactly where they are.</p>
+      <input type="range" min="0" max="3650" value="0" class="slider" id="shift-slider">
+      <div class="timeline" id="timeline"></div>
+      <div class="frow"><div class="fk">Preserved</div><div class="fv safe">intervals · time of day · day of week · season</div></div>
+      <div class="frow"><div class="fk">Destroyed</div><div class="fv phi">absolute year · comparability between patients</div></div>
+      <div class="frow"><div class="fk">anchor_year_group</div><div class="fv safe" id="anchor-grp">2026 - 2028</div></div>
+      <div class="frow"><div class="fk">anchor_age</div><div class="fv safe" id="anchor-age">58</div></div>
+    </div>
+
+    <div class="card" style="margin-bottom:16px">
+      <div class="card-h"><span class="card-t">2 · Clinical note de-identification</span>
+        <span class="badge b-green" id="detect-count">0 detected</span></div>
+      <p style="font-size:.85rem;color:var(--text-secondary);margin-bottom:12px">
+        Detection is a hybrid of dictionary lookup, regular expressions and context heuristics. What you put <em>back</em> is the
+        interesting decision — try all four.</p>
+      <div class="toggles" id="mode-toggles">
+        <button class="tg" data-m="redact">[REDACTED]</button>
+        <button class="tg on" data-m="typed">Typed tags &lt;NAME&gt;</button>
+        <button class="tg" data-m="surrogate">Realistic surrogates</button>
+        <button class="tg bad" data-m="indexed">Indexed tags (anti-pattern)</button>
+      </div>
+      <div class="grid2">
+        <div>
+          <div class="card-t" style="margin-bottom:8px">Original — PHI highlighted</div>
+          <div class="note" id="note-orig"></div>
+          <div class="legend">
+            <span><i class="m-name" style="background:#fbe8c8"></i>Name</span>
+            <span><i class="m-org" style="background:#d8ebf7"></i>Organisation</span>
+            <span><i class="m-id" style="background:#f8d6d1"></i>MRN</span>
+            <span><i class="m-abha" style="background:#f0c4bd"></i>ABHA</span>
+            <span><i class="m-contact" style="background:#e4daf7"></i>Contact</span>
+            <span><i class="m-date" style="background:#cfe9d9"></i>Date</span>
+            <span><i class="m-loc" style="background:#d5ece2"></i>Location</span>
+          </div>
+        </div>
+        <div>
+          <div class="card-t" style="margin-bottom:8px">De-identified output</div>
+          <div class="note" id="note-deid"></div>
+          <div class="callout" id="mode-note" style="margin-top:12px;margin-bottom:0"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-h"><span class="card-t">3 · Generalising indirect identifiers</span>
+        <span class="badge b-green">Mosaic defence</span></div>
+      <div class="tbl-scroll"><table>
+        <thead><tr><th>Attribute</th><th>Before</th><th>After</th><th>Why</th></tr></thead>
+        <tbody id="gen-tbl"></tbody>
+      </table></div>
+    </div>
+  </div>
+
+  <!-- ══════════ STAGE 4 ══════════ -->
+  <div class="panel" data-p="4">
+    <div class="zone-tag">Zone 3 — Gold</div>
+    <h2>The Vault state</h2>
+    <p class="sub">This is the record every analyst, dashboard and local model sees. No privacy review is required to query it,
+    because there is nothing here to review.</p>
+    <div class="grid2">
+      <div class="card">
+        <div class="card-h"><span class="card-t">gold.patient</span><span class="badge b-green">No identity present</span></div>
+        <div id="gold-fields"></div>
+      </div>
+      <div class="card">
+        <div class="card-h"><span class="card-t">k-anonymity — cohort this record hides in</span>
+          <span class="badge" id="k-badge">k = 1</span></div>
+        <div class="meter"><div class="meter-fill" id="k-fill" style="width:8%;background:var(--red)"></div></div>
+        <p style="font-size:.78rem;color:var(--text-dim)" id="k-text"></p>
+        <div style="margin-top:14px">
+          <div class="card-t" style="margin-bottom:8px">Quasi-identifiers in play</div>
+          <div id="k-qi"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:16px">
+      <div class="card-h"><span class="card-t">Try to re-identify this patient</span><span class="badge b-violet">Linkage attack</span></div>
+      <p style="font-size:.86rem;color:var(--text-secondary);margin-bottom:14px">
+        Here is a mock external dataset — the kind of thing an attacker actually has: an electoral roll extract for the district.
+        Attempt to join it against the gold record above and find our patient.</p>
+      <div class="tbl-scroll"><table>
+        <thead><tr><th>Name</th><th>Age</th><th>Sex</th><th>District</th><th>Ward</th></tr></thead>
+        <tbody id="roll-tbl"></tbody>
+      </table></div>
+      <div class="btn-row">
+        <button class="btn" id="btn-attack">Run the linkage attack →</button>
+      </div>
+      <div id="attack-result" style="margin-top:16px"></div>
+    </div>
+  </div>
+
+  <!-- ══════════ STAGE 5 ══════════ -->
+  <div class="panel" data-p="5">
+    <div class="zone-tag">Break-glass</div>
+    <h2>Authorised re-identification</h2>
+    <p class="sub">A lab result has to reach a real person. Here is the only path back, and every condition is required.</p>
+
+    <div class="card" style="margin-bottom:16px">
+      <div class="card-h"><span class="card-t">Acting as</span><span class="badge" id="role-badge">Analyst</span></div>
+      <div class="toggles" id="role-toggles">
+        <button class="tg on" data-r="analyst">Analyst</button>
+        <button class="tg" data-r="custodian">Data Custodian</button>
+      </div>
+      <div id="role-caps"></div>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <div class="card-h"><span class="card-t">Re-identification request</span><span class="badge b-amber">6 conditions</span></div>
+        <div id="gate-list"></div>
+        <div style="margin-top:14px" id="gate-form">
+          <div style="margin-bottom:10px">
+            <div class="fk" style="margin-bottom:5px">Stated purpose (ticket reference)</div>
+            <input type="text" id="purpose" placeholder="e.g. INC-4471 — critical lab callback">
+          </div>
+          <div style="margin-bottom:10px">
+            <div class="fk" style="margin-bottom:5px">Second factor — live TOTP</div>
+            <div class="totp" id="totp-code">——————</div>
+            <div class="totp-bar"><div id="totp-bar" style="width:100%"></div></div>
+            <input type="text" id="totp-input" placeholder="Enter the 6 digits above" style="margin-top:10px" maxlength="6">
+          </div>
+          <div style="margin-bottom:10px">
+            <div class="fk" style="margin-bottom:5px">Dual control — second authoriser</div>
+            <button class="tg" id="btn-approve">Request approval from DPO</button>
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn" id="btn-reid" disabled>Re-identify subject_id 10023847</button>
+        </div>
+        <div id="gate-msg" style="margin-top:12px"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-h"><span class="card-t">Result</span><span class="badge b-red" id="session-badge">Sealed</span></div>
+        <div id="reid-result"><div class="fv gone">Identity Vault sealed. Complete all six conditions to unseal.</div></div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:16px">
+      <div class="card-h"><span class="card-t">Append-only audit chain</span>
+        <span><span class="badge b-green" id="chain-status">Chain intact</span></span></div>
+      <div class="audit" id="audit-log"><div class="fv gone">No entries.</div></div>
+      <div class="btn-row">
+        <button class="btn btn-danger" id="btn-tamper" disabled>Tamper with the first entry</button>
+        <button class="btn btn-ghost" id="btn-verify" disabled>Verify chain</button>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:16px">
+      <div class="card-h"><span class="card-t">What a user without the permission sees</span><span class="badge b-blue">Analyst view</span></div>
+      <div id="analyst-view"></div>
+    </div>
+  </div>
+
+  <!-- ══════════ STAGE 6 ══════════ -->
+  <div class="panel" data-p="6">
+    <div class="zone-tag">Zone 4 — Egress</div>
+    <h2>Why nothing leaves</h2>
+    <p class="sub">The guarantee is not a promise in a contract. It is the absence of a route and the absence of a credential.</p>
+    <div class="grid2">
+      <div class="card">
+        <div class="card-h"><span class="card-t">Send notes to an external model</span><span class="badge b-red">Blocked</span></div>
+        <p style="font-size:.85rem;color:var(--text-secondary);margin-bottom:12px">
+          Attempt to POST the clinical corpus to a hosted LLM API.</p>
+        <button class="btn btn-danger" id="btn-egress">Attempt external inference →</button>
+        <div id="egress-log" style="margin-top:14px"></div>
+      </div>
+      <div class="card">
+        <div class="card-h"><span class="card-t">Run the same model locally</span><span class="badge b-green">Permitted</span></div>
+        <p style="font-size:.85rem;color:var(--text-secondary);margin-bottom:12px">
+          The same task, computed inside the boundary.</p>
+        <button class="btn" id="btn-local">Run local inference →</button>
+        <div id="local-log" style="margin-top:14px"></div>
+      </div>
+    </div>
+    <div class="callout warn" style="margin-top:18px"><strong>ABDM is not an exception to this.</strong> Consent-artefact
+    exchange is outbound by design, and it should be. The rule is not <em>no egress</em> — it is <em>no ungoverned egress</em>.
+    ABDM traffic is an allowlisted Zone 4 channel: consent-bound, logged, carrying only what the artefact permits.</div>
+  </div>
+
+  <div class="nav-btns">
+    <button class="btn btn-ghost" id="btn-prev">← Previous</button>
+    <button class="btn" id="btn-next">Next stage →</button>
+  </div>
+
+  <div class="foot">
+    <p>Synthetic data throughout. No real patient record is present, and nothing you type leaves your browser.
+    Companion to <a href="/2026/09/16/the-yajur-health-vault-anonymisation-by-architecture.html">The Yajur Health Vault: Anonymisation by Architecture</a>.</p>
+    <p style="margin-top:8px">Method drawn from <a href="https://mimic.mit.edu/">MIMIC-IV</a> (MIT-LCP) and the
+    <a href="https://saildatabank.com/">SAIL Databank</a> (Swansea University).</p>
+  </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════
+   Yajur Health Vault — anonymisation sandbox
+   All cryptography is genuine WebCrypto, operating on synthetic data.
+   ═══════════════════════════════════════════════════════════════ */
+
+const STAGES = ["Source","Zone 0 · Archive","Zone 1 · Split","Zone 2 · Anonymise",
+                "Zone 3 · Vault","Break-glass","Zone 4 · Egress"];
+
+const P = {
+  name:"Ramesh Kumar", mrn:"APL/2024/08812", abha:"91-7364-2891-5530",
+  phone:"+91 98404 21178", address:"12/4 Second Street, Anna Nagar, Chennai 600040",
+  pin:"600040", dob:"1968-04-22", sex:"M", age:58,
+  admit:"2026-03-12", discharge:"2026-03-23", followup:"2026-04-03",
+  subject_id:10023847, hadm_id:24418902
+};
+
+const DEFAULT_NOTE =
+`DISCHARGE SUMMARY — Apollo Speciality Hospital, Chennai
+
+Patient: Ramesh Kumar (MRN APL/2024/08812, ABHA 91-7364-2891-5530)
+DOB 22/04/1968, Male. Contact +91 98404 21178.
+Resident of 12/4 Second Street, Anna Nagar, Chennai 600040.
+
+Admitted 12/03/2026 under Dr. Lakshmi Narayanan, referred from
+Sri Ramachandra Medical Centre following an abnormal HbA1c.
+
+Mr. Kumar is a 58-year-old gentleman with a ten-year history of type 2
+diabetes mellitus, presenting with a non-healing ulcer of the right
+great toe. HbA1c on admission 9.4%. Started on basal-bolus insulin.
+
+Vascular review on 15/03/2026 confirmed adequate distal perfusion.
+Wound debridement performed 16/03/2026. Cultures grew Staphylococcus
+aureus, sensitive to cloxacillin.
+
+His wife, Mrs. Sudha Kumar, was counselled regarding foot care and
+glycaemic monitoring at home. Discharged 23/03/2026 in stable condition.
+
+Follow-up in the diabetic foot clinic on 03/04/2026 with
+Dr. Lakshmi Narayanan. Patient advised to contact the ward on
+044-2829-3333 if the ulcer deteriorates.`;
+
+/* ── PHI detection: dictionary + regex + context ── */
+const DICT = {
+  name:["Ramesh Kumar","Sudha Kumar","Lakshmi Narayanan","Mr. Kumar","Mrs. Sudha Kumar","Kumar"],
+  org:["Apollo Speciality Hospital","Sri Ramachandra Medical Centre"],
+  loc:["12/4 Second Street, Anna Nagar, Chennai 600040","Anna Nagar","Chennai 600040","Chennai"]
+};
+const RX = [
+  {c:"id",      re:/APL\/\d{4}\/\d{5}/g},
+  {c:"abha",    re:/\b\d{2}-\d{4}-\d{4}-\d{4}\b/g},
+  {c:"contact", re:/\+91\s?\d{5}\s?\d{5}/g},
+  {c:"contact", re:/\b0\d{2}-\d{4}-\d{4}\b/g},
+  {c:"date",    re:/\b\d{2}\/\d{2}\/\d{4}\b/g}
+];
+/* Clinical vocabulary that must never be scrubbed. */
+const ALLOW = ["Staphylococcus","aureus","HbA1c","cloxacillin","mellitus"];
+
+const SURROGATE = {
+  "Ramesh Kumar":"Suresh Patel", "Mr. Kumar":"Mr. Patel", "Kumar":"Patel",
+  "Sudha Kumar":"Anita Patel", "Mrs. Sudha Kumar":"Mrs. Anita Patel",
+  "Lakshmi Narayanan":"Vijaya Raghavan",
+  "Apollo Speciality Hospital":"Meridian General Hospital",
+  "Sri Ramachandra Medical Centre":"Northfield Medical Centre",
+  "12/4 Second Street, Anna Nagar, Chennai 600040":"48/2 Fifth Avenue, Rampura, Bengaluru 560021",
+  "Anna Nagar":"Rampura", "Chennai 600040":"Bengaluru 560021", "Chennai":"Bengaluru",
+  "APL/2024/08812":"MGH/2023/41907", "91-7364-2891-5530":"91-5128-7734-9061",
+  "+91 98404 21178":"+91 97311 55204", "044-2829-3333":"080-4417-2200"
+};
+const TAG = {name:"NAME",org:"HOSPITAL",loc:"LOCATION",id:"MRN",abha:"ABHA",contact:"PHONE",date:"DATE"};
+
+function detect(text){
+  const hits=[];
+  for(const [c,list] of Object.entries(DICT)){
+    for(const term of [...list].sort((a,b)=>b.length-a.length)){
+      let i=0;
+      while((i=text.indexOf(term,i))!==-1){ hits.push({s:i,e:i+term.length,c,t:term}); i+=term.length; }
+    }
+  }
+  for(const {c,re} of RX){
+    let m; re.lastIndex=0;
+    while((m=re.exec(text))!==null) hits.push({s:m.index,e:m.index+m[0].length,c,t:m[0]});
+  }
+  // allow-list: never scrub clinical vocabulary
+  const kept = hits.filter(h=>!ALLOW.some(a=>h.t.includes(a)));
+  // resolve overlaps, longest match wins
+  kept.sort((a,b)=> a.s-b.s || (b.e-b.s)-(a.e-a.s));
+  const out=[]; let last=-1;
+  for(const h of kept){ if(h.s>=last){ out.push(h); last=h.e; } }
+  return out;
+}
+
+const esc = s => s.replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+
+function highlight(text,hits){
+  let out="",p=0;
+  for(const h of hits){
+    out+=esc(text.slice(p,h.s))+'<mark class="m-'+h.c+'">'+esc(h.t)+"</mark>";
+    p=h.e;
+  }
+  return out+esc(text.slice(p));
+}
+
+function deidentify(text,hits,mode,shift){
+  const idx={}; let n=0;
+  let out="",p=0;
+  for(const h of hits){
+    out+=text.slice(p,h.s);
+    let rep;
+    if(h.c==="date" && mode!=="redact"){
+      rep = shiftDateStr(h.t,shift);                  // dates shift, never tagged
+    } else if(mode==="redact"){
+      rep = "[REDACTED]";
+    } else if(mode==="typed"){
+      rep = "<"+TAG[h.c]+">";
+    } else if(mode==="surrogate"){
+      rep = SURROGATE[h.t] || ("<"+TAG[h.c]+">");
+    } else {                                           // indexed anti-pattern
+      if(!(h.t in idx)) idx[h.t]=++n;
+      rep = "[**"+TAG[h.c]+" "+idx[h.t]+"**]";
+    }
+    out+=rep; p=h.e;
+  }
+  return out+text.slice(p);
+}
+
+const MODE_NOTES = {
+  redact:"<strong>Information destroyed.</strong> The reader cannot tell whether a name, a date or a hospital was removed. Downstream NLP degrades measurably, and a clinician loses the shape of the sentence.",
+  typed:"<strong>The Vault default for anything a clinician may read.</strong> The reader knows a name was removed <em>and that it was a name</em>. Nothing is fabricated, so nothing can be mistaken for a clinical fact, and no linkage index is published.",
+  surrogate:"<strong>Camouflage — used for research-corpus export only.</strong> Detection recall is about 0.967, so roughly 3% of PHI survives. Surrogates mean a survivor is indistinguishable from a fake. But a clinician reading this cannot tell real from invented, which is why it never goes to a care setting.",
+  indexed:"<strong>Anti-pattern — do not ship this.</strong> The number is a linkage key you did not mean to publish: every mention of <code>[**NAME 1**]</code> is the same person. You have removed the name and left behind the equivalence class."
+};
+
+/* ── dates ── */
+const MONTHS_MS = 86400000;
+function parseISO(s){ const [y,m,d]=s.split("-").map(Number); return new Date(Date.UTC(y,m-1,d)); }
+function fmtISO(dt){ return dt.toISOString().slice(0,10); }
+function shiftISO(s,days){ return fmtISO(new Date(parseISO(s).getTime()+days*MONTHS_MS)); }
+function shiftDateStr(dmy,days){
+  const [d,m,y]=dmy.split("/").map(Number);
+  const nd=new Date(Date.UTC(y,m-1,d)+days*MONTHS_MS);
+  return String(nd.getUTCDate()).padStart(2,"0")+"/"+String(nd.getUTCMonth()+1).padStart(2,"0")+"/"+nd.getUTCFullYear();
+}
+
+/* ── crypto helpers ── */
+const enc = new TextEncoder();
+const hex = buf => [...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,"0")).join("");
+async function sha256(str){ return hex(await crypto.subtle.digest("SHA-256",enc.encode(str))); }
+
+let VAULT_KEY=null;
+async function vaultKey(){
+  if(!VAULT_KEY) VAULT_KEY = await crypto.subtle.generateKey({name:"AES-GCM",length:256},true,["encrypt","decrypt"]);
+  return VAULT_KEY;
+}
+async function encField(plain){
+  const key=await vaultKey(), iv=crypto.getRandomValues(new Uint8Array(12));
+  const ct=await crypto.subtle.encrypt({name:"AES-GCM",iv},key,enc.encode(plain));
+  return {iv,ct,b64:btoa(String.fromCharCode(...new Uint8Array(ct))).slice(0,44)};
+}
+async function decField(rec){
+  const key=await vaultKey();
+  const pt=await crypto.subtle.decrypt({name:"AES-GCM",iv:rec.iv},key,rec.ct);
+  return new TextDecoder().decode(pt);
+}
+
+/* ── genuine TOTP (RFC 6238, HMAC-SHA-1, 30s step) ── */
+const TOTP_SECRET = crypto.getRandomValues(new Uint8Array(20));
+async function totp(){
+  const ctr=Math.floor(Date.now()/30000);
+  const buf=new ArrayBuffer(8), dv=new DataView(buf);
+  dv.setUint32(4,ctr,false);
+  const key=await crypto.subtle.importKey("raw",TOTP_SECRET,{name:"HMAC",hash:"SHA-1"},false,["sign"]);
+  const sig=new Uint8Array(await crypto.subtle.sign("HMAC",key,buf));
+  const off=sig[19]&0x0f;
+  const code=((sig[off]&0x7f)<<24|sig[off+1]<<16|sig[off+2]<<8|sig[off+3])%1000000;
+  return String(code).padStart(6,"0");
+}
+
+/* ── state ── */
+let stage=0, shift=0, mode="typed", role="analyst", split=false;
+let vaultRecs={}, chain=[], approved=false, unsealed=false;
+
+/* ── stepper ── */
+const stepper=document.getElementById("stepper");
+STAGES.forEach((s,i)=>{
+  const b=document.createElement("button");
+  b.className="step"; b.innerHTML='<span class="step-n">'+i+'</span>'+s;
+  b.onclick=()=>go(i); stepper.appendChild(b);
+});
+function go(i){
+  stage=Math.max(0,Math.min(STAGES.length-1,i));
+  [...stepper.children].forEach((b,j)=>{
+    b.classList.toggle("active",j===stage);
+    b.classList.toggle("done",j<stage);
+  });
+  document.querySelectorAll(".panel").forEach(p=>p.classList.toggle("active",+p.dataset.p===stage));
+  document.getElementById("btn-prev").disabled = stage===0;
+  document.getElementById("btn-next").disabled = stage===STAGES.length-1;
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+document.getElementById("btn-prev").onclick=()=>go(stage-1);
+document.getElementById("btn-next").onclick=()=>go(stage+1);
+
+/* ── stage 0 ── */
+const noteEl=document.getElementById("src-note");
+noteEl.value=DEFAULT_NOTE;
+const SRC_FIELDS=[["Name",P.name],["MRN",P.mrn],["ABHA",P.abha],["Phone",P.phone],
+  ["Address",P.address],["DOB",P.dob],["Sex",P.sex],["Admitted",P.admit],["Discharged",P.discharge]];
+document.getElementById("src-fields").innerHTML = SRC_FIELDS.map(([k,v])=>
+  '<div class="frow"><div class="fk">'+k+'</div><div class="fv phi">'+esc(v)+'</div></div>').join("");
+
+/* ── stage 1 ── */
+(async()=>{
+  const payload=JSON.stringify(P)+noteEl.value;
+  document.getElementById("arc-hash").textContent=await sha256(payload);
+  document.getElementById("arc-size").textContent=new Blob([payload]).size+" bytes";
+  document.getElementById("arc-time").textContent=new Date().toISOString();
+})();
+
+/* ── stage 2: the split ── */
+const VAULT_FIELDS=[["MRN",P.mrn],["ABHA",P.abha],["Name",P.name],["Phone",P.phone],["Address",P.address]];
+document.getElementById("mrn-echo").textContent=P.mrn;
+
+async function runSplit(){
+  const rows=[];
+  for(const [k,v] of VAULT_FIELDS){
+    const r=await encField(v); vaultRecs[k]=r;
+    rows.push('<div class="frow"><div class="fk">'+k+'</div><div class="fv cipher">'+r.b64+'…</div></div>');
+  }
+  rows.push('<div class="frow"><div class="fk">date_offset</div><div class="fv cipher">encrypted</div></div>');
+  document.getElementById("vault-fields").innerHTML=rows.join("");
+  split=true; renderBronze();
+}
+function renderBronze(){
+  const rows=[
+    ["subject_id",P.subject_id,"safe"],["hadm_id",P.hadm_id,"safe"],
+    ["name", split?"— extracted —":P.name, split?"gone":"phi"],
+    ["mrn",  split?"— extracted —":P.mrn,  split?"gone":"phi"],
+    ["abha", split?"— extracted —":P.abha, split?"gone":"phi"],
+    ["phone",split?"— extracted —":P.phone,split?"gone":"phi"],
+    ["sex",P.sex,"safe"],["diagnosis","E11.621 — T2DM with foot ulcer","safe"]
+  ];
+  document.getElementById("bronze-fields").innerHTML=rows.map(([k,v,c])=>
+    '<div class="frow"><div class="fk">'+k+'</div><div class="fv '+c+'">'+esc(String(v))+'</div></div>').join("");
+}
+renderBronze();
+document.getElementById("btn-split").onclick=runSplit;
+document.getElementById("btn-split-reset").onclick=()=>{
+  split=false; vaultRecs={};
+  document.getElementById("vault-fields").innerHTML='<div class="fv gone">empty — run the split</div>';
+  renderBronze();
+};
+
+/* ── stage 3 ── */
+function renderNotes(){
+  const text=noteEl.value, hits=detect(text);
+  document.getElementById("note-orig").innerHTML=highlight(text,hits);
+  document.getElementById("note-deid").textContent=deidentify(text,hits,mode,shift);
+  document.getElementById("detect-count").textContent=hits.length+" detected";
+  document.getElementById("mode-note").innerHTML=MODE_NOTES[mode];
+}
+function renderTimeline(){
+  const evs=[["Admitted",P.admit],["Debridement","2026-03-16"],["Discharged",P.discharge],["Follow-up",P.followup]];
+  let html="";
+  evs.forEach((e,i)=>{
+    if(i>0){
+      const d=Math.round((parseISO(evs[i][1])-parseISO(evs[i-1][1]))/MONTHS_MS);
+      html+='<div class="tl-gap" data-d="'+d+'d"></div>';
+    }
+    html+='<div class="tl-ev"><div class="tl-dot"></div><div class="tl-lbl">'+e[0]+
+          '</div><div class="tl-date">'+shiftISO(e[1],shift)+'</div></div>';
+  });
+  document.getElementById("timeline").innerHTML=html;
+  const yr=parseISO(P.admit).getUTCFullYear()+Math.floor(shift/365);
+  document.getElementById("anchor-grp").textContent=(yr-((yr-2026)%3))+" - "+(yr-((yr-2026)%3)+2);
+  document.getElementById("shift-badge").textContent="offset +"+shift+" days";
+}
+function renderGen(){
+  const rows=[
+    ["Pin code",P.pin,"Chennai district","A pin code is roughly 15,000 people. A district is 7 million."],
+    ["Date of birth",P.dob,"Age band 55–59","Exact DOB plus sex plus locality identifies most people."],
+    ["Age",P.age,P.age>89?"91 (top-coded)":P.age,"HIPAA aggregates 90+; the very old are identifiable by age alone."],
+    ["Diagnosis","E11.621","E11 — T2DM","Only when the specific code falls below the cell-count threshold."],
+    ["Address",P.address,"RALF #8823","Household linkage without ever knowing the location."]
+  ];
+  document.getElementById("gen-tbl").innerHTML=rows.map(r=>
+    "<tr><td>"+esc(String(r[0]))+'</td><td style="color:var(--amber)">'+esc(String(r[1]))+
+    '</td><td style="color:var(--green-text)">'+esc(String(r[2]))+
+    '</td><td style="font-family:var(--font-body);color:var(--text-dim)">'+esc(String(r[3]))+"</td></tr>").join("");
+}
+document.getElementById("shift-slider").oninput=e=>{
+  shift=+e.target.value; renderTimeline(); renderNotes(); renderGold();
+};
+document.querySelectorAll("#mode-toggles .tg").forEach(b=>{
+  b.onclick=()=>{
+    mode=b.dataset.m;
+    document.querySelectorAll("#mode-toggles .tg").forEach(x=>x.classList.toggle("on",x===b));
+    renderNotes();
+  };
+});
+noteEl.oninput=renderNotes;
+renderNotes(); renderTimeline(); renderGen();
+
+/* ── stage 4 ── */
+const COHORT=[
+  ["Age band","55–59","~410 patients in this band"],
+  ["Sex","M","~198 of those"],
+  ["District","Chennai","all 198 — single-district hospital"],
+  ["Diagnosis group","E11 — T2DM","~31 of those"],
+  ["anchor_year_group","2026 – 2028","~12 of those"]
+];
+function renderGold(){
+  const yr=parseISO(P.admit).getUTCFullYear()+Math.floor(shift/365);
+  const rows=[["subject_id",P.subject_id],["anchor_age",P.age>89?91:P.age],["sex",P.sex],
+    ["age_band","55-59"],["district","Chennai"],["ralf",8823],
+    ["anchor_year",yr],["anchor_year_group",(yr-((yr-2026)%3))+" - "+(yr-((yr-2026)%3)+2)],
+    ["primary_dx","E11 — type 2 diabetes mellitus"],["los_days",11]];
+  document.getElementById("gold-fields").innerHTML=rows.map(([k,v])=>
+    '<div class="frow"><div class="fk">'+k+'</div><div class="fv safe">'+esc(String(v))+'</div></div>').join("");
+  document.getElementById("k-qi").innerHTML=COHORT.map(c=>
+    '<div class="frow"><div class="fk">'+esc(c[0])+'</div><div class="fv">'+esc(c[1])+
+    ' <span style="color:var(--text-muted)">— '+esc(c[2])+'</span></div></div>').join("");
+  const k=12;
+  document.getElementById("k-badge").textContent="k = "+k;
+  document.getElementById("k-badge").className="badge "+(k>=5?"b-green":"b-red");
+  const f=document.getElementById("k-fill");
+  f.style.width=Math.min(100,k/12*100)+"%";
+  f.style.background = k>=5 ? "var(--green-core)" : "var(--red)";
+  document.getElementById("k-text").innerHTML = k>=5
+    ? "This record is indistinguishable from <strong>"+(k-1)+" others</strong> on every quasi-identifier. It clears the k ≥ 5 gate and is promoted to gold."
+    : "Below the k ≥ 5 threshold. This record would be <strong>quarantined, not published</strong>, and logged in the suppression register.";
+}
+renderGold();
+
+const ROLL=[["Ramesh Kumar",58,"M","Chennai","Anna Nagar"],["Suresh Iyer",57,"M","Chennai","T Nagar"],
+  ["Venkat Rao",59,"M","Chennai","Adyar"],["Mohan Das",56,"M","Chennai","Velachery"],
+  ["Arun Pillai",58,"M","Chennai","Mylapore"],["Ganesh Murthy",57,"M","Chennai","Guindy"]];
+document.getElementById("roll-tbl").innerHTML=ROLL.map(r=>
+  "<tr>"+r.map(c=>"<td>"+esc(String(c))+"</td>").join("")+"</tr>").join("");
+
+document.getElementById("btn-attack").onclick=()=>{
+  document.getElementById("attack-result").innerHTML=
+    '<div class="callout bad"><strong>Linkage failed.</strong> The join key you would need does not exist on either side.'+
+    '<br><br>The electoral roll has <em>name, age, sex, district, ward</em>. The gold record has <em>age band, sex, district</em>. '+
+    'Joining on the three shared attributes returns <strong>all six people in the roll</strong>, and in the real cohort, 12. '+
+    'You have narrowed the population to a group; you have not identified a person.'+
+    '<br><br>The attributes that would have collapsed it — exact age, ward, pin code, admission date — were generalised at Zone 2 '+
+    'precisely because they are what makes linkage work. This is the mosaic effect being defended against, not the name field.</div>';
+};
+
+/* ── stage 5 ── */
+const CAPS={
+  analyst:[["vault.query.gold","granted"],["vault.query.silver","denied"],["vault.reidentify","denied"],["vault.audit.read","denied"]],
+  custodian:[["vault.query.gold","granted"],["vault.query.silver","granted"],["vault.reidentify","granted"],["vault.audit.read","granted"]]
+};
+const GATES=[["Role holds vault.reidentify","role"],["Second factor verified","totp"],
+  ["Stated purpose bound to a ticket","purpose"],["Dual control — second authoriser","approve"],
+  ["Session time-boxed to 15 minutes","auto"],["Scoped to enumerated subject_ids","auto"]];
+
+function gateState(){
+  const t=document.getElementById("totp-input").value.trim();
+  return {
+    role: role==="custodian",
+    totp: t.length===6 && t===currentTotp,
+    purpose: document.getElementById("purpose").value.trim().length>=4,
+    approve: approved, auto:true
+  };
+}
+function renderRole(){
+  document.getElementById("role-badge").textContent = role==="custodian"?"Data Custodian":"Analyst";
+  document.getElementById("role-badge").className="badge "+(role==="custodian"?"b-green":"b-blue");
+  document.getElementById("role-caps").innerHTML=CAPS[role].map(([c,s])=>
+    '<div class="frow"><div class="fk">'+c+'</div><div class="fv '+(s==="granted"?"safe":"phi")+'">'+s+"</div></div>").join("");
+  renderGates();
+}
+function renderGates(){
+  const g=gateState();
+  document.getElementById("gate-list").innerHTML=GATES.map(([label,k])=>{
+    const ok=g[k];
+    return '<div class="frow"><div class="fk">'+(ok?"✓":"·")+'</div><div class="fv '+(ok?"safe":"gone")+'">'+esc(label)+"</div></div>";
+  }).join("");
+  const all=GATES.every(([,k])=>g[k]);
+  document.getElementById("btn-reid").disabled=!all;
+  if(role!=="custodian"){
+    document.getElementById("gate-msg").innerHTML=
+      '<div class="callout bad"><strong>Denied.</strong> The Analyst role does not hold <code>vault.reidentify</code>. '+
+      'No request is created, and nothing is written to the audit log — because no attempt was permitted to begin.</div>';
+  } else if(!all){
+    document.getElementById("gate-msg").innerHTML=
+      '<div class="callout warn">All six conditions are required. Complete the outstanding ones above.</div>';
+  } else {
+    document.getElementById("gate-msg").innerHTML=
+      '<div class="callout"><strong>All conditions met.</strong> Unsealing will write an audit entry <em>before</em> keys are released.</div>';
+  }
+}
+document.querySelectorAll("#role-toggles .tg").forEach(b=>{
+  b.onclick=()=>{
+    role=b.dataset.r;
+    document.querySelectorAll("#role-toggles .tg").forEach(x=>x.classList.toggle("on",x===b));
+    renderRole(); renderAnalystView();
+  };
+});
+document.getElementById("purpose").oninput=renderGates;
+document.getElementById("totp-input").oninput=renderGates;
+document.getElementById("btn-approve").onclick=function(){
+  approved=true; this.classList.add("on"); this.textContent="✓ Approved by DPO (second authoriser)";
+  renderGates();
+};
+
+let currentTotp="------";
+async function tickTotp(){
+  currentTotp=await totp();
+  document.getElementById("totp-code").textContent=currentTotp;
+  const rem=30-Math.floor((Date.now()/1000)%30);
+  document.getElementById("totp-bar").style.width=(rem/30*100)+"%";
+  renderGates();
+}
+tickTotp(); setInterval(tickTotp,1000);
+
+async function appendChain(entry){
+  const prev = chain.length ? chain[chain.length-1].hash : "0".repeat(64);
+  const body = JSON.stringify(entry)+prev;
+  chain.push({entry,prev,hash:await sha256(body)});
+  renderChain();
+}
+function renderChain(){
+  if(!chain.length){ document.getElementById("audit-log").innerHTML='<div class="fv gone">No entries.</div>'; return; }
+  document.getElementById("audit-log").innerHTML=chain.map((c,i)=>
+    '<div class="audit-e'+(c.broken?" broken":"")+'">'+
+    Object.entries(c.entry).map(([k,v])=>
+      '<span class="audit-k">'+esc(k)+':</span> <span class="audit-v">'+esc(String(v))+"</span>").join("<br>")+
+    '<br><span class="audit-k">prev:</span> <span class="hash'+(c.broken?" bad":"")+'">'+c.prev.slice(0,32)+"…</span>"+
+    '<br><span class="audit-k">hash:</span> <span class="hash'+(c.broken?" bad":"")+'">'+c.hash.slice(0,32)+"…</span></div>").join("");
+  document.getElementById("btn-tamper").disabled=false;
+  document.getElementById("btn-verify").disabled=false;
+}
+document.getElementById("btn-reid").onclick=async()=>{
+  const purpose=document.getElementById("purpose").value.trim();
+  await appendChain({
+    entry_id:chain.length+1, requested_by:"custodian@hospital", approved_by:"dpo@hospital",
+    subject_ids:"[10023847]", purpose_ref:purpose, mfa_method:"TOTP",
+    requested_at:new Date().toISOString(), expires_at:new Date(Date.now()+9e5).toISOString()
+  });
+  const out=[];
+  for(const [k] of VAULT_FIELDS){
+    const v = vaultRecs[k] ? await decField(vaultRecs[k]) : "(run the split in Stage 2 first)";
+    out.push('<div class="frow"><div class="fk">'+k+'</div><div class="fv phi">'+esc(v)+"</div></div>");
+  }
+  unsealed=true;
+  document.getElementById("session-badge").textContent="Unsealed — 15:00";
+  document.getElementById("session-badge").className="badge b-amber";
+  document.getElementById("reid-result").innerHTML=out.join("")+
+    '<div class="callout warn" style="margin-bottom:0"><strong>Decrypted with the real AES-GCM key.</strong> '+
+    'The session closes in fifteen minutes, the audit entry is already written, and it cannot be edited or deleted by the '+
+    'person who requested it.</div>';
+  let rem=900;
+  const iv=setInterval(()=>{
+    rem--; if(rem<=0){ clearInterval(iv);
+      document.getElementById("session-badge").textContent="Sealed — session expired";
+      document.getElementById("session-badge").className="badge b-red";
+      document.getElementById("reid-result").innerHTML='<div class="fv gone">Session expired. Identity Vault re-sealed.</div>';
+      return; }
+    document.getElementById("session-badge").textContent="Unsealed — "+
+      String(Math.floor(rem/60)).padStart(2,"0")+":"+String(rem%60).padStart(2,"0");
+  },1000);
+  renderAnalystView();
+};
+document.getElementById("btn-tamper").onclick=()=>{
+  if(!chain.length) return;
+  chain[0].entry.purpose_ref="ALTERED — covering my tracks";
+  chain[0].broken=true;
+  for(let i=1;i<chain.length;i++) chain[i].broken=true;
+  renderChain();
+  document.getElementById("chain-status").textContent="Chain broken at entry 1";
+  document.getElementById("chain-status").className="badge b-red";
+};
+document.getElementById("btn-verify").onclick=async()=>{
+  let ok=true;
+  for(let i=0;i<chain.length;i++){
+    const prev = i===0 ? "0".repeat(64) : chain[i-1].hash;
+    const h=await sha256(JSON.stringify(chain[i].entry)+prev);
+    if(h!==chain[i].hash || prev!==chain[i].prev){ ok=false; break; }
+  }
+  document.getElementById("chain-status").textContent = ok?"Chain intact — verified":"Chain broken — tampering detected";
+  document.getElementById("chain-status").className = "badge "+(ok?"b-green":"b-red");
+};
+function renderAnalystView(){
+  document.getElementById("analyst-view").innerHTML=
+    '<div class="frow"><div class="fk">Patient name</div><div class="fv gone">column does not exist</div></div>'+
+    '<div class="frow"><div class="fk">Re-identify</div><div class="fv gone">no such endpoint</div></div>'+
+    '<div class="frow"><div class="fk">Audit log</div><div class="fv gone">not visible to this role</div></div>'+
+    '<div class="frow"><div class="fk">Recent access</div><div class="fv gone">'+
+      (chain.length?"no record shown — "+chain.length+" entr"+(chain.length>1?"ies":"y")+" hidden from this role":"nothing to show")+
+    '</div></div>'+
+    '<div class="callout" style="margin-bottom:0">An Analyst cannot see that re-identification is possible, cannot see that it '+
+    'happened, cannot see which patient was involved, and cannot enumerate who holds the capability. The <em>absence</em> of a '+
+    'capability must not leak the shape of the system — who can see a record is metadata about a patient too.</div>';
+}
+renderRole(); renderAnalystView();
+
+/* ── stage 6 ── */
+const EGRESS_STEPS=[
+  ["resolve api.example-llm.com","DNS resolution refused — no outbound resolver configured","drop"],
+  ["connect 443/tcp","No route to host — egress default-deny on vault segment","drop"],
+  ["authenticate","No credential found for this destination in any store","drop"],
+  ["POST /v1/messages","Request never constructed. 0 bytes left the boundary.","drop"]
+];
+const LOCAL_STEPS=[
+  ["load model","qwen2.5:14b — local weights, digest verified at pull time","pass"],
+  ["read corpus","gold.discharge_note — 331,794 de-identified records","pass"],
+  ["infer","Running on local GPU. No network socket opened.","pass"],
+  ["return","Summary returned to the caller inside the boundary.","pass"]
+];
+function runSteps(elId,steps){
+  const el=document.getElementById(elId); el.innerHTML="";
+  steps.forEach((s,i)=>setTimeout(()=>{
+    const d=document.createElement("div");
+    d.className="pkt "+s[2];
+    d.innerHTML="<strong>"+esc(s[0])+"</strong><br>"+esc(s[1]);
+    el.appendChild(d);
+    if(i===steps.length-1 && s[2]==="drop"){
+      const c=document.createElement("div");
+      c.className="callout bad"; c.style.marginBottom="0";
+      c.innerHTML="<strong>Nothing left the building.</strong> Not because a policy forbade it, but because there is no resolver, "+
+        "no route and no credential. An attacker with full code execution inside the Vault has the same problem.";
+      el.appendChild(c);
+    }
+  },i*520));
+}
+document.getElementById("btn-egress").onclick=()=>runSteps("egress-log",EGRESS_STEPS);
+document.getElementById("btn-local").onclick=()=>runSteps("local-log",LOCAL_STEPS);
+
+go(0);
+</script>
+</body>
+</html>
+{% endraw %}
