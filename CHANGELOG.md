@@ -2,6 +2,11 @@
 
 ## 2026-09-16
 
+- style: remove em dashes, add authorship, pin stage navigation
+
+
+## 2026-09-16
+
 - feat: add Yajur Health Vault concept paper and anonymisation sandbox
 
 

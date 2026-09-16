@@ -4,7 +4,7 @@ title: "The Yajur Health Vault: Anonymisation by Architecture"
 date: 2026-09-16 10:00:00 +0530
 last_modified_at: 2026-09-16 10:00:00 +0530
 author: "Manish Sharma"
-description: "A concept paper on building a hospital health data vault where identity is structurally separated from clinical content — drawing on MIMIC's de-identification pipeline and the SAIL Databank's split-file architecture, built entirely on open source, with no path by which data can reach an external model."
+description: "A concept paper on building a hospital health data vault where identity is structurally separated from clinical content, drawing on MIMIC's de-identification pipeline and the SAIL Databank's split-file architecture, built entirely on open source, with no path by which data can reach an external model."
 keywords: "health data vault, hospital data anonymisation, de-identification healthcare, MIMIC de-identification, SAIL Databank architecture, anonymous linking field, ALF_E, trusted research environment India, medallion architecture healthcare, bronze silver gold healthcare data, patient data anonymisation, PHI separation schema, pseudonymisation vs anonymisation, k-anonymity clinical data, date shifting de-identification, surrogate generation clinical notes, break glass re-identification, two factor de-anonymisation, DPDP Act 2023 health data, ABDM health data management policy, anonymisation protocols NHA, HIPAA safe harbor expert determination, motivated intruder test, local inference healthcare, on premise LLM hospital, data sovereignty healthcare India, open source health data platform, MinIO Delta Lake DuckDB healthcare, Five Safes framework, statistical disclosure control, Yajur health vault"
 tags:
   - healthcare
@@ -24,7 +24,7 @@ categories:
   - Healthcare Innovation
 reading_time: "32 min read"
 og_title: "The Yajur Health Vault: Anonymisation by Architecture"
-og_description: "How to build a hospital data vault where the secret is not kept — it is not present. Drawing on MIMIC and the SAIL Databank, built entirely on open source."
+og_description: "How to build a hospital data vault where the secret is not kept; it is not present. Drawing on MIMIC and the SAIL Databank, built entirely on open source."
 og_type: article
 twitter_card: summary_large_image
 article_section: "Healthcare Data Governance"
@@ -41,7 +41,7 @@ mentions:
 <div id="sandbox-sticky" style="position:fixed;bottom:0;left:0;right:0;z-index:9999;background:#0d0d0b;border-top:1px solid #2a2a26;padding:14px 24px;display:none;align-items:center;justify-content:space-between;gap:16px;font-family:'Inter',system-ui,sans-serif;box-shadow:0 -4px 24px rgba(0,0,0,0.3);">
   <div style="display:flex;align-items:center;gap:14px;flex:1;min-width:0;overflow:hidden;">
     <span style="font-size:0.7rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#d97757;white-space:nowrap;">Yajur Labs</span>
-    <span style="font-size:0.9rem;color:#f0ede6;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Watch a record get anonymised — then watch an authorised user bring it back</span>
+    <span style="font-size:0.9rem;color:#f0ede6;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Watch a record get anonymised, then watch an authorised user bring it back</span>
   </div>
   <div style="display:flex;align-items:center;gap:12px;flex-shrink:0;">
     <a href="/sandbox/health-vault-anonymiser.html" style="font-family:'Inter',system-ui,sans-serif;font-size:0.85rem;font-weight:700;padding:9px 20px;background:#d97757;color:#fff;border-radius:5px;text-decoration:none;white-space:nowrap;">Open Sandbox &rarr;</a>
@@ -67,11 +67,11 @@ mentions:
 
 ### A hospital's data problem is not storage. It is permission.
 
-Six months ago I wrote a [practical guide to building a data lakehouse for your hospital](/2026/03/11/building-a-data-lakehouse-for-your-hospital.html) — MinIO, Delta Lake, DuckDB, Metabase, on one server, for the price of a mid-range car and no licensing fees at all. The architecture works. Hospitals have built it.
+Six months ago I wrote a [practical guide to building a data lakehouse for your hospital](/2026/03/11/building-a-data-lakehouse-for-your-hospital.html): MinIO, Delta Lake, DuckDB, Metabase, on one server, for the price of a mid-range car and no licensing fees at all. The architecture works. Hospitals have built it.
 
 And then they stop.
 
-They stop because the moment the lakehouse contains real patient records, a different set of questions arrives, and they are not engineering questions. Who is allowed to run a query? What happens when a researcher wants an extract? Can the analytics team see names? Can the billing vendor? If we want to try an AI model on discharge summaries, does that mean uploading two hundred thousand patients' clinical narratives to a company in another jurisdiction? And if the answer to that last one is no — which it is — then what exactly *are* we allowed to do with the thing we just built?
+They stop because the moment the lakehouse contains real patient records, a different set of questions arrives, and they are not engineering questions. Who is allowed to run a query? What happens when a researcher wants an extract? Can the analytics team see names? Can the billing vendor? If we want to try an AI model on discharge summaries, does that mean uploading two hundred thousand patients' clinical narratives to a company in another jurisdiction? And if the answer to that last one is no, which it is, then what exactly *are* we allowed to do with the thing we just built?
 
 These questions do not have technical answers in most hospitals. They have *organisational* answers, which is to say they have no answers: a spreadsheet of who has database credentials, an informal norm that the data team "doesn't look at names", a vendor contract with an indemnity clause. None of that survives contact with a serious auditor, and none of it survives contact with a breach.
 
@@ -79,9 +79,9 @@ This paper describes the layer that has to come next. We call it the **Yajur Hea
 
 > **A vault is not a place where the secret is kept. It is an architecture in which the secret is not present.**
 
-Everything below follows from that. The clinical data your analysts, your dashboards and your models touch does not contain identity — not because a policy forbids looking, but because the identifying values are not in that database, are not reachable from it, and cannot be derived from what is. Re-identification remains possible for the small number of people whose job requires it, through a deliberate, authenticated, dual-authorised, time-boxed and permanently audited path. For everyone else it is not restricted. It is absent.
+Everything below follows from that. The clinical data your analysts, your dashboards and your models touch does not contain identity, not because a policy forbids looking, but because the identifying values are not in that database, are not reachable from it, and cannot be derived from what is. Re-identification remains possible for the small number of people whose job requires it, through a deliberate, authenticated, dual-authorised, time-boxed and permanently audited path. For everyone else it is not restricted. It is absent.
 
-This is not a new idea, and I want to be clear about that from the start, because the credibility of this approach rests on it being *old*. Two systems have been doing versions of this for over a decade and have published how: **MIMIC**, the intensive-care database released by MIT's Laboratory for Computational Physiology from Beth Israel Deaconess Medical Center, and the **SAIL Databank** at Swansea University, which links health and social-care records for the population of Wales. Between them they have supported thousands of studies. Neither has had a re-identification incident. This paper steals from both, says exactly what it is stealing, and — where their published methods conflict, which happens more often than you would expect — says which one we chose and why.
+This is not a new idea, and I want to be clear about that from the start, because the credibility of this approach rests on it being *old*. Two systems have been doing versions of this for over a decade and have published how: **MIMIC**, the intensive-care database released by MIT's Laboratory for Computational Physiology from Beth Israel Deaconess Medical Center, and the **SAIL Databank** at Swansea University, which links health and social-care records for the population of Wales. Between them they have supported thousands of studies. Neither has had a re-identification incident. This paper steals from both, says exactly what it is stealing, and, where their published methods conflict, which happens more often than you would expect, says which one we chose and why.
 
 It is written for three readers at once. Part I and II are for the medical director, the CEO and the Data Protection Officer deciding whether this is worth doing. Parts III and IV are for the architect and the data engineer who will build it. Part V is for the ethics committee, the regulator and the institutional review board who will ask whether it is defensible. Part VI is the section I would read first if I were any of them: what this approach does *not* do, and what it costs.
 
@@ -89,23 +89,23 @@ There is also a [working demonstration](/sandbox/health-vault-anonymiser.html) t
 
 ---
 
-## Part I — Why the obvious approaches fail
+## Part I: Why the obvious approaches fail
 
 ### The access-control answer
 
-The instinctive response to "who can see patient data" is to control access: roles, permissions, row-level security, a good audit log. Every hospital information system ships with this, and it is necessary. It is also, on its own, insufficient — for a reason that has nothing to do with how well it is implemented.
+The instinctive response to "who can see patient data" is to control access: roles, permissions, row-level security, a good audit log. Every hospital information system ships with this, and it is necessary. It is also, on its own, insufficient, for a reason that has nothing to do with how well it is implemented.
 
-Access control protects data **that is present**. A privileged credential, a misconfigured backup, an SQL injection, a departing employee with a USB drive, a ransomware operator who exfiltrates before encrypting — every one of these defeats access control precisely because the data was sitting there, complete, waiting to be read by anyone who got past the gate. The 2023–2025 run of hospital breaches in India, the US and the UK were overwhelmingly not failures of cryptography. They were successful authentications by the wrong party.
+Access control protects data **that is present**. A privileged credential, a misconfigured backup, an SQL injection, a departing employee with a USB drive, a ransomware operator who exfiltrates before encrypting. Every one of these defeats access control precisely because the data was sitting there, complete, waiting to be read by anyone who got past the gate. The 2023–2025 run of hospital breaches in India, the US and the UK were overwhelmingly not failures of cryptography. They were successful authentications by the wrong party.
 
 Access control asks: *is this person allowed to see the name?* Anonymisation by architecture asks a better question: *is the name here at all?*
 
 ### The "we'll just remove the names" answer
 
-The second instinct is to strip the obvious identifiers — name, phone, address, hospital number — and call the result anonymous. This fails in a more interesting way, and the failure has a name: the **mosaic effect**.
+The second instinct is to strip the obvious identifiers (name, phone, address, hospital number) and call the result anonymous. This fails in a more interesting way, and the failure has a name: the **mosaic effect**.
 
-Latanya Sweeney demonstrated the canonical version in the late 1990s: date of birth, sex and five-digit ZIP code — none of them a "name" — uniquely identify a large majority of the US population. She proved it by re-identifying the Governor of Massachusetts in a supposedly anonymous hospital discharge dataset and mailing him his own medical records. The lesson generalises brutally to clinical data, where a patient is characterised not by three attributes but by hundreds: a sequence of lab values, an admission timestamp, a rare drug, an unusual comorbidity pairing, a referral from a named clinic.
+Latanya Sweeney demonstrated the canonical version in the late 1990s: date of birth, sex and five-digit ZIP code (none of them a "name") uniquely identify a large majority of the US population. She proved it by re-identifying the Governor of Massachusetts in a supposedly anonymous hospital discharge dataset and mailing him his own medical records. The lesson generalises brutally to clinical data, where a patient is characterised not by three attributes but by hundreds: a sequence of lab values, an admission timestamp, a rare drug, an unusual comorbidity pairing, a referral from a named clinic.
 
-In a 50-bed hospital in a single neighbourhood, the mosaic effect is *worse*, not better, than in a national dataset. A 34-year-old woman from a particular pin code admitted with a rare autoimmune presentation is not one in a million. In that catchment she is one, full stop. The smaller and more local your data, the more identifying every attribute becomes — which is the exact opposite of the intuition most hospital boards start with.
+In a 50-bed hospital in a single neighbourhood, the mosaic effect is *worse*, not better, than in a national dataset. A 34-year-old woman from a particular pin code admitted with a rare autoimmune presentation is not one in a million. In that catchment she is one, full stop. The smaller and more local your data, the more identifying every attribute becomes, which is the exact opposite of the intuition most hospital boards start with.
 
 ### The "send it to the model" answer
 
@@ -117,7 +117,7 @@ There is also a jurisdictional reality that Indian hospitals in particular shoul
 
 ---
 
-## Part II — What the Vault is, in one page
+## Part II: What the Vault is, in one page
 
 For readers who will decide whether to fund this rather than build it.
 
@@ -125,54 +125,54 @@ The Yajur Health Vault is a set of five zones through which every piece of clini
 
 | Zone | What it holds | Who reads it |
 |---|---|---|
-| **0 — Archive** | A byte-exact, encrypted, immutable copy of exactly what arrived. Full identity. | Nobody. It is a legal record of receipt, not a dataset. |
-| **1 — Bronze** | The same records, parsed — but with direct identifiers *extracted out* into a separate encrypted store. | The ingestion service only. |
-| **2 — Silver** | Dates shifted, clinical notes de-identified, indirect identifiers generalised. | Data engineering, audited. |
-| **3 — Gold** | Analysis-ready data containing no identity. | Everyone. Freely. This is the working database. |
-| **4 — Egress** | Anything leaving the building at all, checked for disclosure first. | Requires human sign-off. |
+| **0 · Archive** | A byte-exact, encrypted, immutable copy of exactly what arrived. Full identity. | Nobody. It is a legal record of receipt, not a dataset. |
+| **1 · Bronze** | The same records, parsed, but with direct identifiers *extracted out* into a separate encrypted store. | The ingestion service only. |
+| **2 · Silver** | Dates shifted, clinical notes de-identified, indirect identifiers generalised. | Data engineering, audited. |
+| **3 · Gold** | Analysis-ready data containing no identity. | Everyone. Freely. This is the working database. |
+| **4 · Egress** | Anything leaving the building at all, checked for disclosure first. | Requires human sign-off. |
 
-The direct identifiers extracted at Zone 1 go into the **Identity Vault** — a small, separate, encrypted database whose only function is to hold the mapping between a real person and a random number. It sits behind its own credentials, its own encryption keys, and a key-management service that requires several people to unseal. The analytics database has no network route to it, no credential for it, and no key that would decrypt it.
+The direct identifiers extracted at Zone 1 go into the **Identity Vault**: a small, separate, encrypted database whose only function is to hold the mapping between a real person and a random number. It sits behind its own credentials, its own encryption keys, and a key-management service that requires several people to unseal. The analytics database has no network route to it, no credential for it, and no key that would decrypt it.
 
 **What you get.** Your analysts, your dashboards, your quality team, your researchers and your AI models all work against Zone 3, freely, without a privacy review for every query, because there is nothing there to review. The work that was blocked for governance reasons becomes ordinary work.
 
-**What it costs.** One additional server-class machine, roughly ₹2–3 lakh, plus a PostgreSQL instance you probably already run. Zero licensing — every component is open source. The real cost is not money; it is about eight to twelve weeks of engineering and, more importantly, the creation of a small standing governance body that approves data uses. That body is not optional. It is the part that makes the rest defensible.
+**What it costs.** One additional server-class machine, roughly ₹2–3 lakh, plus a PostgreSQL instance you probably already run. Zero licensing; every component is open source. The real cost is not money; it is about eight to twelve weeks of engineering and, more importantly, the creation of a small standing governance body that approves data uses. That body is not optional. It is the part that makes the rest defensible.
 
 **What it does not do.** It does not make your data anonymous in an absolute sense, because nothing does. Part VI is an honest accounting of that, and I would rather you read it before committing than after.
 
 ---
 
-## Part III — Architecture
+## Part III: Architecture
 
 ### III.1 The split: the single most important design decision
 
 The foundational move is borrowed from the SAIL Databank, and it is worth understanding why it is stronger than it first appears.
 
-SAIL does not hold identified data at all. Health records arrive at Swansea already split: a **demographic file** goes to a trusted third party — historically the NHS Wales Informatics Service, now Digital Health and Care Wales — while the **clinical file**, stripped of identity, goes to SAIL. The third party matches people and assigns each an anonymous key. SAIL receives clinical data keyed by that number and never sees the demographics. The third party sees demographics and never sees the clinical content.
+SAIL does not hold identified data at all. Health records arrive at Swansea already split: a **demographic file** goes to a trusted third party, historically the NHS Wales Informatics Service, now Digital Health and Care Wales, while the **clinical file**, stripped of identity, goes to SAIL. The third party matches people and assigns each an anonymous key. SAIL receives clinical data keyed by that number and never sees the demographics. The third party sees demographics and never sees the clinical content.
 
 Neither party can re-identify anyone alone. That is not a promise about behaviour; it is a statement about what each party physically holds.
 
-A single hospital cannot fully replicate a two-organisation split — it is one organisation, and it legitimately holds both halves for care delivery. But it can replicate the *property* by making the separation a boundary of credentials, keys and network reachability rather than of corporate ownership:
+A single hospital cannot fully replicate a two-organisation split; it is one organisation, and it legitimately holds both halves for care delivery. But it can replicate the *property* by making the separation a boundary of credentials, keys and network reachability rather than of corporate ownership:
 
 - The Identity Vault is a **separate PostgreSQL instance**, not a separate schema in the same database. A schema is a permissions boundary; a separate instance with separate credentials on a separate network segment is an architectural one.
 - **No database link, foreign data wrapper or federated query** connects the two. A join between clinical content and identity cannot be expressed as a query at all. It requires an explicit, authenticated API call that writes an audit record before it returns anything.
-- Application credentials for the lakehouse **do not exist** in the Identity Vault's authentication realm. Not "are denied permission" — do not exist.
+- Application credentials for the lakehouse **do not exist** in the Identity Vault's authentication realm. Not "are denied permission". They do not exist.
 - Identity Vault columns are encrypted at the application layer with **AES-256-GCM**, using a key held in **OpenBao** (the open-source fork of HashiCorp Vault), sealed, and unsealed by Shamir key shares distributed to several people. A database administrator with full filesystem access to the Identity Vault reads ciphertext.
 
 The test of whether you have implemented this correctly is simple and worth putting in your runbook: **if a single compromised credential can produce a name attached to a diagnosis, you have not built a vault.** You have built a database with good intentions.
 
 ### III.2 Identifiers: random, never hashed
 
-Every record in Zones 1 through 4 is keyed by surrogate identifiers — `subject_id` for a person, `hadm_id` for an admission, `stay_id` for an episode of care.
+Every record in Zones 1 through 4 is keyed by surrogate identifiers: `subject_id` for a person, `hadm_id` for an admission, `stay_id` for an episode of care.
 
 These are **randomly generated and stored in a look-up table**. They are emphatically *not* hashes of the medical record number, and this is the single most common and most serious mistake in health data de-identification.
 
-The reasoning is worth spelling out because the mistake is so intuitive. Hashing feels safe: SHA-256 is one-way, so a hashed MRN cannot be reversed. But a hash is only one-way over an *unpredictable* input space. Hospital MRNs are not unpredictable — they are short, structured, sequential, and follow a visible format like `APL/2024/08812`. An attacker who knows the format can hash every plausible MRN in the issuing range in seconds and build a complete reverse lookup table. Hashing an MRN provides essentially no protection. Salting helps only until the salt leaks, at which point the same attack runs again.
+The reasoning is worth spelling out because the mistake is so intuitive. Hashing feels safe: SHA-256 is one-way, so a hashed MRN cannot be reversed. But a hash is only one-way over an *unpredictable* input space. Hospital MRNs are not unpredictable; they are short, structured, sequential, and follow a visible format like `APL/2024/08812`. An attacker who knows the format can hash every plausible MRN in the issuing range in seconds and build a complete reverse lookup table. Hashing an MRN provides essentially no protection. Salting helps only until the salt leaks, at which point the same attack runs again.
 
 MIMIC gets this right, and says so plainly. From the MIMIC-IV documentation:
 
 > "Patient identifiers were replaced using a random cipher, resulting in deidentified integer identifiers for patients, hospitalizations, and ICU stays."
 
-A random integer from a look-up table has no relationship to the input at all. There is nothing to attack except the look-up table itself — which is exactly the thing we put in the Identity Vault and guard accordingly.
+A random integer from a look-up table has no relationship to the input at all. There is nothing to attack except the look-up table itself, which is exactly the thing we put in the Identity Vault and guard accordingly.
 
 Identifiers are also **shuffled**, so that ordering leaks nothing: `subject_id` 10023847 was not admitted before `subject_id` 10023848.
 
@@ -182,16 +182,16 @@ SAIL goes considerably further than a single surrogate, and the design is elegan
 
 | Layer | SAIL's name | Held by | The attack it defeats |
 |---|---|---|---|
-| Source | NHS number / ABHA + MRN | The hospital | — |
-| 1 | **ALF** — Anonymous Linking Field, a consistent encryption of the national ID | Trusted third party | Exposure of the national identifier |
-| 2 | **ALF_E** — re-encrypted on receipt | The vault operator | **Collusion with the third party.** SAIL's own wording: re-encryption means "it is not possible for either a SAIL researcher or someone working for NWIS to use SAIL data to reverse the process to reveal NHS numbers." |
-| 3 | **ALF_PE** — encrypted again with a per-project key | Per-project | **The mosaic attack across releases.** A researcher working on two approved projects cannot join their own two datasets, because the same patient carries a different key in each. |
+| Source | NHS number / ABHA + MRN | The hospital | n/a |
+| 1 | **ALF**: Anonymous Linking Field, a consistent encryption of the national ID | Trusted third party | Exposure of the national identifier |
+| 2 | **ALF_E**: re-encrypted on receipt | The vault operator | **Collusion with the third party.** SAIL's own wording: re-encryption means "it is not possible for either a SAIL researcher or someone working for NWIS to use SAIL data to reverse the process to reveal NHS numbers." |
+| 3 | **ALF_PE**: encrypted again with a per-project key | Per-project | **The mosaic attack across releases.** A researcher working on two approved projects cannot join their own two datasets, because the same patient carries a different key in each. |
 
-That third layer deserves emphasis, because it defends against something most anonymisation schemes ignore entirely. Anonymisation is usually evaluated one dataset at a time. But an adversary — or simply a curious researcher with two legitimate approvals — can combine releases, and combination is where re-identification actually happens in practice. Project-scoped keys make combination impossible without going back through the Vault.
+That third layer deserves emphasis, because it defends against something most anonymisation schemes ignore entirely. Anonymisation is usually evaluated one dataset at a time. But an adversary, or simply a curious researcher with two legitimate approvals, can combine releases, and combination is where re-identification actually happens in practice. Project-scoped keys make combination impossible without going back through the Vault.
 
-SAIL applies the same idea to addresses, producing a **RALF** — a Residential Anonymous Linking Field. Researchers can determine that two people live in the same household, and study household transmission or neighbourhood effects, without ever learning where that household is. For a hospital whose ambition is [neighbourhood health intelligence](/2026/03/11/building-a-data-lakehouse-for-your-hospital.html), this is precisely the right primitive, and it is one most people never think to build.
+SAIL applies the same idea to addresses, producing a **RALF**: a Residential Anonymous Linking Field. Researchers can determine that two people live in the same household, and study household transmission or neighbourhood effects, without ever learning where that household is. For a hospital whose ambition is [neighbourhood health intelligence](/2026/03/11/building-a-data-lakehouse-for-your-hospital.html), this is precisely the right primitive, and it is one most people never think to build.
 
-Matching people across source systems before any of this happens uses SAIL's **MACRAL** approach — deterministic matching on a valid national identifier where one exists, probabilistic weighted matching on five demographics (forename, surname, postcode, date of birth, sex) otherwise. SAIL reports match rates of 99.999% for GP data, 99.32% for inpatient records, and 95.16% for social services data — a useful reminder that the cleaner the source system, the better every downstream privacy property behaves.
+Matching people across source systems before any of this happens uses SAIL's **MACRAL** approach, deterministic matching on a valid national identifier where one exists, probabilistic weighted matching on five demographics (forename, surname, postcode, date of birth, sex) otherwise. SAIL reports match rates of 99.999% for GP data, 99.32% for inpatient records, and 95.16% for social services data, a useful reminder that the cleaner the source system, the better every downstream privacy property behaves.
 
 ### III.4 Dates: what shifting actually preserves
 
@@ -201,7 +201,7 @@ MIMIC assigns **a single random offset, in whole days, to each patient**, and ap
 
 **What survives this, intact:**
 
-- Every interval within a patient. MIMIC's documentation is explicit: "If the time between two measures in the database was 4 hours in the raw data, then the calculated time difference in MIMIC-IV will also be 4 hours." Length of stay, time-to-treatment, readmission interval, dose spacing — all exact.
+- Every interval within a patient. MIMIC's documentation is explicit: "If the time between two measures in the database was 4 hours in the raw data, then the calculated time difference in MIMIC-IV will also be 4 hours." Length of stay, time-to-treatment, readmission interval and dose spacing are all exact.
 - **Time of day.** A 3 a.m. admission is still a 3 a.m. admission.
 - **Day of week.** Weekend-effect studies work.
 - **Approximate seasonality.** The MIMIC-II user guide states that "the day of the week and season of the year were preserved."
@@ -211,17 +211,17 @@ MIMIC assigns **a single random offset, in whole days, to each patient**, and ap
 - Absolute calendar position. MIMIC's shifted years land somewhere in 2100–2200.
 - **Comparability between patients.** This is the real loss, and MIMIC states it bluntly: "Distinct patients are not temporally comparable. That is, two patients admitted in 2130 were not necessarily admitted in the same year."
 
-That second point is what actually hurts. It is not seasonality that dies — it is your ability to line two patients up on a shared calendar, which is what epidemic curves, practice-change studies and pandemic-wave stratification all require.
+That second point is what actually hurts. It is not seasonality that dies; it is your ability to line two patients up on a shared calendar, which is what epidemic curves, practice-change studies and pandemic-wave stratification all require.
 
 MIMIC-IV introduces a fix, and it is the single most reusable idea in the whole corpus. Alongside the shifted dates, each patient carries:
 
-- `anchor_year` — a shifted year,
-- `anchor_age` — their age in that year,
-- `anchor_year_group` — **a three-year band of *real* calendar time**, such as `2008 - 2010`.
+- `anchor_year`: a shifted year,
+- `anchor_age`: their age in that year,
+- `anchor_year_group`: **a three-year band of *real* calendar time**, such as `2008-2010`.
 
-So a patient with `anchor_year` 2153, `anchor_year_group` `2008 - 2010` and `anchor_age` 60 was 60 years old sometime in 2008–2010; their shifted year 2154 maps to real 2009–2011. You recover coarse real-world calendar position at ±3 years while every patient keeps a day-level random shift.
+So a patient with `anchor_year` 2153, `anchor_year_group` `2008-2010` and `anchor_age` 60 was 60 years old sometime in 2008–2010; their shifted year 2154 maps to real 2009–2011. You recover coarse real-world calendar position at ±3 years while every patient keeps a day-level random shift.
 
-For a hospital, the practical read is: **dengue and respiratory seasonality analysis works. Year-on-year trend analysis works at three-year granularity. Stratifying by COVID wave does not.** Know which of those you need before you choose your band width — a wider band is more private and less useful, and that trade is yours to set, not ours.
+For a hospital, the practical read is: **dengue and respiratory seasonality analysis works. Year-on-year trend analysis works at three-year granularity. Stratifying by COVID wave does not.** Know which of those you need before you choose your band width: a wider band is more private and less useful, and that trade is yours to set, not ours.
 
 **Patients over 89.** HIPAA's Safe Harbor rule requires ages above 89 to be aggregated, because the very old are identifiable by age alone. MIMIC has done this two different ways, and the difference is instructive. MIMIC-III set the date of birth to exactly 300 years before first admission, so these patients appear to be over 300 years old (their real median age is 91.4). MIMIC-IV instead top-codes: "If a patient's `anchor_age` is over 89 in the `anchor_year` then their `anchor_age` is set to 91."
 
@@ -231,33 +231,33 @@ For a hospital, the practical read is: **dengue and respiratory seasonality anal
 
 Free text is where most of the clinical value lives and where most de-identification projects fail.
 
-**Detection** is a solved-enough problem, and the solution is a hybrid. The reference implementation is the `deid` package from Neamatullah et al. (2008), built for MIMIC-II and MIMIC-III, which combines three mechanisms: dictionary look-up against known-PHI tables pulled from the source database itself; regular expressions for structured numerics like dates, phone numbers and MRNs; and context heuristics that catch names by their surroundings — "Mr.", "Dr.", "daughter", "Hospital", "Street". Critically it also maintains a **non-PHI allow-list** of clinical vocabulary, which is what stops it scrubbing "Parkinson", "Bell" or "Crohn". MIMIC-IV upgraded this to a rule-based system unioned with a neural network trained for de-identification.
+**Detection** is a solved-enough problem, and the solution is a hybrid. The reference implementation is the `deid` package from Neamatullah et al. (2008), built for MIMIC-II and MIMIC-III, which combines three mechanisms: dictionary look-up against known-PHI tables pulled from the source database itself; regular expressions for structured numerics like dates, phone numbers and MRNs; and context heuristics that catch names by their surroundings: "Mr.", "Dr.", "daughter", "Hospital", "Street". Critically it also maintains a **non-PHI allow-list** of clinical vocabulary, which is what stops it scrubbing "Parkinson", "Bell" or "Crohn". MIMIC-IV upgraded this to a rule-based system unioned with a neural network trained for de-identification.
 
 The numbers are public, and both halves should be quoted:
 
 > `deid` achieved **recall 0.967 and precision 0.749** on a gold-standard corpus of 2,434 nursing notes. MIMIC-IV-Note reports **99.9% sensitivity** on 2.3 million radiology reports.
 
-The precision figure is the one people skip. It means roughly **15% of what the system removes is not PHI at all** — real clinical text destroyed as collateral because the system is deliberately tuned to prefer over-removal. That is the correct trade for privacy and a genuine cost to your data. It should appear in your documentation, not just your vendor's.
+The precision figure is the one people skip. It means roughly **15% of what the system removes is not PHI at all**: real clinical text destroyed as collateral because the system is deliberately tuned to prefer over-removal. That is the correct trade for privacy and a genuine cost to your data. It should appear in your documentation, not just your vendor's.
 
-**Replacement is the interesting decision**, and MIMIC itself has changed its mind about it twice — which is a good sign that anyone claiming an obvious answer has not looked closely.
+**Replacement is the interesting decision**, and MIMIC itself has changed its mind about it twice, which is a good sign that anyone claiming an obvious answer has not looked closely.
 
 | Approach | Example | Property |
 |---|---|---|
-| MIMIC-III: typed **and indexed** tags | `[**Known lastname 1234**]` | Informative and stable per entity — **but the index leaks equivalence classes.** You learn which mentions refer to the same person, which is itself information. |
+| MIMIC-III: typed **and indexed** tags | `[**Known lastname 1234**]` | Informative and stable per entity, **but the index leaks equivalence classes.** You learn which mentions refer to the same person, which is itself information. |
 | MIMIC-IV: a single opaque token | `___` | Zero information, zero linkage. Safest available. But it destroys *what kind* of thing was removed, which measurably degrades downstream NLP. |
 | Realistic surrogates | "Ramesh Kumar" → "Suresh Patel" | **Camouflage.** A missed real name is indistinguishable from the thousands of fake ones, so a detection failure stops being a disclosure. |
 
 The camouflage property of surrogates is genuinely powerful, and given a 0.967 recall it matters: about 3% of PHI instances survive detection, and surrogates are what stops those survivors standing out.
 
-But surrogates carry an objection that applies to a *hospital* vault and not to a research corpus: **a clinician reading a surrogate-substituted note cannot tell what is real.** If vault data ever informs care — and in a hospital it eventually will — then a system that invents plausible clinical text is a patient-safety hazard, not merely a privacy choice. "Referred by Dr. Suresh Patel of Ganga Hospital" is a fabricated clinical fact sitting in a record that looks authoritative.
+But surrogates carry an objection that applies to a *hospital* vault and not to a research corpus: **a clinician reading a surrogate-substituted note cannot tell what is real.** If vault data ever informs care, and in a hospital it eventually will, then a system that invents plausible clinical text is a patient-safety hazard, not merely a privacy choice. "Referred by Dr. Suresh Patel of Ganga Hospital" is a fabricated clinical fact sitting in a record that looks authoritative.
 
 **So the Vault does both, and selects by destination.** The replacement mode is a function of who reads the text:
 
 | Destination | Mode | Rationale |
 |---|---|---|
-| Zones 2–3: internal clinical vault, local inference, anything a clinician may read | **Typed, unindexed tags** — `<NAME>`, `<HOSPITAL>`, `<MRN>` | The reader knows a name was removed *and that it was a name*. Nothing is fabricated, so nothing can be mistaken for a clinical fact. No equivalence-class leak. |
+| Zones 2–3: internal clinical vault, local inference, anything a clinician may read | **Typed, unindexed tags**: `<NAME>`, `<HOSPITAL>`, `<MRN>` | The reader knows a name was removed *and that it was a name*. Nothing is fabricated, so nothing can be mistaken for a clinical fact. No equivalence-class leak. |
 | Zone 4: research-corpus export | **Realistic surrogates**, consistent within a patient, deliberately inconsistent across patients | Camouflage where it matters most. No clinician reads this text, so the safety objection does not apply. |
-| Never | **Indexed** tags | Documented anti-pattern — the index is a linkage key you did not mean to publish. |
+| Never | **Indexed** tags | Documented anti-pattern. The index is a linkage key you did not mean to publish. |
 
 Dates inside notes are not tagged at all. They are shifted in lockstep with the structured data, so the narrative stays clinically coherent: "readmitted eleven days later" remains true.
 
@@ -267,10 +267,10 @@ Direct identifiers are the easy half. The mosaic effect lives in the *indirect* 
 
 The natural next step is to claim a formal privacy guarantee, and here the paper has to be careful, because the honest answer is more limited than the marketing answer.
 
-- **k-anonymity** guarantees each record is indistinguishable from at least *k−1* others on the quasi-identifiers — but says nothing about the sensitive attribute, so a k-anonymous group where all *k* members share a diagnosis leaks it anyway.
-- **l-diversity** requires *l* well-represented values of the sensitive attribute per group — but ignores their distribution, so a group that is 99% HIV-positive can still be 2-diverse and fully disclosive.
-- **t-closeness** constrains that distribution — and in practice destroys the most utility, because clinical cohorts are *supposed* to have skewed outcomes.
-- **Differential privacy** makes an individual's participation deniable regardless of the adversary's side knowledge — but it is a property of a *query mechanism*, not of a released table, and its privacy budget is consumed by every query, which makes it a poor fit for open-ended exploratory clinical research.
+- **k-anonymity** guarantees each record is indistinguishable from at least *k−1* others on the quasi-identifiers, but says nothing about the sensitive attribute, so a k-anonymous group where all *k* members share a diagnosis leaks it anyway.
+- **l-diversity** requires *l* well-represented values of the sensitive attribute per group, but ignores their distribution, so a group that is 99% HIV-positive can still be 2-diverse and fully disclosive.
+- **t-closeness** constrains that distribution, and in practice destroys the most utility, because clinical cohorts are *supposed* to have skewed outcomes.
+- **Differential privacy** makes an individual's participation deniable regardless of the adversary's side knowledge, but it is a property of a *query mechanism*, not of a released table, and its privacy budget is consumed by every query, which makes it a poor fit for open-ended exploratory clinical research.
 
 All four assume you can cleanly partition columns into quasi-identifiers and sensitive attributes. **Real EHR data cannot be partitioned that way.** A longitudinal sequence of two hundred lab values with timestamps *is* a quasi-identifier. High-dimensional sparse records are provably near-impossible to k-anonymise without destroying their utility.
 
@@ -278,7 +278,7 @@ The decisive evidence: **neither MIMIC nor SAIL claims k-anonymity, l-diversity 
 
 So the Vault makes a correspondingly scoped claim:
 
-- **k-anonymity with an l-diversity check is enforced as a build-time gate on gold aggregate and cohort marts** — where the quasi-identifier/sensitive partition is real and the guarantee means something. A cell that cannot reach the threshold is quarantined, not published. Recommended starting values: **k ≥ 5, suppress cells below 5** — though these are for your Data Access Committee to set, not for us to standardise.
+- **k-anonymity with an l-diversity check is enforced as a build-time gate on gold aggregate and cohort marts**, where the quasi-identifier/sensitive partition is real and the guarantee means something. A cell that cannot reach the threshold is quarantined, not published. Recommended starting values: **k ≥ 5, suppress cells below 5**, though these are for your Data Access Committee to set, not for us to standardise.
 - **Full longitudinal record sets are not claimed to be k-anonymous.** They are protected by access control, project-scoped keys, and output checking at Zone 4.
 - The standard we test against is the UK ICO's **motivated intruder test**: could someone who actively *wants* to re-identify a person from this output succeed, using public records and reasonable effort? That is a red-team exercise, not a checklist, and it is the right bar.
 
@@ -288,12 +288,12 @@ Anonymisation that cannot be reversed by anyone is not a hospital system. It is 
 
 So the Vault has a re-identification path. It is narrow, and every condition is required:
 
-1. **Role.** The requester holds an explicit `vault.reidentify` permission. Not an admin role that happens to include it — a specific, separately granted capability.
+1. **Role.** The requester holds an explicit `vault.reidentify` permission. Not an admin role that happens to include it, but a specific, separately granted capability.
 2. **Second factor.** TOTP or, preferably, a hardware WebAuthn key. Password alone never suffices.
 3. **Stated purpose**, bound to a ticket, a consent record, or a named legal basis. A free-text box is not a purpose; the purpose must reference an object that exists.
 4. **Dual control** for anything beyond a single subject. A second authoriser, different person, approves before keys are released.
 5. **Time-boxed session** with a visible countdown. Fifteen minutes, then it closes.
-6. **Scoped** to enumerated `subject_id` values. There is no "re-identify all" endpoint. It is not that the endpoint is protected — it is not implemented.
+6. **Scoped** to enumerated `subject_id` values. There is no "re-identify all" endpoint. It is not that the endpoint is protected; it is not implemented.
 
 Every request writes an entry to an **append-only, hash-chained audit log** before keys are released. Each entry contains the hash of its predecessor, so altering or deleting any historical entry breaks the chain at every subsequent record and is immediately detectable. The requester cannot edit it, and neither can the database administrator.
 
@@ -305,13 +305,13 @@ The audit log is visible to the Data Protection Officer and the Data Access Comm
 
 Hospitals are routinely asked to accept "your data will not be used for training" as a privacy guarantee. The Vault replaces that promise with five layers that do not require trusting anyone:
 
-1. **Network.** The Vault runs on a segment with default-deny egress. There is no route to the public internet. Not a firewall rule that could be changed by someone with access — no route.
+1. **Network.** The Vault runs on a segment with default-deny egress. There is no route to the public internet. Not a firewall rule that could be changed by someone with access. There is no route.
 2. **Runtime.** Containers have no outbound DNS resolution. An egress proxy logs and drops anything attempting to leave.
 3. **Data plane.** Model weights are pulled *in* once, verified by digest, and then run locally. Inference is a local computation, not a network call.
 4. **Credentials.** This is the layer that makes the argument land: **no API key for any external model provider exists anywhere in the Vault environment.** Not in a vault, not in an environment variable, not in a developer's `.env`. You cannot exfiltrate to a service you cannot authenticate to. An attacker who achieves full code execution inside the Vault still has nowhere to send anything.
-5. **Verification.** Continuous egress audit, plus canary records — synthetic patients whose distinctive attributes would surface if the corpus ever appeared anywhere it should not.
+5. **Verification.** Continuous egress audit, plus canary records: synthetic patients whose distinctive attributes would surface if the corpus ever appeared anywhere it should not.
 
-A necessary clarification, because hospitals in India will immediately raise it: **ABDM exchange is not an exception to this rule.** ABDM's consent-artefact flow is outbound by design, and it should be. The rule is not "no egress" — it is "**no ungoverned egress**". ABDM traffic is a Zone 4 channel: explicitly allowlisted, consent-bound, logged, and carrying only what the consent artefact permits. The distinction the Vault enforces is between traffic that passed through a governed channel and traffic that found its own way out.
+A necessary clarification, because hospitals in India will immediately raise it: **ABDM exchange is not an exception to this rule.** ABDM's consent-artefact flow is outbound by design, and it should be. The rule is not "no egress"; it is "**no ungoverned egress**". ABDM traffic is a Zone 4 channel: explicitly allowlisted, consent-bound, logged, and carrying only what the consent artefact permits. The distinction the Vault enforces is between traffic that passed through a governed channel and traffic that found its own way out.
 
 ---
 
@@ -328,7 +328,7 @@ A necessary clarification, because hospitals in India will immediately raise it:
   <a href="/sandbox/health-vault-anonymiser.html" style="display:inline-block;font-family:'Inter',system-ui,sans-serif;font-size:0.875rem;font-weight:700;letter-spacing:0.03em;padding:12px 26px;background:#d97757;color:#fff;border-radius:6px;text-decoration:none;">Open the Health Vault Sandbox &rarr;</a>
 </div>
 
-## Part IV — What you actually build
+## Part IV: What you actually build
 
 For the engineer. Concrete enough to start from; not a substitute for design review.
 
@@ -340,7 +340,7 @@ Extending the [lakehouse stack](/2026/03/11/building-a-data-lakehouse-for-your-h
 |---|---|---|
 | Object storage | **MinIO** | Already in the stack. Object lock provides Zone 0 WORM. |
 | Table format | **Delta Lake** (Tier 1) / **Apache Iceberg** (Tier 3) | Time travel, schema enforcement, ACID between zones. |
-| Identity Vault | **PostgreSQL**, separate instance | Small, relational, separately credentialed. Not a schema — an instance. |
+| Identity Vault | **PostgreSQL**, separate instance | Small, relational, separately credentialed. Not a schema but an instance. |
 | Key management | **OpenBao** | Open-source Vault fork. Sealed storage, Shamir unseal, key rotation, per-project key derivation for ALF_PE. |
 | Transformation | **DuckDB + dbt** | Zone promotions as dbt models; disclosure gates as dbt tests. |
 | Orchestration | **Prefect** (Tier 1) / **Airflow** (Tier 2+) | Zone promotion is a scheduled pipeline, not a script someone runs. |
@@ -416,16 +416,16 @@ The suppression log matters more than it sounds. If you suppress silently, analy
 
 If you ingest imaging, note that **DICOM carries PHI in two entirely separate places**, and a pipeline that handles one will silently pass the other:
 
-- **Header metadata** — `PatientName`, `PatientID`, `PatientBirthDate`, plus private vendor tags that vary by manufacturer and are frequently overlooked.
-- **Burned-in pixel data** — the patient's name rendered into the image itself, standard on ultrasound and common on scanned films. No amount of header scrubbing touches it; it requires optical character recognition over the pixels.
+- **Header metadata**: `PatientName`, `PatientID`, `PatientBirthDate`, plus private vendor tags that vary by manufacturer and are frequently overlooked.
+- **Burned-in pixel data**: the patient's name rendered into the image itself, standard on ultrasound and common on scanned films. No amount of header scrubbing touches it; it requires optical character recognition over the pixels.
 
 India's ICMR guidelines are, as far as I can find, the only domestic instrument that flags this explicitly, and they are worth quoting because the point is so easily missed: *"patient identifiers can be present as 'Metadata' and as 'on-image' data and both need to be effectively anonymized."*
 
 ---
 
-## Part V — Whether this is defensible
+## Part V: Whether this is defensible
 
-For the ethics committee, the DPO and the regulator. This section is deliberately more hedged than the rest, because the legal position — particularly in India — is genuinely unsettled, and a concept paper that papers over that is worse than useless.
+For the ethics committee, the DPO and the regulator. This section is deliberately more hedged than the rest, because the legal position, particularly in India, is genuinely unsettled, and a concept paper that papers over that is worse than useless.
 
 **Everything below reflects the position as at September 2026 and should be verified against primary sources before it is relied on.**
 
@@ -446,47 +446,47 @@ Around it sits the **Five Safes** framework: safe people (trained, accredited re
 
 This is the section I expect to be most useful, because the commonly repeated version of Indian health-data law is wrong in both directions at once.
 
-**What is actually in force today.** The Digital Personal Data Protection Act 2023 is widely described as India's operative privacy law. Its substantive provisions **are not yet in force**. The commencement notification of 13 November 2025 places sections 3 to 17 — which is to say almost the entire operative Act — in an eighteen-month tranche, commencing around **mid-May 2027**. Rules 6, 7 and 16 of the DPDP Rules 2025 are in the same tranche. What commenced in November 2025 was the definitions, the Data Protection Board's machinery and the government's rule-making powers.
+**What is actually in force today.** The Digital Personal Data Protection Act 2023 is widely described as India's operative privacy law. Its substantive provisions **are not yet in force**. The commencement notification of 13 November 2025 places sections 3 to 17, which is to say almost the entire operative Act, in an eighteen-month tranche, commencing around **mid-May 2027**. Rules 6, 7 and 16 of the DPDP Rules 2025 are in the same tranche. What commenced in November 2025 was the definitions, the Data Protection Board's machinery and the government's rule-making powers.
 
 A direct consequence that most compliance advice has not caught up with: **the research exemption at s.17(2)(b) is not currently available.** A hospital cannot rely on it today.
 
-**So what governs health data right now?** The Information Technology (Reasonable Security Practices) Rules, 2011 — the SPDI Rules — remain in force, because the DPDP provision that omits their enabling power (s.44(2)) is itself in the delayed tranche. SPDI Rule 3 expressly classifies "physical, physiological and mental health condition" and "medical records and history" as **sensitive personal data**.
+**So what governs health data right now?** The Information Technology (Reasonable Security Practices) Rules, 2011 (the SPDI Rules) remain in force, because the DPDP provision that omits their enabling power (s.44(2)) is itself in the delayed tranche. SPDI Rule 3 expressly classifies "physical, physiological and mental health condition" and "medical records and history" as **sensitive personal data**.
 
 This produces a reversal that every Indian compliance statement must be tensed around:
 
-> **Until mid-May 2027, health data in India is sensitive personal data under the SPDI Rules. From mid-May 2027, under the DPDP Act, there is no sensitive-data category at all** — health data receives no special statutory tier, a deliberate departure from both the SPDI Rules and the withdrawn 2019 Bill.
+> **Until mid-May 2027, health data in India is sensitive personal data under the SPDI Rules. From mid-May 2027, under the DPDP Act, there is no sensitive-data category at all**: health data receives no special statutory tier, a deliberate departure from both the SPDI Rules and the withdrawn 2019 Bill.
 
 Claims that the DPDP Act classifies health data as sensitive are common in circulation and are simply incorrect.
 
-**On anonymisation, the position is starker.** The DPDP Act does not define anonymisation, does not exempt anonymised data, and does not empower anyone to set a standard. The 2019 Bill had all three — a scope exclusion at clause 2(B), a definition at clause 3(2), and a standard-setting power vested in the Data Protection Authority. The 2023 Act dropped every one. Anonymised data falls outside the Act only by inference from the definition of personal data at s.2(t), which turns on identifiability.
+**On anonymisation, the position is starker.** The DPDP Act does not define anonymisation, does not exempt anonymised data, and does not empower anyone to set a standard. The 2019 Bill had all three: a scope exclusion at clause 2(B), a definition at clause 3(2), and a standard-setting power vested in the Data Protection Authority. The 2023 Act dropped every one. Anonymised data falls outside the Act only by inference from the definition of personal data at s.2(t), which turns on identifiability.
 
-The DPDP Rules 2025 contain **no occurrence of "anonymisation", "de-identification" or "pseudonymisation"** anywhere. The closest adjacent provision, Rule 6(1)(a), refers to "obfuscation, masking or the use of virtual tokens" — but frames these as *security measures applied to data that remains personal data*, not as a route out of the Act's scope.
+The DPDP Rules 2025 contain **no occurrence of "anonymisation", "de-identification" or "pseudonymisation"** anywhere. The closest adjacent provision, Rule 6(1)(a), refers to "obfuscation, masking or the use of virtual tokens", but frames these as *security measures applied to data that remains personal data*, not as a route out of the Act's scope.
 
-**And ABDM?** The operative instrument is the NDHM Health Data Management Policy, finalised December 2020. It defines both terms carefully — Clause 4(a) defines anonymisation as an "irreversible process", borrowing the "means reasonably likely to be used" formulation from GDPR Recital 26; Clause 4(j) defines de-identification as replacement with "fictitious name or code that is unique to a data principal but does not, on its own, directly identify" them, which is pseudonymisation and maps exactly onto the `subject_id`/ALF pattern. Chapter 29 permits sharing anonymised data in aggregated form for research, requires recipients not to re-identify, and places compliance responsibility on the anonymising party.
+**And ABDM?** The operative instrument is the NDHM Health Data Management Policy, finalised December 2020. It defines both terms carefully. Clause 4(a) defines anonymisation as an "irreversible process", borrowing the "means reasonably likely to be used" formulation from GDPR Recital 26; Clause 4(j) defines de-identification as replacement with "fictitious name or code that is unique to a data principal but does not, on its own, directly identify" them, which is pseudonymisation and maps exactly onto the `subject_id`/ALF pattern. Chapter 29 permits sharing anonymised data in aggregated form for research, requires recipients not to re-identify, and places compliance responsibility on the anonymising party.
 
 Then Clause 29.5 says the anonymisation "shall be done in accordance with technical processes and anonymisation protocols **which may be specified by the NHA in consultation with MeitY**."
 
-Those protocols do not appear to exist. That absence has been checked against the ABDM publications catalogue, its full guidelines catalogue, both editions of the HIP/HIU guidelines, and the Health Data Retention Policy — which itself exists only as a 2021 consultation paper that never closed, and which expressly disclaims any standard: *"The process and method of anonymization/pseudonymization may be organization specific."* MeitY's own draft Guidelines on Anonymisation of Data, published August 2022, were withdrawn within about a week and never finalised.
+Those protocols do not appear to exist. That absence has been checked against the ABDM publications catalogue, its full guidelines catalogue, both editions of the HIP/HIU guidelines, and the Health Data Retention Policy, which itself exists only as a 2021 consultation paper that never closed, and which expressly disclaims any standard: *"The process and method of anonymization/pseudonymization may be organization specific."* MeitY's own draft Guidelines on Anonymisation of Data, published August 2022, were withdrawn within about a week and never finalised.
 
 So the honest summary of the Indian position:
 
-> **Three separate instruments promised an anonymisation standard — ABDM Clause 29.5, MeitY's 2022 draft, and the 2019 Bill's Authority power. None delivered one. The DPDP Act then removed the power to make one.** Clause 29.5's obligation has been outstanding since December 2020.
+> **Three separate instruments promised an anonymisation standard: ABDM Clause 29.5, MeitY's 2022 draft, and the 2019 Bill's Authority power. None delivered one. The DPDP Act then removed the power to make one.** Clause 29.5's obligation has been outstanding since December 2020.
 
-Two further wrinkles worth knowing. ABDM's own definition of sensitive personal data, at Clause 4(ee), is pinned *by reference* to SPDI Rule 3 — the instrument due to lapse in 2027, with no published reconciliation. And the HDM Policy self-describes as "a guidance document"; its sanction is exclusion from the ABDM ecosystem, not a statutory penalty.
+Two further wrinkles worth knowing. ABDM's own definition of sensitive personal data, at Clause 4(ee), is pinned *by reference* to SPDI Rule 3, the instrument due to lapse in 2027, with no published reconciliation. And the HDM Policy self-describes as "a guidance document"; its sanction is exclusion from the ABDM ecosystem, not a statutory penalty.
 
-**The practical conclusion for a hospital building a vault in India today: there is no domestic technical standard to conform to. So adopt an external one explicitly, in writing, and say which.** We recommend HIPAA's Expert Determination pathway combined with the ICO's motivated-intruder test — not because they bind an Indian hospital, but because a documented conformance to a recognised external standard is a far better answer to a future regulator than silence.
+**The practical conclusion for a hospital building a vault in India today: there is no domestic technical standard to conform to. So adopt an external one explicitly, in writing, and say which.** We recommend HIPAA's Expert Determination pathway combined with the ICO's motivated-intruder test, not because they bind an Indian hospital, but because a documented conformance to a recognised external standard is a far better answer to a future regulator than silence.
 
-### V.3 The one Indian standard that does exist — and a terminology trap
+### V.3 The one Indian standard that does exist, and a terminology trap
 
-There is an important exception, and it sits in research ethics rather than data-protection law: the **ICMR National Ethical Guidelines for Biomedical and Health Research (2017)**, whose Section 11 sets out a real taxonomy — anonymous, anonymized (reversible or irreversible), and identifiable. These bind through institutional ethics committees, and they are the only operative Indian guidance a hospital vault can actually conform to today.
+There is an important exception, and it sits in research ethics rather than data-protection law: the **ICMR National Ethical Guidelines for Biomedical and Health Research (2017)**, whose Section 11 sets out a real taxonomy: anonymous, anonymized (reversible or irreversible), and identifiable. These bind through institutional ethics committees, and they are the only operative Indian guidance a hospital vault can actually conform to today.
 
-Two things follow. First, ICMR requires **ethics committee approval for a consent waiver even for anonymised data** — the researcher does not self-certify. That is a higher bar than anything currently in Indian data-protection law, and it maps neatly onto the Data Access Committee described above.
+Two things follow. First, ICMR requires **ethics committee approval for a consent waiver even for anonymised data**: the researcher does not self-certify. That is a higher bar than anything currently in Indian data-protection law, and it maps neatly onto the Data Access Committee described above.
 
 Second, a trap that will cause real confusion if it is not flagged:
 
-> **ICMR uses "anonymized" as an umbrella term that includes the reversible case** — its "coded or reversibly anonymized" category is data that "could be re-linked if required". Under GDPR and ICO terminology that is **pseudonymised data, which remains personal data.**
+> **ICMR uses "anonymized" as an umbrella term that includes the reversible case**: its "coded or reversibly anonymized" category is data that "could be re-linked if required". Under GDPR and ICO terminology that is **pseudonymised data, which remains personal data.**
 
-An Indian hospital that tells a European collaborator its data is "anonymised per ICMR" may be describing something the collaborator's regulator considers fully identifiable. Never map the two vocabularies without flagging the difference. Almost everything a hospital vault produces is, in GDPR terms, pseudonymised — which is the subject of the next section.
+An Indian hospital that tells a European collaborator its data is "anonymised per ICMR" may be describing something the collaborator's regulator considers fully identifiable. Never map the two vocabularies without flagging the difference. Almost everything a hospital vault produces is, in GDPR terms, pseudonymised, which is the subject of the next section.
 
 ### V.4 Europe: a 2025 judgment that reads like a specification
 
@@ -496,25 +496,25 @@ In *EDPS v SRB* (Case C-413/23 P, 4 September 2025), the Court of Justice held t
 
 > "pseudonymised data must not be regarded as constituting, in all cases and for every person, personal data … in so far as pseudonymisation may, depending on the circumstances of the case, effectively prevent persons other than the controller from identifying the data subject."
 
-Two cautions on citing this. It was decided under Regulation 2018/1725 rather than the GDPR directly, with the Court bridging the two at paragraph 52. And the approach is **context-dependent, not a flat rule**: whose perspective governs depends on the obligation at issue — data transmitted to a recipient is classified from *that recipient's* position, while the transparency duty is assessed at collection from the *controller's* position. The EDPS won the appeal; the substantive law nonetheless went the other party's way, and the matter was referred back.
+Two cautions on citing this. It was decided under Regulation 2018/1725 rather than the GDPR directly, with the Court bridging the two at paragraph 52. And the approach is **context-dependent, not a flat rule**: whose perspective governs depends on the obligation at issue. Data transmitted to a recipient is classified from *that recipient's* position, while the transparency duty is assessed at collection from the *controller's* position. The EDPS won the appeal; the substantive law nonetheless went the other party's way, and the matter was referred back.
 
 What makes it directly relevant is paragraph 77, which sets out the two conditions a recipient must satisfy. Paraphrased: the recipient must not be in a position to lift the pseudonymisation during processing under its control, **and** the measures must in fact prevent attribution "including by recourse to other means of identification such as cross-checking with other factors".
 
 Read that against the architecture in Part III. The first condition is the split: the analytics environment holds no key and no route to the Identity Vault. The second is why generalisation and project-scoped keys exist: to defeat cross-referencing. Paragraph 85 closes the loop by confirming that where a party *does* have means "reasonably allowing them to attribute pseudonymised data to the data subject", it remains personal data for them.
 
-This is as close to an architectural specification as case law gets, and it is worth designing against deliberately. It is also recent and untested on remittal — treat it as a strong indication of direction, not a settled safe harbour.
+This is as close to an architectural specification as case law gets, and it is worth designing against deliberately. It is also recent and untested on remittal, so treat it as a strong indication of direction, not a settled safe harbour.
 
 ### V.5 The UK, and a live consultation
 
 The reference standard is the ICO's guidance on anonymisation, pseudonymisation and privacy-enhancing technologies, published 28 March 2025. Two caveats: it is explicitly "not a statutory code", and it carries a notice that it is under review following the Data (Use and Access) Act. The older 2012 code was removed from the ICO's site and superseded in practice, though no formal withdrawal notice appears to have been issued.
 
-The operative concept remains the **motivated intruder test**: would someone who actively wants to re-identify a person from this output succeed, using public records and reasonable effort? That is the standard a hospital vault should actually be tested against — as a periodic red-team exercise with a written result, not a checklist.
+The operative concept remains the **motivated intruder test**: would someone who actively wants to re-identify a person from this output succeed, using public records and reasonable effort? That is the standard a hospital vault should actually be tested against, as a periodic red-team exercise with a written result, not a checklist.
 
 One timely note for anyone reading this in autumn 2026: the ICO's draft guidance on **anonymisation and pseudonymisation for research purposes** is out for consultation now and **closes on 19 October 2026**. Any institution building a health data vault has a direct interest in that text and a narrow window to respond to it.
 
 ---
 
-## Part VI — What this does not do
+## Part VI: What this does not do
 
 The section I would read first.
 
@@ -526,42 +526,57 @@ The section I would read first.
 
 **Cross-patient temporal comparability is degraded.** The ±3-year `anchor_year_group` band softens this; it does not restore it. Epidemic-curve work is coarsened and wave-level stratification is not possible.
 
-**The Identity Vault is a concentrated risk.** We have not removed the crown jewel — we have made it small, single-purpose and heavily guarded, which is better but not the same as gone. MIMIC is in precisely the same position: it is a pseudonymised-at-source, key-withheld release, not a keyless anonymisation, and the look-up tables still exist somewhere. Anyone claiming to have destroyed the mapping entirely has either built an archive nobody can use clinically, or is not being straight with you.
+**The Identity Vault is a concentrated risk.** We have not removed the crown jewel; we have made it small, single-purpose and heavily guarded, which is better but not the same as gone. MIMIC is in precisely the same position: it is a pseudonymised-at-source, key-withheld release, not a keyless anonymisation, and the look-up tables still exist somewhere. Anyone claiming to have destroyed the mapping entirely has either built an archive nobody can use clinically, or is not being straight with you.
 
 **And the strongest objection, which deserves a direct answer.** ABDM is deliberately **federated**: records stay with the originating facility, and the consent manager brokers access between providers and users precisely so that no national clinical data lake is ever created. A hospital vault *is* a local lake. It therefore takes on exactly the concentration risk that ABDM's architecture was designed to avoid, and it would be dishonest to present this design without acknowledging that it cuts against the grain of the national architecture.
 
-The answer is narrower than a rebuttal. The data is already in the hospital — in the HIS, the LIMS, the PACS, and in the reporting database that three people have direct credentials to. The Vault does not change *whether* a local concentration exists. It changes whether that concentration is governed, split, keyed, audited and egress-controlled, or whether it is a flat database with a shared password. The realistic alternative to a governed lake is not the absence of a lake. It is the ungoverned one that is already there.
+The answer is narrower than a rebuttal. The data is already in the hospital: in the HIS, the LIMS, the PACS, and in the reporting database that three people have direct credentials to. The Vault does not change *whether* a local concentration exists. It changes whether that concentration is governed, split, keyed, audited and egress-controlled, or whether it is a flat database with a shared password. The realistic alternative to a governed lake is not the absence of a lake. It is the ungoverned one that is already there.
 
-That argument holds for a single institution. It does **not** extend to aggregating multiple hospitals' vaults into a regional one — at that point the concentration objection becomes correct, and the answer is federated analytics, where queries travel to the data rather than data travelling to a centre.
+That argument holds for a single institution. It does **not** extend to aggregating multiple hospitals' vaults into a regional one. At that point the concentration objection becomes correct, and the answer is federated analytics, where queries travel to the data rather than data travelling to a centre.
 
 ---
 
-## Part VII — Local inference, and what comes next
+## Part VII: Local inference, and what comes next
 
-The Vault's purpose is not storage. It is to make the data *usable* — including by models — without any of it leaving.
+The Vault's purpose is not storage. It is to make the data *usable*, including by models, without any of it leaving.
 
 **Phase 1 (weeks 1–12): the Vault.** The five zones, the split, the Identity Vault, break-glass, the Data Access Committee. At the end of it your analysts work freely against Zone 3 and every extract has a documented provenance.
 
 **Phase 2: local inference.** Open-weight models served on-premise with **Ollama** or **vLLM**, embeddings computed locally, retrieval over **pgvector**. Two tiers:
 
-- **Gold-tier inference** — the default. The model reads anonymised Zone 3 data. Outputs are safe by construction, because the inputs contained no identity.
-- **Sealed clinical inference** — for point-of-care use, a model reads identified Zone 1 data *inside* the boundary, but its outputs pass back through the same de-identification gate before being stored or displayed outside the clinical context. Higher access tier, fully audited.
+- **Gold-tier inference**: the default. The model reads anonymised Zone 3 data. Outputs are safe by construction, because the inputs contained no identity.
+- **Sealed clinical inference**: for point-of-care use, a model reads identified Zone 1 data *inside* the boundary, but its outputs pass back through the same de-identification gate before being stored or displayed outside the clinical context. Higher access tier, fully audited.
 
 The architectural point is that both tiers are local computations. There is no configuration of the Vault in which a clinical note becomes an outbound HTTPS request, because the credential that would authenticate such a request does not exist anywhere in the environment.
 
 This connects directly to the [clinical reasoning pipelines](/2025/07/09/smarter-ai-demands-smarter-context-how-yajur-healthcare-is-re-architecting-clinical-reasoning-pipelines.html) and the [task framework for agentic healthcare workflows](/2025/03/19/a-task-framework-for-healthcare-for-enabling-ai-agentic-workflows-in-ehr-systems.html) described previously: an agent that plans over clinical data needs that data to be reachable and governed. The Vault is what makes an agentic workflow something a hospital board can approve.
 
-**Phase 3: federated analytics.** Once several hospitals each run a vault, the question becomes multi-site research without pooling. The answer is to send the query to the data — each site computes locally and returns only aggregates that pass its own disclosure control. That is the direction that does not reintroduce the concentration risk Part VI identified, and it is where this work goes next.
+**Phase 3: federated analytics.** Once several hospitals each run a vault, the question becomes multi-site research without pooling. The answer is to send the query to the data: each site computes locally and returns only aggregates that pass its own disclosure control. That is the direction that does not reintroduce the concentration risk Part VI identified, and it is where this work goes next.
 
 ---
 
 ### Try it
 
-Reading about anonymisation is a poor substitute for watching it happen. The [Health Vault anonymisation sandbox](/sandbox/health-vault-anonymiser.html) runs the entire pipeline in your browser on a synthetic patient: the split into the Identity Vault, date shifting with intervals preserved, the four replacement modes for clinical notes side by side, a k-anonymity meter, and a linkage attack you are invited to attempt and watch fail. Then it steps through an authorised re-identification — role check, live TOTP, dual control, real decryption, hash-chained audit entry — and shows you what a user without the permission sees, which is nothing at all.
+Reading about anonymisation is a poor substitute for watching it happen. The [Health Vault anonymisation sandbox](/sandbox/health-vault-anonymiser.html) runs the entire pipeline in your browser on a synthetic patient: the split into the Identity Vault, date shifting with intervals preserved, the four replacement modes for clinical notes side by side, a k-anonymity meter, and a linkage attack you are invited to attempt and watch fail. Then it steps through an authorised re-identification (role check, live TOTP, dual control, real decryption, hash-chained audit entry) and shows you what a user without the permission sees, which is nothing at all.
 
 It uses real cryptography on synthetic data, runs entirely client-side, and sends nothing anywhere. Which is, after all, the point.
 
 ---
+
+---
+
+### Authorship and method
+
+Written by **Manish Sharma**, Yajur.ai, September 2026.
+
+Yajur.ai is a medical data infrastructure company working on disease-specific datasets, clinical AI applications and compliance-driven interoperability pipelines for health systems in India and beyond.
+
+The architecture described here is not original research. It adapts two published systems, and every technical claim about them is drawn from their own documentation and peer-reviewed papers rather than from secondary commentary: the de-identification pipeline, identifier scheme and date-shifting method come from **MIMIC-III and MIMIC-IV** (MIT Laboratory for Computational Physiology, Beth Israel Deaconess Medical Center); the split-file architecture, the ALF key hierarchy and the governance model come from the **SAIL Databank** (Swansea University). The debt to both is substantial and gratefully acknowledged.
+
+The legal analysis in Part V was prepared from primary sources: the gazetted commencement notification and text of the DPDP Act 2023 and Rules 2025, the SPDI Rules 2011, the NDHM Health Data Management Policy of December 2020, the ICMR guidelines of 2017 and 2023, and the CJEU judgment in Case C-413/23 P. Where a source could not be verified, the paper says so rather than asserting. It is a good-faith reading offered for discussion, and it is not legal advice; a hospital acting on any of it should take its own counsel.
+
+Corrections are welcome and will be credited. If you find something wrong here, particularly in Part V, I would rather hear it than not.
+
 
 ### References
 
@@ -581,7 +596,7 @@ It uses real cryptography on synthetic data, runs entirely client-side, and send
 - Information Technology (Reasonable Security Practices and Procedures and Sensitive Personal Data or Information) Rules, 2011.
 - National Digital Health Mission, Health Data Management Policy, December 2020.
 - ICMR, National Ethical Guidelines for Biomedical and Health Research Involving Human Participants, 2017, §11; Ethical Guidelines for Application of AI in Biomedical Research and Healthcare, 2023.
-- ICO, Anonymisation, pseudonymisation and privacy enhancing technologies guidance, 28 March 2025. Draft guidance on anonymisation and pseudonymisation for research purposes — consultation closes 19 October 2026.
+- ICO, Anonymisation, pseudonymisation and privacy enhancing technologies guidance, 28 March 2025. Draft guidance on anonymisation and pseudonymisation for research purposes, consultation closes 19 October 2026.
 - Case C-413/23 P, *EDPS v SRB*, CJEU (First Chamber), 4 September 2025, ECLI:EU:C:2025:645.
 - 45 CFR §164.514(b), HIPAA Safe Harbor and Expert Determination.
 
