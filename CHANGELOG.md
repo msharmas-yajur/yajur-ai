@@ -2,6 +2,11 @@
 
 ## 2026-09-16
 
+- post: Frontier Signal — inaugural edition + 5-day automation
+
+
+## 2026-09-16
+
 - post: Caladrius Pulse — August 2026 roundup + monthly automation
 - chore: ignore .claude/ directory
 
