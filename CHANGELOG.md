@@ -2,6 +2,11 @@
 
 ## 2026-09-16
 
+- No individual commits (fast-forward or empty merge)
+
+
+## 2026-09-16
+
 - seo(aeo/geo): FAQ + citation schema for whitepaper & Caladrius roundup
 
 
