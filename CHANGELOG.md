@@ -2,6 +2,11 @@
 
 ## 2026-09-16
 
+- seo(aeo/geo): FAQ + citation schema for whitepaper & Caladrius roundup
+
+
+## 2026-09-16
+
 - fix(sandbox): stop Health Vault stepper flinging page to top on Prev/Next
 
 

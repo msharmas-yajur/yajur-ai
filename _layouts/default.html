@@ -161,7 +161,8 @@
 	    "name": "Yajur.ai Blog",
 	    "url": "https://yajur.ai/blog/"
 	  }{% if page.mentions %},
-	  "mentions": [{% for mention in page.mentions %}{"@type":{{ mention.type | jsonify }},"name":{{ mention.name | jsonify }}{% if mention.url %},"url":{{ mention.url | jsonify }}{% endif %}}{% unless forloop.last %},{% endunless %}{% endfor %}]{% endif %}
+	  "mentions": [{% for mention in page.mentions %}{% assign m_type = mention.type | default: "Thing" %}{% assign m_name = mention.name | default: mention %}{"@type":{{ m_type | jsonify }},"name":{{ m_name | jsonify }}{% if mention.url %},"url":{{ mention.url | jsonify }}{% endif %}}{% unless forloop.last %},{% endunless %}{% endfor %}]{% endif %}{% if page.citation %},
+  "citation": [{% for c in page.citation %}{"@type":{{ c.type | default: "CreativeWork" | jsonify }},"name":{{ c.name | jsonify }}{% if c.url %},"url":{{ c.url | jsonify }}{% endif %}}{% unless forloop.last %},{% endunless %}{% endfor %}]{% endif %}
 	}
 	</script>
 	{% endif %}
