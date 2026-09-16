@@ -1,0 +1,110 @@
+# Frontier Signal — coverage ledger
+# ---------------------------------------------------------------------------
+# State file for the "Frontier Signal" roundup automation (runs every 5 days).
+# Tracks every source article ALREADY summarised in a Yajur Pontifex edition,
+# across the six tracked companies: Anthropic, OpenAI, Google (Gemini/DeepMind),
+# SpaceX, Groq, and Cursor.
+#
+# Each run: fetch each company's news/blog index, drop any item whose URL (or,
+# for SpaceX where URLs are unstable, whose title) already appears below, and
+# only write up the remainder. After publishing, append the newly-covered items.
+#
+# Dedup: match `url` case-insensitively with trailing '/' stripped. For SpaceX,
+# also match on `title` (milestone headline), since its updates page has no
+# stable per-item URLs.
+# See scripts/frontier-signal-runbook.md for the full procedure.
+# ---------------------------------------------------------------------------
+
+covered:
+  # --- Edition 1: 2026-09-16 ---
+  # Anthropic
+  - company: Anthropic
+    url: https://www.anthropic.com/claude-fable-and-mythos-5-1
+    title: "Introducing Claude Fable 5.1 and Claude Mythos 5.1"
+    date: 2026-09-01
+    edition: 2026-09-16
+  - company: Anthropic
+    url: https://www.anthropic.com/threat-intelligence-report-september-2026
+    title: "Detecting and countering misuse of AI: September 2026"
+    date: 2026-09-10
+    edition: 2026-09-16
+  - company: Anthropic
+    url: https://www.anthropic.com/news/model-hardware-standard-research-preview
+    title: "Previewing the Model Hardware Standard"
+    date: 2026-08-27
+    edition: 2026-09-16
+  # OpenAI
+  - company: OpenAI
+    url: https://deploymentsafety.openai.com/gpt-6-astra
+    title: "Introducing GPT-6 Astra"
+    date: 2026-09-03
+    edition: 2026-09-16
+  - company: OpenAI
+    url: https://openai.com/news/product-releases/
+    title: "September product wave: ChatGPT for Financial Services, GPT-Live-1, Agents API, ChatGPT Images 2.5"
+    date: 2026-09-10
+    edition: 2026-09-16
+  # Google (Gemini / DeepMind)
+  - company: Google
+    url: https://blog.google/innovation-and-ai/models-and-research/gemini-models/gemini-3-8-live-gemini-3-8-live-extended-thinking/
+    title: "Introducing Gemini 3.8 Live and 3.8 Live Extended Thinking"
+    date: 2026-09-01
+    edition: 2026-09-16
+  - company: Google
+    url: https://blog.google/innovation-and-ai/models-and-research/gemini-models/3-8-flash-and-3-8-flash-cyber/
+    title: "Introducing Gemini 3.8 Flash and 3.8 Flash Cyber"
+    date: 2026-08-01
+    edition: 2026-09-16
+  - company: Google
+    url: https://blog.google/innovation-and-ai/models-and-research/gemini-models/introducing-agentic-video-in-gemini/
+    title: "Introducing agentic video understanding with Gemini"
+    date: 2026-08-01
+    edition: 2026-09-16
+  # SpaceX
+  - company: SpaceX
+    url: https://www.spacex.com/updates
+    title: "Starship Flight 14 — first orbital attempt, deploying V3 Starlinks (targeted Sep 22)"
+    date: 2026-09-15
+    edition: 2026-09-16
+  - company: SpaceX
+    url: https://www.spacex.com/updates
+    title: "100th launch of 2026 and 80th Starlink mission of the year"
+    date: 2026-09-06
+    edition: 2026-09-16
+  # Groq
+  - company: Groq
+    url: https://groq.com/blog/groq-among-the-first-to-bring-nvidia-groq-3-lpx-and-vera-rubin-nvl72-to-market
+    title: "Groq Among the First to Bring NVIDIA Groq 3 LPX and Vera Rubin NVL72 to Market"
+    date: 2026-08-24
+    edition: 2026-09-16
+  - company: Groq
+    url: https://groq.com/newsroom/groq-closes-usd350-million-series-a-building-the-world-s-leading-ai-inference-cloud
+    title: "Groq Closes $350 million Series A"
+    date: 2026-08-17
+    edition: 2026-09-16
+  - company: Groq
+    url: https://groq.com/newsroom/groq-becomes-an-nvidia-cloud-partner
+    title: "Groq Becomes an NVIDIA Cloud Partner"
+    date: 2026-08-12
+    edition: 2026-09-16
+  # Cursor
+  - company: Cursor
+    url: https://www.cursor.com/blog/projects
+    title: "Introducing Projects"
+    date: 2026-09-10
+    edition: 2026-09-16
+  - company: Cursor
+    url: https://www.cursor.com/blog/self-hosted-machines
+    title: "Run cloud agents on machines you manage"
+    date: 2026-09-02
+    edition: 2026-09-16
+  - company: Cursor
+    url: https://www.cursor.com/blog/joining-spacex
+    title: "Cursor is now a part of SpaceX"
+    date: 2026-08-14
+    edition: 2026-09-16
+  - company: Cursor
+    url: https://www.cursor.com/blog/grok-4-6
+    title: "Introducing Grok 4.6"
+    date: 2026-08-12
+    edition: 2026-09-16
