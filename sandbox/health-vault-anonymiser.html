@@ -7,14 +7,14 @@ sitemap: false
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>YAJUR.ai — Health Vault Anonymisation Sandbox</title>
+<title>YAJUR.ai · Health Vault Anonymisation Sandbox</title>
 <meta name="robots" content="noindex">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
 <style>
   :root{
-    /* Anthropic Ivory/Slate palette — matches _sass/variables.scss */
+    /* Anthropic Ivory/Slate palette, matches _sass/variables.scss */
     --bg-void:#faf9f5;      /* page            $clr-bg      */
     --bg-deep:#f0eee6;      /* inset / code    $clr-bg-alt  */
     --bg-surface:#ffffff;
@@ -236,22 +236,50 @@ sitemap: false
   .foot{border-top:1px solid var(--border-dim);padding:36px 0 56px;color:var(--text-dim);
         font-family:var(--font-prose);font-size:.95rem}
   .foot a{color:var(--clay)}
-  .nav-btns{display:flex;justify-content:space-between;gap:10px;padding:26px 0;
-            border-top:1px solid var(--border-dim);margin-top:30px}
+  /* stepper sticks under the top bar so any stage is one click away */
+  .stepper{position:sticky;top:calc(52px + env(safe-area-inset-top,0px));z-index:90;
+           background:rgba(250,249,245,.94);backdrop-filter:blur(10px);
+           border-bottom:1px solid var(--border-dim);margin-bottom:0}
+
+  /* persistent stage bar pinned to the bottom of the viewport */
+  .stagebar{position:fixed;left:0;right:0;bottom:0;z-index:95;
+            background:rgba(255,255,255,.96);backdrop-filter:blur(12px);
+            border-top:1px solid var(--border-mid);box-shadow:0 -4px 20px rgba(0,0,0,.06);
+            padding:12px 20px calc(12px + env(safe-area-inset-bottom,0px));
+            display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .stagebar-mid{display:flex;flex-direction:column;align-items:center;gap:5px;flex:1;min-width:0}
+  .stagebar-label{font-family:var(--font-body);font-size:.78rem;font-weight:700;
+                  color:var(--text-primary);white-space:nowrap;overflow:hidden;
+                  text-overflow:ellipsis;max-width:100%}
+  .stagebar-count{font-family:var(--font-mono);font-size:.66rem;color:var(--text-muted)}
+  .dots{display:flex;gap:5px}
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--border-mid);cursor:pointer;
+       transition:.2s;border:none;padding:0}
+  .dot.on{background:var(--clay);transform:scale(1.35)}
+  .dot.past{background:rgba(217,119,87,.45)}
+  .stagebar .btn{padding:10px 18px;font-size:.82rem;white-space:nowrap}
+  @media(max-width:600px){
+    .stagebar{padding:10px 12px calc(10px + env(safe-area-inset-bottom,0px))}
+    .stagebar .btn{padding:10px 13px;font-size:.78rem}
+    .stagebar-label{font-size:.72rem}
+    .dots{display:none}
+  }
+  /* clear the fixed bar so the footer is never trapped under it */
+  body{padding-bottom:calc(112px + env(safe-area-inset-bottom,0px))}
 </style>
 </head>
 <body>
 
 <div class="nav">
-  <div class="nav-brand">YAJUR<span>.ai</span> — Health Vault Sandbox</div>
+  <div class="nav-brand">YAJUR<span>.ai</span> · Health Vault Sandbox</div>
   <a class="nav-back" href="/2026/09/16/the-yajur-health-vault-anonymisation-by-architecture.html">← Back to the concept paper</a>
 </div>
 
 <div class="wrap">
   <div class="hero">
     <div class="eyebrow">Interactive Demonstration</div>
-    <h1>Watch a patient record become un-identifiable — then watch it come back</h1>
-    <p class="lede">This runs the full Health Vault pipeline in your browser on a synthetic patient. The cryptography is real —
+    <h1>Watch a patient record become un-identifiable, then watch it come back</h1>
+    <p class="lede">This runs the full Health Vault pipeline in your browser on a synthetic patient. The cryptography is real:
     AES-256-GCM for the Identity Vault, HMAC-based TOTP for the second factor, SHA-256 for the audit chain. Nothing is sent anywhere,
     because there is nowhere for it to be sent. That is rather the point.</p>
     <div class="pills">
@@ -268,7 +296,7 @@ sitemap: false
   <div class="panel" data-p="0">
     <div class="zone-tag">Source system</div>
     <h2>What arrives from the hospital information system</h2>
-    <p class="sub">A discharge record for a synthetic patient. Every identifier here is invented. Edit the note if you like —
+    <p class="sub">A discharge record for a synthetic patient. Every identifier here is invented. Edit the note if you like;
     the anonymisation engine in Stage 3 will process whatever you type.</p>
     <div class="grid2">
       <div class="card">
@@ -276,18 +304,18 @@ sitemap: false
         <div id="src-fields"></div>
       </div>
       <div class="card">
-        <div class="card-h"><span class="card-t">Discharge summary — free text</span><span class="badge b-red">Contains PHI</span></div>
+        <div class="card-h"><span class="card-t">Discharge summary · free text</span><span class="badge b-red">Contains PHI</span></div>
         <textarea id="src-note" rows="15"></textarea>
       </div>
     </div>
     <div class="callout warn"><strong>Note what makes this identifying.</strong> Not just the name and the ABHA number.
-    The pin code, the date of birth and the sex together identify most people in a single hospital's catchment — and the
+    The pin code, the date of birth and the sex together identify most people in a single hospital's catchment, and the
     narrative names a relative, a referring doctor and a hospital. Removing the name field alone would accomplish very little.</div>
   </div>
 
   <!-- ══════════ STAGE 1 ══════════ -->
   <div class="panel" data-p="1">
-    <div class="zone-tag">Zone 0 — Archive</div>
+    <div class="zone-tag">Zone 0, Archive</div>
     <h2>The immutable record of receipt</h2>
     <p class="sub">Before anything is processed, a byte-exact copy is written to object storage under a WORM lock and hashed.
     This is a legal record that a particular payload arrived at a particular time. It is never queried, never joined, and never read
@@ -296,10 +324,10 @@ sitemap: false
       <div class="card-h"><span class="card-t">archive/2026/09/16/enc_a7f3.json</span>
         <span><span class="badge b-amber">WORM locked</span> <span class="badge b-red">No read grant</span></span></div>
       <div class="frow"><div class="fk">SHA-256</div><div class="fv cipher" id="arc-hash">computing…</div></div>
-      <div class="frow"><div class="fk">Size</div><div class="fv" id="arc-size">—</div></div>
-      <div class="frow"><div class="fk">Received</div><div class="fv" id="arc-time">—</div></div>
-      <div class="frow"><div class="fk">Retention</div><div class="fv">7 years — object lock, no delete grant issued</div></div>
-      <div class="frow"><div class="fk">Readers</div><div class="fv gone">none — ingestion service has write-only credentials</div></div>
+      <div class="frow"><div class="fk">Size</div><div class="fv" id="arc-size">…</div></div>
+      <div class="frow"><div class="fk">Received</div><div class="fv" id="arc-time">…</div></div>
+      <div class="frow"><div class="fk">Retention</div><div class="fv">7 years (object lock, no delete grant issued)</div></div>
+      <div class="frow"><div class="fk">Readers</div><div class="fv gone">none; ingestion service has write-only credentials</div></div>
     </div>
     <div class="callout"><strong>Why keep it at all?</strong> Because anonymisation is lossy and occasionally wrong. If the
     de-identification engine mangles a record, or a regulator asks what was actually received, the archive is the only authoritative
@@ -308,7 +336,7 @@ sitemap: false
 
   <!-- ══════════ STAGE 2 ══════════ -->
   <div class="panel" data-p="2">
-    <div class="zone-tag">Zone 1 — Bronze</div>
+    <div class="zone-tag">Zone 1, Bronze</div>
     <h2>The split</h2>
     <p class="sub">Direct identifiers are extracted out of the clinical record and encrypted into a separate database on a separate
     host with separate credentials. What remains on the clinical side is a random integer. This is the move that everything else
@@ -319,8 +347,8 @@ sitemap: false
     </div>
     <div class="split-view">
       <div class="card vault">
-        <div class="card-h"><span class="card-t">Instance A — identity_vault</span><span class="badge b-amber">AES-256-GCM</span></div>
-        <div id="vault-fields"><div class="fv gone">empty — run the split</div></div>
+        <div class="card-h"><span class="card-t">Instance A · identity_vault</span><span class="badge b-amber">AES-256-GCM</span></div>
+        <div id="vault-fields"><div class="fv gone">empty; run the split</div></div>
       </div>
       <div class="barrier">
         <div class="barrier-line"></div>
@@ -328,19 +356,19 @@ sitemap: false
         <div class="barrier-line"></div>
       </div>
       <div class="card">
-        <div class="card-h"><span class="card-t">Instance B — lakehouse</span><span class="badge b-green">No identity</span></div>
+        <div class="card-h"><span class="card-t">Instance B · lakehouse</span><span class="badge b-green">No identity</span></div>
         <div id="bronze-fields"></div>
       </div>
     </div>
     <div class="callout warn"><strong>Why <code>subject_id</code> is random and not a hash of the MRN.</strong>
-    Hashing feels safe, but a hash is only one-way over an unpredictable input. Hospital MRNs are short, structured and sequential —
+    Hashing feels safe, but a hash is only one-way over an unpredictable input. Hospital MRNs are short, structured and sequential:
     <code id="mrn-echo">APL/2024/08812</code> tells you the format. An attacker hashes every plausible MRN in the issuing range in
     seconds and builds a complete reverse lookup. A random integer from a look-up table has no relationship to the input at all.</div>
   </div>
 
   <!-- ══════════ STAGE 3 ══════════ -->
   <div class="panel" data-p="3">
-    <div class="zone-tag">Zone 2 — Silver</div>
+    <div class="zone-tag">Zone 2 · Silver</div>
     <h2>Anonymisation</h2>
     <p class="sub">Three transformations run here: dates are shifted, the clinical narrative is de-identified, and indirect
     identifiers are generalised.</p>
@@ -348,7 +376,7 @@ sitemap: false
     <div class="card" style="margin-bottom:16px">
       <div class="card-h"><span class="card-t">1 · Date shifting</span><span class="badge b-blue" id="shift-badge">offset +0 days</span></div>
       <p style="font-size:.85rem;color:var(--text-secondary);margin-bottom:6px">
-        One random offset per patient, applied to every date in their record. Drag it — and watch the intervals below stay
+        One random offset per patient, applied to every date in their record. Drag it, and watch the intervals below stay
         exactly where they are.</p>
       <input type="range" min="0" max="3650" value="0" class="slider" id="shift-slider">
       <div class="timeline" id="timeline"></div>
@@ -363,7 +391,7 @@ sitemap: false
         <span class="badge b-green" id="detect-count">0 detected</span></div>
       <p style="font-size:.85rem;color:var(--text-secondary);margin-bottom:12px">
         Detection is a hybrid of dictionary lookup, regular expressions and context heuristics. What you put <em>back</em> is the
-        interesting decision — try all four.</p>
+        interesting decision, try all four.</p>
       <div class="toggles" id="mode-toggles">
         <button class="tg" data-m="redact">[REDACTED]</button>
         <button class="tg on" data-m="typed">Typed tags &lt;NAME&gt;</button>
@@ -372,7 +400,7 @@ sitemap: false
       </div>
       <div class="grid2">
         <div>
-          <div class="card-t" style="margin-bottom:8px">Original — PHI highlighted</div>
+          <div class="card-t" style="margin-bottom:8px">Original · PHI highlighted</div>
           <div class="note" id="note-orig"></div>
           <div class="legend">
             <span><i class="m-name" style="background:#fbe8c8"></i>Name</span>
@@ -404,7 +432,7 @@ sitemap: false
 
   <!-- ══════════ STAGE 4 ══════════ -->
   <div class="panel" data-p="4">
-    <div class="zone-tag">Zone 3 — Gold</div>
+    <div class="zone-tag">Zone 3, Gold</div>
     <h2>The Vault state</h2>
     <p class="sub">This is the record every analyst, dashboard and local model sees. No privacy review is required to query it,
     because there is nothing here to review.</p>
@@ -414,7 +442,7 @@ sitemap: false
         <div id="gold-fields"></div>
       </div>
       <div class="card">
-        <div class="card-h"><span class="card-t">k-anonymity — cohort this record hides in</span>
+        <div class="card-h"><span class="card-t">k-anonymity · cohort this record hides in</span>
           <span class="badge" id="k-badge">k = 1</span></div>
         <div class="meter"><div class="meter-fill" id="k-fill" style="width:8%;background:var(--red)"></div></div>
         <p style="font-size:.78rem;color:var(--text-dim)" id="k-text"></p>
@@ -428,7 +456,7 @@ sitemap: false
     <div class="card" style="margin-top:16px">
       <div class="card-h"><span class="card-t">Try to re-identify this patient</span><span class="badge b-violet">Linkage attack</span></div>
       <p style="font-size:.86rem;color:var(--text-secondary);margin-bottom:14px">
-        Here is a mock external dataset — the kind of thing an attacker actually has: an electoral roll extract for the district.
+        Here is a mock external dataset, the kind of thing an attacker actually has: an electoral roll extract for the district.
         Attempt to join it against the gold record above and find our patient.</p>
       <div class="tbl-scroll"><table>
         <thead><tr><th>Name</th><th>Age</th><th>Sex</th><th>District</th><th>Ward</th></tr></thead>
@@ -463,16 +491,16 @@ sitemap: false
         <div style="margin-top:14px" id="gate-form">
           <div style="margin-bottom:10px">
             <div class="fk" style="margin-bottom:5px">Stated purpose (ticket reference)</div>
-            <input type="text" id="purpose" placeholder="e.g. INC-4471 — critical lab callback">
+            <input type="text" id="purpose" placeholder="e.g. INC-4471, critical lab callback">
           </div>
           <div style="margin-bottom:10px">
-            <div class="fk" style="margin-bottom:5px">Second factor — live TOTP</div>
-            <div class="totp" id="totp-code">——————</div>
+            <div class="fk" style="margin-bottom:5px">Second factor, live TOTP</div>
+            <div class="totp" id="totp-code">••••••</div>
             <div class="totp-bar"><div id="totp-bar" style="width:100%"></div></div>
             <input type="text" id="totp-input" placeholder="Enter the 6 digits above" style="margin-top:10px" maxlength="6">
           </div>
           <div style="margin-bottom:10px">
-            <div class="fk" style="margin-bottom:5px">Dual control — second authoriser</div>
+            <div class="fk" style="margin-bottom:5px">Dual control, second authoriser</div>
             <button class="tg" id="btn-approve">Request approval from DPO</button>
           </div>
         </div>
@@ -506,7 +534,7 @@ sitemap: false
 
   <!-- ══════════ STAGE 6 ══════════ -->
   <div class="panel" data-p="6">
-    <div class="zone-tag">Zone 4 — Egress</div>
+    <div class="zone-tag">Zone 4, Egress</div>
     <h2>Why nothing leaves</h2>
     <p class="sub">The guarantee is not a promise in a contract. It is the absence of a route and the absence of a credential.</p>
     <div class="grid2">
@@ -526,26 +554,40 @@ sitemap: false
       </div>
     </div>
     <div class="callout warn" style="margin-top:18px"><strong>ABDM is not an exception to this.</strong> Consent-artefact
-    exchange is outbound by design, and it should be. The rule is not <em>no egress</em> — it is <em>no ungoverned egress</em>.
+    exchange is outbound by design, and it should be. The rule is not <em>no egress</em>; it is <em>no ungoverned egress</em>.
     ABDM traffic is an allowlisted Zone 4 channel: consent-bound, logged, carrying only what the artefact permits.</div>
   </div>
 
-  <div class="nav-btns">
-    <button class="btn btn-ghost" id="btn-prev">← Previous</button>
-    <button class="btn" id="btn-next">Next stage →</button>
-  </div>
 
+</div>
+
+<div class="stagebar">
+  <button class="btn btn-ghost" id="btn-prev">← Prev</button>
+  <div class="stagebar-mid">
+    <div class="stagebar-label" id="stage-label">Source</div>
+    <div class="dots" id="dots"></div>
+    <div class="stagebar-count" id="stage-count">1 / 7</div>
+  </div>
+  <button class="btn" id="btn-next">Next →</button>
+</div>
+
+<div class="wrap">
   <div class="foot">
     <p>Synthetic data throughout. No real patient record is present, and nothing you type leaves your browser.
     Companion to <a href="/2026/09/16/the-yajur-health-vault-anonymisation-by-architecture.html">The Yajur Health Vault: Anonymisation by Architecture</a>.</p>
     <p style="margin-top:8px">Method drawn from <a href="https://mimic.mit.edu/">MIMIC-IV</a> (MIT-LCP) and the
     <a href="https://saildatabank.com/">SAIL Databank</a> (Swansea University).</p>
+    <p style="margin-top:18px;padding-top:18px;border-top:1px solid var(--border-dim)">
+      Built by <strong>Manish Sharma</strong>, <a href="https://yajur.ai/">Yajur.ai</a>, September 2026.
+      Part of <a href="https://yajur.ai/#s-pillars">Yajur Labs</a>.
+      The cryptography here is genuine (AES-256-GCM, HMAC-based TOTP, SHA-256 hash chaining) and operates
+      only on invented data that never leaves this page.</p>
   </div>
 </div>
 
 <script>
 /* ═══════════════════════════════════════════════════════════════
-   Yajur Health Vault — anonymisation sandbox
+   Yajur Health Vault, anonymisation sandbox
    All cryptography is genuine WebCrypto, operating on synthetic data.
    ═══════════════════════════════════════════════════════════════ */
 
@@ -561,7 +603,7 @@ const P = {
 };
 
 const DEFAULT_NOTE =
-`DISCHARGE SUMMARY — Apollo Speciality Hospital, Chennai
+`DISCHARGE SUMMARY | Apollo Speciality Hospital, Chennai
 
 Patient: Ramesh Kumar (MRN APL/2024/08812, ABHA 91-7364-2891-5530)
 DOB 22/04/1968, Male. Contact +91 98404 21178.
@@ -672,8 +714,8 @@ function deidentify(text,hits,mode,shift){
 const MODE_NOTES = {
   redact:"<strong>Information destroyed.</strong> The reader cannot tell whether a name, a date or a hospital was removed. Downstream NLP degrades measurably, and a clinician loses the shape of the sentence.",
   typed:"<strong>The Vault default for anything a clinician may read.</strong> The reader knows a name was removed <em>and that it was a name</em>. Nothing is fabricated, so nothing can be mistaken for a clinical fact, and no linkage index is published.",
-  surrogate:"<strong>Camouflage — used for research-corpus export only.</strong> Detection recall is about 0.967, so roughly 3% of PHI survives. Surrogates mean a survivor is indistinguishable from a fake. But a clinician reading this cannot tell real from invented, which is why it never goes to a care setting.",
-  indexed:"<strong>Anti-pattern — do not ship this.</strong> The number is a linkage key you did not mean to publish: every mention of <code>[**NAME 1**]</code> is the same person. You have removed the name and left behind the equivalence class."
+  surrogate:"<strong>Camouflage, used for research-corpus export only.</strong> Detection recall is about 0.967, so roughly 3% of PHI survives. Surrogates mean a survivor is indistinguishable from a fake. But a clinician reading this cannot tell real from invented, which is why it never goes to a care setting.",
+  indexed:"<strong>Anti-pattern, do not ship this.</strong> The number is a linkage key you did not mean to publish: every mention of <code>[**NAME 1**]</code> is the same person. You have removed the name and left behind the equivalence class."
 };
 
 /* ── dates ── */
@@ -732,17 +774,42 @@ STAGES.forEach((s,i)=>{
   b.className="step"; b.innerHTML='<span class="step-n">'+i+'</span>'+s;
   b.onclick=()=>go(i); stepper.appendChild(b);
 });
+const dotsEl=document.getElementById("dots");
+STAGES.forEach((s,i)=>{
+  const d=document.createElement("button");
+  d.className="dot"; d.type="button";
+  d.setAttribute("aria-label","Go to "+s);
+  d.onclick=()=>go(i); dotsEl.appendChild(d);
+});
+
 function go(i){
   stage=Math.max(0,Math.min(STAGES.length-1,i));
   [...stepper.children].forEach((b,j)=>{
     b.classList.toggle("active",j===stage);
     b.classList.toggle("done",j<stage);
   });
+  [...dotsEl.children].forEach((d,j)=>{
+    d.classList.toggle("on",j===stage);
+    d.classList.toggle("past",j<stage);
+  });
   document.querySelectorAll(".panel").forEach(p=>p.classList.toggle("active",+p.dataset.p===stage));
   document.getElementById("btn-prev").disabled = stage===0;
   document.getElementById("btn-next").disabled = stage===STAGES.length-1;
+  document.getElementById("stage-label").textContent = STAGES[stage];
+  document.getElementById("stage-count").textContent = (stage+1)+" / "+STAGES.length;
+  // keep the active chip visible in the sticky stepper
+  const chip=stepper.children[stage];
+  if(chip && chip.scrollIntoView) chip.scrollIntoView({block:"nearest",inline:"center",behavior:"smooth"});
   window.scrollTo({top:0,behavior:"smooth"});
 }
+
+// arrow keys move between stages, except while typing
+document.addEventListener("keydown",e=>{
+  const t=e.target.tagName;
+  if(t==="INPUT"||t==="TEXTAREA"||e.metaKey||e.ctrlKey||e.altKey) return;
+  if(e.key==="ArrowRight"){ e.preventDefault(); go(stage+1); }
+  if(e.key==="ArrowLeft"){  e.preventDefault(); go(stage-1); }
+});
 document.getElementById("btn-prev").onclick=()=>go(stage-1);
 document.getElementById("btn-next").onclick=()=>go(stage+1);
 
@@ -779,11 +846,11 @@ async function runSplit(){
 function renderBronze(){
   const rows=[
     ["subject_id",P.subject_id,"safe"],["hadm_id",P.hadm_id,"safe"],
-    ["name", split?"— extracted —":P.name, split?"gone":"phi"],
-    ["mrn",  split?"— extracted —":P.mrn,  split?"gone":"phi"],
-    ["abha", split?"— extracted —":P.abha, split?"gone":"phi"],
-    ["phone",split?"— extracted —":P.phone,split?"gone":"phi"],
-    ["sex",P.sex,"safe"],["diagnosis","E11.621 — T2DM with foot ulcer","safe"]
+    ["name", split?"(extracted)":P.name, split?"gone":"phi"],
+    ["mrn",  split?"(extracted)":P.mrn,  split?"gone":"phi"],
+    ["abha", split?"(extracted)":P.abha, split?"gone":"phi"],
+    ["phone",split?"(extracted)":P.phone,split?"gone":"phi"],
+    ["sex",P.sex,"safe"],["diagnosis","E11.621, T2DM with foot ulcer","safe"]
   ];
   document.getElementById("bronze-fields").innerHTML=rows.map(([k,v,c])=>
     '<div class="frow"><div class="fk">'+k+'</div><div class="fv '+c+'">'+esc(String(v))+'</div></div>').join("");
@@ -792,7 +859,7 @@ renderBronze();
 document.getElementById("btn-split").onclick=runSplit;
 document.getElementById("btn-split-reset").onclick=()=>{
   split=false; vaultRecs={};
-  document.getElementById("vault-fields").innerHTML='<div class="fv gone">empty — run the split</div>';
+  document.getElementById("vault-fields").innerHTML='<div class="fv gone">empty; run the split</div>';
   renderBronze();
 };
 
@@ -825,7 +892,7 @@ function renderGen(){
     ["Pin code",P.pin,"Chennai district","A pin code is roughly 15,000 people. A district is 7 million."],
     ["Date of birth",P.dob,"Age band 55–59","Exact DOB plus sex plus locality identifies most people."],
     ["Age",P.age,P.age>89?"91 (top-coded)":P.age,"HIPAA aggregates 90+; the very old are identifiable by age alone."],
-    ["Diagnosis","E11.621","E11 — T2DM","Only when the specific code falls below the cell-count threshold."],
+    ["Diagnosis","E11.621","E11, T2DM","Only when the specific code falls below the cell-count threshold."],
     ["Address",P.address,"RALF #8823","Household linkage without ever knowing the location."]
   ];
   document.getElementById("gen-tbl").innerHTML=rows.map(r=>
@@ -850,8 +917,8 @@ renderNotes(); renderTimeline(); renderGen();
 const COHORT=[
   ["Age band","55–59","~410 patients in this band"],
   ["Sex","M","~198 of those"],
-  ["District","Chennai","all 198 — single-district hospital"],
-  ["Diagnosis group","E11 — T2DM","~31 of those"],
+  ["District","Chennai","all 198, single-district hospital"],
+  ["Diagnosis group","E11, T2DM","~31 of those"],
   ["anchor_year_group","2026 – 2028","~12 of those"]
 ];
 function renderGold(){
@@ -859,12 +926,12 @@ function renderGold(){
   const rows=[["subject_id",P.subject_id],["anchor_age",P.age>89?91:P.age],["sex",P.sex],
     ["age_band","55-59"],["district","Chennai"],["ralf",8823],
     ["anchor_year",yr],["anchor_year_group",(yr-((yr-2026)%3))+" - "+(yr-((yr-2026)%3)+2)],
-    ["primary_dx","E11 — type 2 diabetes mellitus"],["los_days",11]];
+    ["primary_dx","E11, type 2 diabetes mellitus"],["los_days",11]];
   document.getElementById("gold-fields").innerHTML=rows.map(([k,v])=>
     '<div class="frow"><div class="fk">'+k+'</div><div class="fv safe">'+esc(String(v))+'</div></div>').join("");
   document.getElementById("k-qi").innerHTML=COHORT.map(c=>
     '<div class="frow"><div class="fk">'+esc(c[0])+'</div><div class="fv">'+esc(c[1])+
-    ' <span style="color:var(--text-muted)">— '+esc(c[2])+'</span></div></div>').join("");
+    ' <span style="color:var(--text-muted)">'+esc(c[2])+'</span></div></div>').join("");
   const k=12;
   document.getElementById("k-badge").textContent="k = "+k;
   document.getElementById("k-badge").className="badge "+(k>=5?"b-green":"b-red");
@@ -889,7 +956,7 @@ document.getElementById("btn-attack").onclick=()=>{
     '<br><br>The electoral roll has <em>name, age, sex, district, ward</em>. The gold record has <em>age band, sex, district</em>. '+
     'Joining on the three shared attributes returns <strong>all six people in the roll</strong>, and in the real cohort, 12. '+
     'You have narrowed the population to a group; you have not identified a person.'+
-    '<br><br>The attributes that would have collapsed it — exact age, ward, pin code, admission date — were generalised at Zone 2 '+
+    '<br><br>The attributes that would have collapsed it, exact age, ward, pin code, admission date, were generalised at Zone 2 '+
     'precisely because they are what makes linkage work. This is the mosaic effect being defended against, not the name field.</div>';
 };
 
@@ -899,7 +966,7 @@ const CAPS={
   custodian:[["vault.query.gold","granted"],["vault.query.silver","granted"],["vault.reidentify","granted"],["vault.audit.read","granted"]]
 };
 const GATES=[["Role holds vault.reidentify","role"],["Second factor verified","totp"],
-  ["Stated purpose bound to a ticket","purpose"],["Dual control — second authoriser","approve"],
+  ["Stated purpose bound to a ticket","purpose"],["Dual control, second authoriser","approve"],
   ["Session time-boxed to 15 minutes","auto"],["Scoped to enumerated subject_ids","auto"]];
 
 function gateState(){
@@ -929,7 +996,7 @@ function renderGates(){
   if(role!=="custodian"){
     document.getElementById("gate-msg").innerHTML=
       '<div class="callout bad"><strong>Denied.</strong> The Analyst role does not hold <code>vault.reidentify</code>. '+
-      'No request is created, and nothing is written to the audit log — because no attempt was permitted to begin.</div>';
+      'No request is created, and nothing is written to the audit log, because no attempt was permitted to begin.</div>';
   } else if(!all){
     document.getElementById("gate-msg").innerHTML=
       '<div class="callout warn">All six conditions are required. Complete the outstanding ones above.</div>';
@@ -992,7 +1059,7 @@ document.getElementById("btn-reid").onclick=async()=>{
     out.push('<div class="frow"><div class="fk">'+k+'</div><div class="fv phi">'+esc(v)+"</div></div>");
   }
   unsealed=true;
-  document.getElementById("session-badge").textContent="Unsealed — 15:00";
+  document.getElementById("session-badge").textContent="Unsealed · 15:00";
   document.getElementById("session-badge").className="badge b-amber";
   document.getElementById("reid-result").innerHTML=out.join("")+
     '<div class="callout warn" style="margin-bottom:0"><strong>Decrypted with the real AES-GCM key.</strong> '+
@@ -1001,18 +1068,18 @@ document.getElementById("btn-reid").onclick=async()=>{
   let rem=900;
   const iv=setInterval(()=>{
     rem--; if(rem<=0){ clearInterval(iv);
-      document.getElementById("session-badge").textContent="Sealed — session expired";
+      document.getElementById("session-badge").textContent="Sealed · session expired";
       document.getElementById("session-badge").className="badge b-red";
       document.getElementById("reid-result").innerHTML='<div class="fv gone">Session expired. Identity Vault re-sealed.</div>';
       return; }
-    document.getElementById("session-badge").textContent="Unsealed — "+
+    document.getElementById("session-badge").textContent="Unsealed · "+
       String(Math.floor(rem/60)).padStart(2,"0")+":"+String(rem%60).padStart(2,"0");
   },1000);
   renderAnalystView();
 };
 document.getElementById("btn-tamper").onclick=()=>{
   if(!chain.length) return;
-  chain[0].entry.purpose_ref="ALTERED — covering my tracks";
+  chain[0].entry.purpose_ref="ALTERED, covering my tracks";
   chain[0].broken=true;
   for(let i=1;i<chain.length;i++) chain[i].broken=true;
   renderChain();
@@ -1026,7 +1093,7 @@ document.getElementById("btn-verify").onclick=async()=>{
     const h=await sha256(JSON.stringify(chain[i].entry)+prev);
     if(h!==chain[i].hash || prev!==chain[i].prev){ ok=false; break; }
   }
-  document.getElementById("chain-status").textContent = ok?"Chain intact — verified":"Chain broken — tampering detected";
+  document.getElementById("chain-status").textContent = ok?"Chain intact · verified":"Chain broken · tampering detected";
   document.getElementById("chain-status").className = "badge "+(ok?"b-green":"b-red");
 };
 function renderAnalystView(){
@@ -1035,24 +1102,24 @@ function renderAnalystView(){
     '<div class="frow"><div class="fk">Re-identify</div><div class="fv gone">no such endpoint</div></div>'+
     '<div class="frow"><div class="fk">Audit log</div><div class="fv gone">not visible to this role</div></div>'+
     '<div class="frow"><div class="fk">Recent access</div><div class="fv gone">'+
-      (chain.length?"no record shown — "+chain.length+" entr"+(chain.length>1?"ies":"y")+" hidden from this role":"nothing to show")+
+      (chain.length?"no record shown, "+chain.length+" entr"+(chain.length>1?"ies":"y")+" hidden from this role":"nothing to show")+
     '</div></div>'+
     '<div class="callout" style="margin-bottom:0">An Analyst cannot see that re-identification is possible, cannot see that it '+
     'happened, cannot see which patient was involved, and cannot enumerate who holds the capability. The <em>absence</em> of a '+
-    'capability must not leak the shape of the system — who can see a record is metadata about a patient too.</div>';
+    'capability must not leak the shape of the system, who can see a record is metadata about a patient too.</div>';
 }
 renderRole(); renderAnalystView();
 
 /* ── stage 6 ── */
 const EGRESS_STEPS=[
-  ["resolve api.example-llm.com","DNS resolution refused — no outbound resolver configured","drop"],
-  ["connect 443/tcp","No route to host — egress default-deny on vault segment","drop"],
+  ["resolve api.example-llm.com","DNS resolution refused, no outbound resolver configured","drop"],
+  ["connect 443/tcp","No route to host, egress default-deny on vault segment","drop"],
   ["authenticate","No credential found for this destination in any store","drop"],
   ["POST /v1/messages","Request never constructed. 0 bytes left the boundary.","drop"]
 ];
 const LOCAL_STEPS=[
-  ["load model","qwen2.5:14b — local weights, digest verified at pull time","pass"],
-  ["read corpus","gold.discharge_note — 331,794 de-identified records","pass"],
+  ["load model","qwen2.5:14b, local weights, digest verified at pull time","pass"],
+  ["read corpus","gold.discharge_note, 331,794 de-identified records","pass"],
   ["infer","Running on local GPU. No network socket opened.","pass"],
   ["return","Summary returned to the caller inside the boundary.","pass"]
 ];
