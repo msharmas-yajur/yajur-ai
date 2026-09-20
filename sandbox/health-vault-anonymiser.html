@@ -6,6 +6,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'none'; base-uri 'none'; form-action 'none'">
 <title>Health Vault Anonymisation Sandbox | Yajur.ai</title>
 <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1">
 <meta name="description" content="An interactive demonstration of hospital health data anonymisation: watch a patient record pass through archive, split, de-identification and disclosure control, then watch an authorised user re-identify it behind two-factor authentication and dual control. Runs entirely in your browser on synthetic data using real cryptography.">
@@ -396,7 +397,7 @@
       </div>
       <div class="barrier">
         <div class="barrier-line"></div>
-        <div class="barrier-lbl">no join path</div>
+        <div class="barrier-lbl">no join without the vault</div>
         <div class="barrier-line"></div>
       </div>
       <div class="card">
@@ -484,6 +485,7 @@
       <div class="card">
         <div class="card-h"><span class="card-t">gold.patient</span><span class="badge b-green">No identity present</span></div>
         <div id="gold-fields"></div>
+        <p style="font-size:.72rem;color:var(--text-dim);margin-top:12px">The <code>subject_id</code> is a pseudonym, not an identifier. It re-links to a person only through the Identity Vault, under break-glass. It is the one deliberate join key, which is why the barrier reads <em>no join without the vault</em>. Retained fields like <code>los_days</code> are not counted by the k-anonymity meter below, and a rare enough free-text narrative can itself be re-identifying.</p>
       </div>
       <div class="card">
         <div class="card-h"><span class="card-t">k-anonymity · cohort this record hides in</span>
@@ -509,7 +511,7 @@
       <div class="btn-row">
         <button class="btn" id="btn-attack">Run the linkage attack →</button>
       </div>
-      <div id="attack-result" style="margin-top:16px"></div>
+      <div id="attack-result" style="margin-top:16px" aria-live="polite"></div>
     </div>
   </div>
 
@@ -551,18 +553,18 @@
         <div class="btn-row">
           <button class="btn" id="btn-reid" disabled>Re-identify subject_id 10023847</button>
         </div>
-        <div id="gate-msg" style="margin-top:12px"></div>
+        <div id="gate-msg" style="margin-top:12px" aria-live="polite"></div>
       </div>
 
       <div class="card">
         <div class="card-h"><span class="card-t">Result</span><span class="badge b-red" id="session-badge">Sealed</span></div>
-        <div id="reid-result"><div class="fv gone">Identity Vault sealed. Complete all six conditions to unseal.</div></div>
+        <div id="reid-result" aria-live="polite"><div class="fv gone">Identity Vault sealed. Complete all six conditions to unseal.</div></div>
       </div>
     </div>
 
     <div class="card" style="margin-top:16px">
       <div class="card-h"><span class="card-t">Append-only audit chain</span>
-        <span><span class="badge b-green" id="chain-status">Chain intact</span></span></div>
+        <span><span class="badge b-green" id="chain-status" aria-live="polite">Chain intact</span></span></div>
       <div class="audit" id="audit-log"><div class="fv gone">No entries.</div></div>
       <div class="btn-row">
         <button class="btn btn-danger" id="btn-tamper" disabled>Tamper with the first entry</button>
@@ -580,21 +582,21 @@
   <div class="panel" data-p="6">
     <div class="zone-tag">Zone 4, Egress</div>
     <h2>Why nothing leaves</h2>
-    <p class="sub">The guarantee is not a promise in a contract. It is the absence of a route and the absence of a credential.</p>
+    <p class="sub">The guarantee is not a promise in a contract. It is the absence of a route and the absence of a credential. The steps below are a scripted illustration of that production topology; this page itself opens no network connection.</p>
     <div class="grid2">
       <div class="card">
         <div class="card-h"><span class="card-t">Send notes to an external model</span><span class="badge b-red">Blocked</span></div>
         <p style="font-size:.85rem;color:var(--text-secondary);margin-bottom:12px">
           Attempt to POST the clinical corpus to a hosted LLM API.</p>
         <button class="btn btn-danger" id="btn-egress">Attempt external inference →</button>
-        <div id="egress-log" style="margin-top:14px"></div>
+        <div id="egress-log" style="margin-top:14px" aria-live="polite"></div>
       </div>
       <div class="card">
         <div class="card-h"><span class="card-t">Run the same model locally</span><span class="badge b-green">Permitted</span></div>
         <p style="font-size:.85rem;color:var(--text-secondary);margin-bottom:12px">
           The same task, computed inside the boundary.</p>
         <button class="btn" id="btn-local">Run local inference →</button>
-        <div id="local-log" style="margin-top:14px"></div>
+        <div id="local-log" style="margin-top:14px" aria-live="polite"></div>
       </div>
     </div>
     <div class="callout warn" style="margin-top:18px"><strong>ABDM is not an exception to this.</strong> Consent-artefact
@@ -634,6 +636,16 @@
    Yajur Health Vault, anonymisation sandbox
    All cryptography is genuine WebCrypto, operating on synthetic data.
    ═══════════════════════════════════════════════════════════════ */
+
+/* Secure-context / Web Crypto feature detection: fail gracefully rather than
+   half-breaking on an old browser or a non-HTTPS (insecure) context, where
+   crypto.subtle is undefined. */
+if(!window.crypto || !window.crypto.subtle){
+  const w=document.querySelector(".wrap");
+  if(w) w.innerHTML='<div class="callout warn" style="margin-top:48px"><strong>This demo needs a modern browser over HTTPS.</strong> It runs real cryptography (AES-256-GCM, HMAC-based TOTP, SHA-256) using the Web Crypto API, which browsers expose only in a secure (https) context. Please open this page over https:// in an up-to-date browser.</div>';
+  const sb=document.querySelector(".stagebar"); if(sb) sb.style.display="none";
+  throw new Error("Web Crypto API unavailable");
+}
 
 const STAGES = ["Source","Zone 0 · Archive","Zone 1 · Split","Zone 2 · Anonymise",
                 "Zone 3 · Vault","Break-glass","Zone 4 · Egress"];
@@ -721,7 +733,7 @@ function detect(text){
   return out;
 }
 
-const esc = s => s.replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+const esc = s => s.replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 
 function highlight(text,hits){
   let out="",p=0;
@@ -758,7 +770,7 @@ function deidentify(text,hits,mode,shift){
 const MODE_NOTES = {
   redact:"<strong>Information destroyed.</strong> The reader cannot tell whether a name, a date or a hospital was removed. Downstream NLP degrades measurably, and a clinician loses the shape of the sentence.",
   typed:"<strong>The Vault default for anything a clinician may read.</strong> The reader knows a name was removed <em>and that it was a name</em>. Nothing is fabricated, so nothing can be mistaken for a clinical fact, and no linkage index is published.",
-  surrogate:"<strong>Camouflage, used for research-corpus export only.</strong> Detection recall is about 0.967, so roughly 3% of PHI survives. Surrogates mean a survivor is indistinguishable from a fake. But a clinician reading this cannot tell real from invented, which is why it never goes to a care setting.",
+  surrogate:"<strong>Camouflage, used for research-corpus export only.</strong> Detection is never perfect: in a real corpus a few percent of PHI survives, and surrogates mean a survivor is indistinguishable from a fake. Note too that a rare enough clinical narrative can itself be re-identifying even after the identifiers are swapped. And a clinician reading this cannot tell real from invented, which is why it never goes to a care setting.",
   indexed:"<strong>Anti-pattern, do not ship this.</strong> The number is a linkage key you did not mean to publish: every mention of <code>[**NAME 1**]</code> is the same person. You have removed the name and left behind the equivalence class."
 };
 
@@ -786,7 +798,7 @@ async function vaultKey(){
 async function encField(plain){
   const key=await vaultKey(), iv=crypto.getRandomValues(new Uint8Array(12));
   const ct=await crypto.subtle.encrypt({name:"AES-GCM",iv},key,enc.encode(plain));
-  return {iv,ct,b64:btoa(String.fromCharCode(...new Uint8Array(ct))).slice(0,44)};
+  return {iv,ct,ivHex:hex(iv),b64:btoa(String.fromCharCode(...new Uint8Array(ct))).slice(0,44)};
 }
 async function decField(rec){
   const key=await vaultKey();
@@ -809,7 +821,7 @@ async function totp(){
 
 /* ── state ── */
 let stage=0, shift=0, mode="typed", role="analyst", split=false;
-let vaultRecs={}, chain=[], approved=false, unsealed=false;
+let vaultRecs={}, chain=[], approved=false, unsealed=false, sessionTimer=null;
 
 /* ── stepper ── */
 const stepper=document.getElementById("stepper");
@@ -895,7 +907,7 @@ async function runSplit(){
   const rows=[];
   for(const [k,v] of VAULT_FIELDS){
     const r=await encField(v); vaultRecs[k]=r;
-    rows.push('<div class="frow"><div class="fk">'+k+'</div><div class="fv cipher">'+r.b64+'…</div></div>');
+    rows.push('<div class="frow"><div class="fk">'+k+'</div><div class="fv cipher">iv '+r.ivHex+'<br>ct '+r.b64+'… <span style="color:var(--text-muted)">(AES-256-GCM; ciphertext truncated for display, 128-bit auth tag appended)</span></div></div>');
   }
   rows.push('<div class="frow"><div class="fk">date_offset</div><div class="fv cipher">encrypted</div></div>');
   document.getElementById("vault-fields").innerHTML=rows.join("");
@@ -1124,8 +1136,9 @@ document.getElementById("btn-reid").onclick=async()=>{
     'The session closes in fifteen minutes, the audit entry is already written, and it cannot be edited or deleted by the '+
     'person who requested it.</div>';
   let rem=900;
-  const iv=setInterval(()=>{
-    rem--; if(rem<=0){ clearInterval(iv);
+  if(sessionTimer) clearInterval(sessionTimer);
+  sessionTimer=setInterval(()=>{
+    rem--; if(rem<=0){ clearInterval(sessionTimer);
       document.getElementById("session-badge").textContent="Sealed · session expired";
       document.getElementById("session-badge").className="badge b-red";
       document.getElementById("reid-result").innerHTML='<div class="fv gone">Session expired. Identity Vault re-sealed.</div>';
