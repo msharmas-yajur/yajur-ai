@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-09-20
+
+- fix(seo): make the Health Vault sandbox indexable
+
+
 ## 2026-09-16
 
 - style: remove em/en dashes from Caladrius Pulse and Frontier Signal editions
