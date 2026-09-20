@@ -2,6 +2,11 @@
 
 ## 2026-09-20
 
+- harden(sandbox): apply architect review fixes to the Health Vault sandbox
+
+
+## 2026-09-20
+
 - editorial: correct Starship Flight 14 date in Frontier Signal (Sep 22 -> Sep 28)
 
 
