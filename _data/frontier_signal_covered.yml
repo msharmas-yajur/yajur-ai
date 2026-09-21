@@ -108,3 +108,21 @@ covered:
     title: "Introducing Grok 4.6"
     date: 2026-08-12
     edition: 2026-09-16
+  # --- Edition 2: 2026-09-21 ---
+  # Anthropic
+  - company: Anthropic
+    url: https://www.anthropic.com/news/life-sciences-verification-program
+    title: "Introducing the Life Sciences Verification Program"
+    date: 2026-09-17
+    edition: 2026-09-21
+  - company: Anthropic
+    url: https://www.anthropic.com/news/the-need-for-transparency-in-frontier-ai
+    title: "A framework for AI development transparency"
+    date: 2026-09-17
+    edition: 2026-09-21
+  # OpenAI
+  - company: OpenAI
+    url: https://openai.com/index/astra-for-law
+    title: "Introducing Astra for Law"
+    date: 2026-09-17
+    edition: 2026-09-21
