@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-09-21
+
+- post: Frontier Signal — 2026-09-21 roundup
+
+
 ## 2026-09-20
 
 - harden(sandbox): apply architect review fixes to the Health Vault sandbox
