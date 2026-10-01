@@ -145,3 +145,22 @@ covered:
     title: "Gemini 4 enters post-training — early release targeted 'as soon as possible'"
     date: 2026-09-24
     edition: 2026-09-26
+  # --- Edition 4: 2026-10-01 ---
+  # Anthropic
+  - company: Anthropic
+    url: https://www.anthropic.com/news/accenture-embedded-evaluation
+    title: "Partnering with Accenture on embedded evaluation"
+    date: 2026-09-18
+    edition: 2026-10-01
+  # OpenAI
+  - company: OpenAI
+    url: https://openai.com/index/devday-2026-recap/
+    title: "OpenAI DevDay 2026: GPT-6.1 Sol, Dots always-on agents, Ultrafast speed tier, Agents API computer use"
+    date: 2026-09-29
+    edition: 2026-10-01
+  # SpaceX
+  - company: SpaceX
+    url: https://www.spacex.com/updates
+    title: "Starship Flight 14 reaches orbit — first orbital flight, 26 V3 Starlinks deployed"
+    date: 2026-09-28
+    edition: 2026-10-01
