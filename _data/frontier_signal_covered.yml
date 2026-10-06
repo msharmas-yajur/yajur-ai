@@ -164,3 +164,44 @@ covered:
     title: "Starship Flight 14 reaches orbit — first orbital flight, 26 V3 Starlinks deployed"
     date: 2026-09-28
     edition: 2026-10-01
+  # --- Edition 5: 2026-10-06 ---
+  # Anthropic
+  - company: Anthropic
+    url: https://www.anthropic.com/news/claude-frontier-academy
+    title: "Claude Frontier Academy: $100 M to train 10,000 Frontier Deployed Engineers"
+    date: 2026-10-02
+    edition: 2026-10-06
+  # OpenAI
+  - company: OpenAI
+    url: https://openai.com/index/expanding-ai-access-us-government/
+    title: "OpenAI OneGov GSA deal: free platform access + 50% off usage for all US governments"
+    date: 2026-10-01
+    edition: 2026-10-06
+  # Google (Gemini / DeepMind)
+  - company: Google
+    url: https://thehackernews.com/2026/10/google-rolls-out-gemini-4-argon-to.html
+    title: "Gemini 4 Argon released to cybersecurity partners via Fairwind Program"
+    date: 2026-09-30
+    edition: 2026-10-06
+  # SpaceX
+  - company: SpaceX
+    url: https://spaceflightnow.com/?p=74473
+    title: "Falcon Heavy NROL-97 — first NRO payload on Falcon Heavy, Oct 1 2026"
+    date: 2026-10-01
+    edition: 2026-10-06
+  - company: SpaceX
+    url: https://gurufocus.com/news/9110076/spacex-spcx-proposes-32mile-natural-gas-pipeline-to-support-starship-launches
+    title: "SpaceX proposes 32-mile natural gas pipeline in Brevard County for Starship"
+    date: 2026-10-05
+    edition: 2026-10-06
+  # Groq
+  - company: Groq
+    url: https://groq.com/newsroom/groq-and-nvidia-enter-non-exclusive-inference-technology-licensing-agreement-to-accelerate-ai-inference-at-global-scale
+    title: "Groq and NVIDIA non-exclusive LPU technology licensing agreement (~$20 B)"
+    date: 2025-12-01
+    edition: 2026-10-06
+  - company: Groq
+    url: https://www.cnbc.com/2026/10/05/nvidia-groq-deal-stockholder-lawsuit.html
+    title: "Groq shareholder lawsuit over NVIDIA $20 B deal; DOJ inquiry reported"
+    date: 2026-10-02
+    edition: 2026-10-06
