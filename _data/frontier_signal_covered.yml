@@ -205,3 +205,44 @@ covered:
     title: "Groq shareholder lawsuit over NVIDIA $20 B deal; DOJ inquiry reported"
     date: 2026-10-02
     edition: 2026-10-06
+  # --- Edition 6: 2026-10-11 ---
+  # Anthropic
+  - company: Anthropic
+    url: https://www.anthropic.com/claude-haiku-5-5
+    title: "Introducing Claude Haiku 5.5"
+    date: 2026-10-07
+    edition: 2026-10-11
+  - company: Anthropic
+    url: https://www.anthropic.com/news/anthropic-cyber-mission
+    title: "Anthropic Cyber Mission: Critical Infrastructure Defense Program and OSS Scanner"
+    date: 2026-10-08
+    edition: 2026-10-11
+  - company: Anthropic
+    url: https://www.anthropic.com/news/genesis-mission-commitment
+    title: "Building on our commitment to American scientific discovery — $150 M Genesis Mission"
+    date: 2026-10-08
+    edition: 2026-10-11
+  # OpenAI
+  - company: OpenAI
+    url: https://openai.com/products/release-notes/
+    title: "GPT-6 rolls out to all ChatGPT users (Sol for paid, Luna for free); Ultrafast mode for GPT-6.1 Sol in Responses API"
+    date: 2026-10-08
+    edition: 2026-10-11
+  # Google (Gemini / DeepMind)
+  - company: Google
+    url: https://deepmind.google/discover/blog/
+    title: "SynthID Bio: watermarking AI-designed protein sequences for biosecurity provenance (Nature, Sep 30 2026)"
+    date: 2026-09-30
+    edition: 2026-10-11
+  # SpaceX
+  - company: SpaceX
+    url: https://www.spacex.com/launches
+    title: "Three-mission week: Starlink 15-25 (booster 20th flight, Oct 12), CRS-35 ISS cargo (Oct 13), USSF-481 (Oct 15)"
+    date: 2026-10-11
+    edition: 2026-10-11
+  # Cursor
+  - company: Cursor
+    url: https://www.cursor.com/changelog
+    title: "Remote Control for iOS — view and reply to local desktop agents from mobile without cloud routing"
+    date: 2026-10-06
+    edition: 2026-10-11
