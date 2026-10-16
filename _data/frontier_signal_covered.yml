@@ -246,3 +246,43 @@ covered:
     title: "Remote Control for iOS — view and reply to local desktop agents from mobile without cloud routing"
     date: 2026-10-06
     edition: 2026-10-11
+  # --- Edition 7: 2026-10-16 ---
+  # Anthropic
+  - company: Anthropic
+    url: https://www.anthropic.com/news/singapore-office-opening
+    title: "Anthropic opens Singapore office and signs MOU with the Government of Singapore"
+    date: 2026-10-14
+    edition: 2026-10-16
+  - company: Anthropic
+    url: https://www.anthropic.com/news/an-update-on-independent-evaluators
+    title: "An update on independent evaluators — METR employee-like access with publication rights"
+    date: 2026-10-15
+    edition: 2026-10-16
+  - company: Anthropic
+    url: https://www.anthropic.com/news/2026-us-midterms
+    title: "Preparing for the 2026 US midterms"
+    date: 2026-10-14
+    edition: 2026-10-16
+  # OpenAI
+  - company: OpenAI
+    url: https://openai.com/index/new-chatgpt-ads-format-and-measurement
+    title: "Building advertising for the way people use AI — ChatGPT visual ads and expanded measurement"
+    date: 2026-10-05
+    edition: 2026-10-16
+  - company: OpenAI
+    url: https://openai.com/index/introducing-the-rosalind-academic-plan
+    title: "Introducing the Rosalind Academic Plan — free ChatGPT for academic life-sciences labs, GPT-Rosalind access"
+    date: 2026-10-15
+    edition: 2026-10-16
+  # Google (Gemini / DeepMind)
+  - company: Google
+    url: https://blog.google/innovation-and-ai/models-and-research/gemini-models/gemini-4-argon
+    title: "Gemini 4 Argon — generally available at $2/$10 per million tokens, 1M context window"
+    date: 2026-10-13
+    edition: 2026-10-16
+  # Cursor
+  - company: Cursor
+    url: https://www.cursor.com/changelog/origin-marketplace
+    title: "Origin App Marketplace — 20+ developer tool integrations, open for public submissions"
+    date: 2026-10-13
+    edition: 2026-10-16
