@@ -236,6 +236,7 @@
 	.zoombar button { border: 0; background: none; color: var(--khadi); min-width: 34px; height: 32px; border-radius: 999px; cursor: pointer; font: 600 1rem var(--text); padding: 0 10px; }
 	.zoombar button:hover { background: rgba(243,241,234,.12); }
 	.zoombar button[aria-pressed=true] { background: var(--khadi); color: var(--pine-deep); }
+	.zoombar button:disabled { opacity: .4; cursor: not-allowed; }
 	.zoombar .zoombar__level { min-width: 48px; text-align: center; font-size: 0.85rem; color: var(--mist); font-variant-numeric: tabular-nums; }
 	.viewer__head { flex-wrap: wrap; gap: 8px 12px; }
 	.viewer__tools { display: flex; flex-wrap: wrap; gap: 8px 10px; justify-content: flex-end; min-width: 0; }
@@ -588,6 +589,10 @@
 	<div class="viewer__head">
 		<span class="muted" id="viewer-count"></span>
 		<span class="viewer__tools">
+			<span class="zoombar" id="viewer-quality" role="group" aria-label="Photo version">
+				<button type="button" data-quality="enhanced" aria-pressed="true" title="AI-upscaled 2× (Real-ESRGAN). Sharper; no facial detail is invented.">Enhanced</button>
+				<button type="button" data-quality="original" aria-pressed="false" title="The photo as it was shared">Original</button>
+			</span>
 			<span class="zoombar" id="viewer-zoom" role="group" aria-label="Zoom">
 				<button type="button" data-zoom="out" aria-label="Zoom out">−</button>
 				<span class="zoombar__level" aria-live="polite">100%</span>
@@ -1624,6 +1629,17 @@
 	// ── Photo viewer
 	// The viewer steps through `viewerPhotos`: all photos, or one person's photos from a profile.
 	var photoIndex = 0, lastFocus = null, viewerPhotos = [], photoTags = {};
+	// Enhanced (Real-ESRGAN 2×, enhance-photos.sh) or the original; remembered per device.
+	var QUALITY_KEY = 'yajur-kodai-photo-quality';
+	var photoQuality = storeGet('localStorage', QUALITY_KEY) === 'original' ? 'original' : 'enhanced';
+	function photoSrc(ph, q) { return (q || photoQuality) === 'enhanced' ? HLS + 'photos-enhanced/' + ph.id + '.jpg' : HLS + 'photos/' + ph.src; }
+	function showQuality(hasEnhanced) {
+		$('viewer-quality').querySelectorAll('button').forEach(function (b) {
+			var q = b.dataset.quality, effective = hasEnhanced === false ? 'original' : photoQuality;
+			b.setAttribute('aria-pressed', String(q === effective));
+			if (q === 'enhanced') { b.disabled = hasEnhanced === false; b.title = b.disabled ? 'No enhanced version of this photo yet' : 'AI-upscaled 2× (Real-ESRGAN). Sharper; no facial detail is invented.'; }
+		});
+	}
 	function loadPhotoTags() {
 		return capi('/photo-tags').then(function (t) { photoTags = t || {}; return photoTags; }).catch(function () { return photoTags; });
 	}
@@ -1660,7 +1676,13 @@
 		layer.textContent = ''; facesHere = [];
 		document.querySelectorAll('#viewer-frame .face-pick, #viewer-frame .faces-hint').forEach(function (n) { n.remove(); });
 		photoZoom.reset();
-		$('viewer-img').src = HLS + 'photos/' + list[photoIndex].src;
+		var img = $('viewer-img'), ph = list[photoIndex];
+		img.onerror = function () {
+			if (img.dataset.version === 'enhanced') { img.dataset.version = 'original'; img.src = photoSrc(ph, 'original'); showQuality(false); }
+		};
+		img.dataset.version = photoQuality;
+		img.src = photoSrc(ph);
+		showQuality(true);
 		$('viewer-count').textContent = 'Photo ' + (photoIndex + 1) + ' of ' + n;
 		var side = el('div');
 		side.appendChild(photoPeopleSection(list[photoIndex].id));
@@ -1668,7 +1690,7 @@
 		mountComments($('viewer-comments'), side);
 		var mark = $('viewer-mark');
 		mark.style.top = (8 + Math.random() * 76) + '%'; mark.style.left = (6 + Math.random() * 58) + '%';
-		[photoIndex + 1, photoIndex - 1].forEach(function (k) { new Image().src = HLS + 'photos/' + list[(k + n) % n].src; });
+		[photoIndex + 1, photoIndex - 1].forEach(function (k) { new Image().src = photoSrc(list[(k + n) % n]); });
 	}
 	// Marking faces: toggle "Mark faces", drag a box around a face, pick who it is.
 	var marking = false, facesHere = [];
@@ -1726,6 +1748,15 @@
 		else { layer.textContent = ''; document.querySelectorAll('#viewer-frame .face-pick, #viewer-frame .faces-hint').forEach(function (n) { n.remove(); }); }
 	}
 	$('viewer-faces').addEventListener('click', function () { setMarking(!marking); });
+	$('viewer-quality').querySelectorAll('button').forEach(function (b) {
+		b.addEventListener('click', function () {
+			if (b.disabled || b.dataset.quality === photoQuality) return;
+			photoQuality = b.dataset.quality; storeSet('localStorage', QUALITY_KEY, photoQuality);
+			var img = $('viewer-img'), ph = viewerPhotos[photoIndex];
+			if (!ph) return;
+			img.dataset.version = photoQuality; img.src = photoSrc(ph); showQuality(true);
+		});
+	});
 	$('viewer-img').addEventListener('load', function () { if (marking) { placeLayer(); loadFaces(); } });
 	window.addEventListener('resize', function () { if (marking) placeLayer(); });
 
