@@ -212,6 +212,29 @@
 	.person form { grid-column: 1 / -1; display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
 	.person form .field { flex: 1 1 140px; padding: 7px 10px; }
 
+	/* People cards open a profile */
+	.person__open { border: 0; background: none; padding: 0; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+	.person__open:hover .person__name { color: #f3b083; }
+	/* Profile page: one person's photos and the moments they appear in */
+	.profile { margin-top: 24px; max-width: 1200px; }
+	.profile__back { margin-bottom: 18px; }
+	.profile__head { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+	.profile__avatar { width: 76px; height: 76px; border-radius: 50%; display: grid; place-items: center; background: rgba(234,122,42,.18); border: 1px solid rgba(234,122,42,.5); font: 400 1.7rem var(--display); }
+	.profile__head h2 { font: 400 clamp(2rem, 5vw, 3rem)/1.05 var(--display); margin: 0; }
+	.profile__head p { margin: 6px 0 0; }
+	.profile h3 { font: 400 1.6rem/1.2 var(--display); margin: 40px 0 14px; }
+	.profile__video { display: grid; grid-template-columns: minmax(150px, 220px) 1fr; gap: 18px; padding: 16px 0; border-top: 1px solid var(--line); }
+	.profile__video:first-of-type { border-top: 0; }
+	.profile__video h4 { margin: 0 0 2px; font-size: 1.1rem; }
+	.profile__moments { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+	.moment { display: inline-flex; gap: 8px; align-items: baseline; border: 1px solid var(--line); background: rgba(243,241,234,.05); color: var(--khadi); border-radius: 10px; padding: 6px 10px; font: inherit; font-size: 0.9rem; cursor: pointer; text-align: left; }
+	.moment:hover { border-color: var(--saffron); }
+	.moment b { font-variant-numeric: tabular-nums; color: #f3b083; }
+	@media (max-width: 640px) { .profile__video { grid-template-columns: 1fr; } }
+	/* People in a photo (viewer side panel) */
+	.photo-people { padding: 4px 0 18px; border-bottom: 1px solid var(--line); margin-bottom: 18px; }
+	.photo-people h3 { font: 400 1.3rem/1.2 var(--display); margin: 0 0 10px; }
+
 	.mk-counts { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
 	.mk-count { border: 1px solid var(--line); border-radius: 999px; padding: 1px 10px; font-size: 0.8rem; color: var(--mist); font-variant-numeric: tabular-nums; }
 	.mk-count b { color: var(--khadi); font-weight: 600; margin-left: 4px; }
@@ -856,6 +879,9 @@
 			refreshRequestBadge();
 			// Link in the request email: ...#requests opens the review panel for the admin.
 			if (location.hash === '#requests' && me && me.isAdmin && $('account').hidden) openAccount();
+			var link = /^#person\/(\d+)$/.exec(location.hash);
+			if (link) { personId = Number(link[1]); view = 'person'; }
+			loadPhotoTags();
 			ready = {}; res[1].forEach(function (s) { ready[s] = true; });
 			photos = res[2];
 			entries = (res[0].Items || []).map(parse).sort(function (a, b) {
@@ -1065,8 +1091,13 @@
 			shown.forEach(function (pp) {
 				var li = el('li', 'person' + (pp.id === flashId ? ' is-flash' : '')); li.dataset.id = pp.id;
 				li.appendChild(el('span', 'person__avatar', initials(pp.name)));
-				li.appendChild(el('span', 'person__name', pp.name));
+				var openBtn = el('button', 'person__open'); openBtn.type = 'button';
+				openBtn.appendChild(el('span', 'person__name', pp.name));
+				openBtn.setAttribute('aria-label', 'Open ' + pp.name + "'s page");
+				openBtn.addEventListener('click', function () { openPerson(pp.id); });
+				li.appendChild(openBtn);
 				var meta = el('span', 'person__meta');
+				meta.appendChild(el('span', '', plural(pp.photos || 0, 'photo') + ', ' + plural(pp.moments || 0, 'moment')));
 				if (pp.addedBy && pp.addedBy !== 'Member' && pp.addedBy !== 'Admin') meta.appendChild(el('span', '', 'added by ' + pp.addedBy));
 				if (pp.canEdit) {
 					var ren = el('button', 'linkish', 'Rename'); ren.type = 'button';
@@ -1122,10 +1153,93 @@
 		load();
 	}
 
+	// ── A person's page: the photos they're tagged in, and per video only their events.
+	var personId = null;
+	function openPerson(id) {
+		personId = id; view = 'person';
+		try { history.replaceState(null, '', '#person/' + id); } catch (e) {}
+		render();
+		$('content').scrollIntoView({ behavior: 'smooth', block: 'start' });
+	}
+	// A #person/<id> link opened or pasted while the page is already open
+	window.addEventListener('hashchange', function () {
+		var link = /^#person\/(\d+)$/.exec(location.hash);
+		if (link && session && !$('library-view').hidden && Number(link[1]) !== personId) openPerson(Number(link[1]));
+	});
+	function closePerson() {
+		personId = null; view = 'people';
+		try { history.replaceState(null, '', location.pathname); } catch (e) {}
+		render();
+	}
+	function renderPerson(root) {
+		var wrap = el('section', 'profile');
+		var back = el('button', 'btn btn--quiet profile__back', '← All people'); back.type = 'button';
+		back.addEventListener('click', closePerson);
+		wrap.appendChild(back);
+		var status = el('p', 'muted', 'Loading…'); wrap.appendChild(status);
+		root.appendChild(wrap);
+		capi('/people/' + personId).then(function (d) {
+			status.remove();
+			var pp = d.person;
+			var head = el('div', 'profile__head');
+			head.appendChild(el('span', 'profile__avatar', initials(pp.name)));
+			var t = el('div'); t.appendChild(el('h2', '', pp.name));
+			var moments = d.videos.reduce(function (n, v) { return n + v.events.length; }, 0);
+			t.appendChild(el('p', 'muted', 'Tagged in ' + plural(d.photos.length, 'photo') + ' and ' + plural(moments, 'moment') +
+				' across ' + plural(d.videos.length, 'video') + '.'));
+			head.appendChild(t); wrap.appendChild(head);
+
+			wrap.appendChild(el('h3', '', 'Photos'));
+			var mine = d.photos.map(function (id) { return photos.filter(function (ph) { return ph.id === id; })[0]; }).filter(Boolean);
+			if (!mine.length) {
+				wrap.appendChild(el('p', 'muted', 'Not tagged in any photos yet. Open a photo and press + under “People in this photo”.'));
+			} else {
+				var grid = el('div', 'photos');
+				grid.addEventListener('contextmenu', function (ev) { ev.preventDefault(); });
+				mine.forEach(function (ph, i) {
+					var b = el('button', 'photo'); b.type = 'button'; b.setAttribute('aria-label', 'Open photo ' + (i + 1) + ' of ' + mine.length);
+					var img = el('img'); img.loading = 'lazy'; img.alt = ''; img.src = HLS + 'photos/' + ph.thumb; img.width = ph.w; img.height = ph.h;
+					b.appendChild(img);
+					b.addEventListener('click', function () { openPhoto(i, mine); });
+					grid.appendChild(b);
+				});
+				wrap.appendChild(grid);
+			}
+
+			wrap.appendChild(el('h3', '', 'Videos'));
+			if (!d.videos.length) {
+				wrap.appendChild(el('p', 'muted', 'Not tagged in any videos yet. While watching, add an Event and tag ' + pp.name + ' with +.'));
+			}
+			d.videos.forEach(function (v) {
+				var slug = v.target.replace(/^video:/, '');
+				var e = entries.filter(function (x) { return x.slug === slug; })[0];
+				var row = el('div', 'profile__video');
+				if (e) row.appendChild(thumb(e)); else row.appendChild(el('div'));
+				var info = el('div');
+				info.appendChild(el('h4', '', e ? e.title : slug));
+				if (e) info.appendChild(el('p', 'muted', e.longDate));
+				var list = el('div', 'profile__moments');
+				v.events.forEach(function (ev) {
+					var m = el('button', 'moment'); m.type = 'button';
+					m.appendChild(el('b', '', fmtDuration(ev.position * 1e7)));
+					m.appendChild(el('span', '', ev.title));
+					m.setAttribute('aria-label', 'Play ' + (e ? e.title : '') + ' from ' + fmtDuration(ev.position * 1e7));
+					if (e && ready[e.slug]) m.addEventListener('click', function () { play(e, ev.position); });
+					else m.disabled = true;
+					list.appendChild(m);
+				});
+				info.appendChild(list);
+				row.appendChild(info);
+				wrap.appendChild(row);
+			});
+		}).catch(function (ex) { status.textContent = ex.message; });
+	}
+
 	function render() {
 		var root = $('content'); root.textContent = '';
-		document.querySelectorAll('.views button').forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.view === view)); });
-		({ timeline: renderTimeline, gallery: renderGallery, photos: renderPhotos, people: renderPeople })[view](root);
+		document.querySelectorAll('.views button').forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.view === (view === 'person' ? 'people' : view))); });
+		if (view === 'person' && !personId) view = 'people';
+		({ timeline: renderTimeline, gallery: renderGallery, photos: renderPhotos, people: renderPeople, person: renderPerson })[view](root);
 	}
 
 	// ── Comments on a video ("video:<slug>") or photo ("photo:<id>")
@@ -1315,18 +1429,55 @@
 	});
 
 	// ── Photo viewer
-	var photoIndex = 0, lastFocus = null;
+	// The viewer steps through `viewerPhotos`: all photos, or one person's photos from a profile.
+	var photoIndex = 0, lastFocus = null, viewerPhotos = [], photoTags = {};
+	function loadPhotoTags() {
+		return capi('/photo-tags').then(function (t) { photoTags = t || {}; return photoTags; }).catch(function () { return photoTags; });
+	}
+	function photoPeopleSection(photoId) {
+		var box = el('section', 'photo-people');
+		box.appendChild(el('h3', '', 'People in this photo'));
+		var tags = (photoTags[photoId] || []).slice();
+		var byPerson = {};
+		tags.forEach(function (t) { byPerson[t.personId] = t; });
+		var pk = peoplePicker(tags.map(function (t) { return { id: t.personId, name: t.name }; }), null, {
+			label: null,
+			empty: 'Nobody is tagged yet. Press + to tag the people you recognise.',
+			canRemove: function (pp) { return !byPerson[pp.id] || byPerson[pp.id].canRemove; },
+			onAdd: function (pp) {
+				return capi('/photo-tags', { method: 'POST', body: { photo: photoId, person: pp.id } }).then(function (r) {
+					var t = { tagId: r.tagId, personId: pp.id, name: pp.name, canRemove: true };
+					byPerson[pp.id] = t; (photoTags[photoId] = photoTags[photoId] || []).push(t);
+				});
+			},
+			onRemove: function (pp) {
+				var t = byPerson[pp.id];
+				return capi('/photo-tags/' + t.tagId, { method: 'DELETE' }).then(function () {
+					delete byPerson[pp.id];
+					photoTags[photoId] = (photoTags[photoId] || []).filter(function (x) { return x.personId !== pp.id; });
+				});
+			}
+		});
+		box.appendChild(pk.el);
+		return box;
+	}
 	function showPhoto(i) {
-		photoIndex = (i + photos.length) % photos.length;
-		$('viewer-img').src = HLS + 'photos/' + photos[photoIndex].src;
-		$('viewer-count').textContent = 'Photo ' + (photoIndex + 1) + ' of ' + photos.length;
-		mountComments($('viewer-comments'), commentsPanel('photo:' + photos[photoIndex].id));
+		var list = viewerPhotos, n = list.length;
+		photoIndex = (i + n) % n;
+		$('viewer-img').src = HLS + 'photos/' + list[photoIndex].src;
+		$('viewer-count').textContent = 'Photo ' + (photoIndex + 1) + ' of ' + n;
+		var side = el('div');
+		side.appendChild(photoPeopleSection(list[photoIndex].id));
+		side.appendChild(commentsPanel('photo:' + list[photoIndex].id));
+		mountComments($('viewer-comments'), side);
 		var mark = $('viewer-mark');
 		mark.style.top = (8 + Math.random() * 76) + '%'; mark.style.left = (6 + Math.random() * 58) + '%';
-		[photoIndex + 1, photoIndex - 1].forEach(function (k) { new Image().src = HLS + 'photos/' + photos[(k + photos.length) % photos.length].src; });
+		[photoIndex + 1, photoIndex - 1].forEach(function (k) { new Image().src = HLS + 'photos/' + list[(k + n) % n].src; });
 	}
-	function openPhoto(i) {
+	function openPhoto(i, list) {
+		viewerPhotos = list || photos;
 		lastFocus = document.activeElement;
+		ensurePeople().catch(function () {});
 		$('viewer-mark').textContent = session.name + ' · ' + new Date().toLocaleDateString('en-GB');
 		showPhoto(i);
 		$('viewer').hidden = false;
@@ -1336,7 +1487,7 @@
 	function closePhoto() {
 		$('viewer').hidden = true; $('viewer-img').removeAttribute('src');
 		mountComments($('viewer-comments'), null);
-		if (view === 'photos') render(); // refresh comment counts on the tiles
+		if (view === 'photos' || view === 'person') render(); // refresh counts and tags
 		document.body.style.overflow = '';
 		if (lastFocus) lastFocus.focus();
 	}
@@ -1353,7 +1504,11 @@
 		if (Math.abs(dx) > 40) showPhoto(photoIndex + (dx < 0 ? 1 : -1));
 	});
 	document.querySelectorAll('.views button').forEach(function (b) {
-		b.addEventListener('click', function () { view = b.dataset.view; storeSet('localStorage', VIEW_KEY, view); render(); });
+		b.addEventListener('click', function () {
+			view = b.dataset.view; personId = null; storeSet('localStorage', VIEW_KEY, view);
+			if (location.hash.indexOf('#person/') === 0) { try { history.replaceState(null, '', location.pathname); } catch (e) {} }
+			render();
+		});
 	});
 
 	// ── Chapters & tagged events on a video, beside the player. Any member can add them;
@@ -1376,7 +1531,10 @@
 	// Pick people from the People list: chips with ×, a + button, and a type-ahead menu.
 	// Returns { el, ids(), focus() }. onChange(peopleArray) fires on every change.
 	var pickerSeq = 0;
-	function peoplePicker(initial, onChange) {
+	// hooks (optional): { onAdd(person) → Promise, onRemove(person) → Promise, canRemove(person) → bool,
+	//   empty: text when nobody is tagged, label: prefix for the names line (or null for none) }
+	function peoplePicker(initial, onChange, hooks) {
+		hooks = hooks || {};
 		var chosen = (initial || []).slice();
 		var uid = 'pp' + (++pickerSeq);
 		var root = el('div', 'tagger');
@@ -1397,18 +1555,21 @@
 			chips.textContent = '';
 			chosen.forEach(function (pp) {
 				var chip = el('li', 'chip-person'); chip.appendChild(document.createTextNode(pp.name));
-				var x = el('button', '', '×'); x.type = 'button'; x.setAttribute('aria-label', 'Remove ' + pp.name);
-				x.addEventListener('click', function () {
-					chosen = chosen.filter(function (c) { return c.id !== pp.id; }); changed(); plus.focus();
-				});
-				chip.appendChild(x); chips.appendChild(chip);
+				if (!hooks.canRemove || hooks.canRemove(pp)) {
+					var x = el('button', '', '×'); x.type = 'button'; x.setAttribute('aria-label', 'Remove ' + pp.name);
+					x.addEventListener('click', function () { removePerson(pp); plus.focus(); });
+					chip.appendChild(x);
+				} else {
+					chip.style.paddingRight = '11px';
+				}
+				chips.appendChild(chip);
 			});
 			preview.textContent = '';
-			if (chosen.length) {
-				preview.appendChild(document.createTextNode('Event name: '));
+			if (chosen.length && hooks.label !== null) {
+				preview.appendChild(document.createTextNode((hooks.label || 'Event name') + ': '));
 				preview.appendChild(el('b', '', chosen.map(function (c) { return c.name; }).join(', ')));
-			} else {
-				preview.textContent = 'Press + to tag the people who appear at this moment.';
+			} else if (!chosen.length) {
+				preview.textContent = hooks.empty || 'Press + to tag the people who appear at this moment.';
 			}
 			if (onChange) onChange(chosen);
 			if (!box.hidden) refresh();
@@ -1446,19 +1607,30 @@
 			if (cur) { input.setAttribute('aria-activedescendant', cur.id); cur.scrollIntoView({ block: 'nearest' }); }
 			else input.removeAttribute('aria-activedescendant');
 		}
+		// With hooks, every add/remove is saved straight away (photos); without, the form saves (events).
+		function addPerson(pp) {
+			if (chosen.some(function (c) { return c.id === pp.id; })) return Promise.resolve();
+			return (hooks.onAdd ? hooks.onAdd(pp) : Promise.resolve()).then(function () {
+				chosen.push(pp); input.value = ''; active = 0; changed(); input.focus();
+			}, function (ex) { preview.textContent = ex.message; });
+		}
+		function removePerson(pp) {
+			return (hooks.onRemove ? hooks.onRemove(pp) : Promise.resolve()).then(function () {
+				chosen = chosen.filter(function (c) { return c.id !== pp.id; }); changed();
+			}, function (ex) { preview.textContent = ex.message; });
+		}
 		function pick(i) {
 			var o = options[i]; if (!o) return;
-			if (o.person) { chosen.push(o.person); input.value = ''; active = 0; changed(); input.focus(); return; }
+			if (o.person) { addPerson(o.person); return; }
 			// Not on the list yet: add them to People, then tag them.
 			capi('/people', { method: 'POST', body: { name: o.create } }).then(function (pp) {
 				people.push(pp); people.sort(function (a, b) { return nameKey(a.name).localeCompare(nameKey(b.name)); });
-				chosen.push(pp); input.value = ''; active = 0; changed(); input.focus();
+				return addPerson(pp);
 			}).catch(function (ex) {
 				if (ex.status === 409) {
 					return ensurePeople(true).then(function () {
 						var hit = people.filter(function (pp) { return nameKey(pp.name) === nameKey(o.create); })[0];
-						if (hit && !chosen.some(function (c) { return c.id === hit.id; })) chosen.push(hit);
-						input.value = ''; changed(); input.focus();
+						if (hit) return addPerson(hit);
 					});
 				}
 				preview.textContent = ex.message;
@@ -1477,7 +1649,10 @@
 			else if (ev.key === 'ArrowUp') { ev.preventDefault(); active = Math.max(active - 1, 0); paint(); }
 			else if (ev.key === 'Enter') { ev.preventDefault(); if (options.length) pick(active); }
 			else if (ev.key === 'Escape') { ev.preventDefault(); ev.stopPropagation(); closeSearch(); plus.focus(); }
-			else if (ev.key === 'Backspace' && !input.value && chosen.length) { chosen.pop(); changed(); }
+			else if (ev.key === 'Backspace' && !input.value && chosen.length) {
+				var last = chosen[chosen.length - 1];
+				if (!hooks.canRemove || hooks.canRemove(last)) removePerson(last);
+			}
 		});
 		input.addEventListener('blur', function () { setTimeout(function () { if (document.activeElement !== input) closeSearch(); }, 120); });
 		changed();
@@ -1776,7 +1951,7 @@
 		watermark.style.left = (4 + Math.random() * 62) + '%';
 	}
 
-	function play(e) {
+	function play(e, startAt) {
 		closePlayer();
 		var item = e.item;
 		$('player-title').textContent = e.title;
@@ -1795,7 +1970,7 @@
 			seek: function (t) { player.currentTime(t); player.play().catch(function () {}); $('player').scrollTo({ top: 0, behavior: 'smooth' }); }
 		}));
 
-		var resumeAt = (item.UserData && item.UserData.PlaybackPositionTicks || 0) / 1e7;
+		var resumeAt = startAt != null ? startAt : (item.UserData && item.UserData.PlaybackPositionTicks || 0) / 1e7;
 		player.playbackRates(RATES); // player.reset() on close empties the list, hiding the speed button
 		player.src({ src: HLS + e.slug + '/master.m3u8', type: 'application/x-mpegURL' });
 		if (resumeAt > 0) player.one('loadedmetadata', function () { player.currentTime(resumeAt); });
