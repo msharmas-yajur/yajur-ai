@@ -1,0 +1,10 @@
+[Unit]
+Description=Nightly Kodai 1994 backup to Google Drive
+
+[Timer]
+OnCalendar=*-*-* 03:00
+RandomizedDelaySec=20m
+Persistent=true
+
+[Install]
+WantedBy=timers.target
