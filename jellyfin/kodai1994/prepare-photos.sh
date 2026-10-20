@@ -25,6 +25,8 @@ set -euo pipefail
 SRC=${1:-"$HOME/Downloads/Kodai - 1994"}
 DEST=${2:-"$HOME/media/kodai1994-hls/photos"}
 PUBLIC=${PUBLIC-"$HOME/media/kodai1994-brand/spiral"}
+# OVERRIDES/NN.<ext>: use this file instead of the source for photo NN (see the loop)
+OVERRIDES=${OVERRIDES:-"$HOME/media/kodai1994-overrides"}
 tmp=$(mktemp -d "$(dirname "$DEST")/.photos.XXXXXX")
 trap 'rm -rf "$tmp"' EXIT
 
@@ -36,13 +38,19 @@ while IFS= read -r -d '' f; do
   [ -n "${seen[$sum]:-}" ] && { echo "skip duplicate: $(basename "$f")"; continue; }
   seen[$sum]=1
   n=$((n + 1)); id=$(printf '%02d' "$n")
-  ffmpeg -v error -nostdin -y -i "$f" -map_metadata -1 \
+  # A better copy of this photo (e.g. a high-res scan of the same print) replaces the
+  # source's pixels; the photo keeps its number, so its faces, tags and comments stay.
+  in=$f
+  ov=$(find "$OVERRIDES" -maxdepth 1 -type f -name "$id.*" 2>/dev/null | head -1)
+  [ -n "$ov" ] && in=$ov
+  ffmpeg -v error -nostdin -y -i "$in" -map_metadata -1 \
     -vf "scale='if(gt(iw,ih),min(2048,iw),-2)':'if(gt(iw,ih),-2,min(2048,ih))'" -q:v 3 "$tmp/$id.jpg"
-  ffmpeg -v error -nostdin -y -i "$f" -map_metadata -1 \
+  ffmpeg -v error -nostdin -y -i "$in" -map_metadata -1 \
     -vf "scale='if(gt(iw,ih),min(640,iw),-2)':'if(gt(iw,ih),-2,min(640,ih))'" -q:v 4 "$tmp/$id-thumb.jpg"
   wh=$(ffprobe -v error -select_streams v:0 -show_entries stream=width,height -of csv=p=0 "$tmp/$id.jpg")
-  entries+=("$id,$wh")
-  echo "photo $id  ${wh/,/x}  $(basename "$f")"
+  owh=$(ffprobe -v error -select_streams v:0 -show_entries stream=width,height -of csv=p=0 "$in")
+  entries+=("$id,$wh,$owh")
+  echo "photo $id  ${wh/,/x}  $(basename "$in")"
 done < <(find "$SRC" -maxdepth 1 -type f \( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' \) -print0 | sort -z)
 
 printf '%s\n' "${entries[@]}" | python3 -I -c '
@@ -50,8 +58,9 @@ import json, sys
 out = []
 for line in sys.stdin:
     if not line.strip(): continue
-    pid, w, h = line.strip().split(",")
-    out.append({"id": pid, "src": pid + ".jpg", "thumb": pid + "-thumb.jpg", "w": int(w), "h": int(h)})
+    pid, w, h, ow, oh = line.strip().split(",")[:5]
+    # ow/oh: the original'"'"'s size (the page tags 4 MP and up as "High res")
+    out.append({"id": pid, "src": pid + ".jpg", "thumb": pid + "-thumb.jpg", "w": int(w), "h": int(h), "ow": int(ow), "oh": int(oh)})
 try:  # keep photos members uploaded (ids from 101)
     out += [p for p in json.load(open(sys.argv[1])) if int(p["id"]) >= 101]
 except FileNotFoundError:
