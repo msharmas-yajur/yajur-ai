@@ -1,0 +1,401 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Kodai 1994 | Yajur.ai</title>
+<link rel="icon" href="https://yajur.ai/favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap">
+<style>
+	:root {
+		--bg: #faf9f5; --surface: #f0eee6; --line: #d6d3c8; --ink: #141413; --muted: #5e5d59;
+		--accent: #d97757; --error: #a8321c; --thumb: #e4e1d6;
+		color-scheme: light;
+	}
+	@media (prefers-color-scheme: dark) {
+		:root:not([data-theme="light"]) {
+			--bg: #1a1a18; --surface: #262624; --line: #3d3d3a; --ink: #f0eee6; --muted: #a6a39b;
+			--accent: #e08a6d; --error: #f3a48a; --thumb: #30302d;
+			color-scheme: dark;
+		}
+	}
+	:root[data-theme="dark"] {
+		--bg: #1a1a18; --surface: #262624; --line: #3d3d3a; --ink: #f0eee6; --muted: #a6a39b;
+		--accent: #e08a6d; --error: #f3a48a; --thumb: #30302d;
+		color-scheme: dark;
+	}
+	* { box-sizing: border-box; }
+	html, body { margin: 0; }
+	body { background: var(--bg); color: var(--ink); font-family: 'Inter', system-ui, -apple-system, sans-serif; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+	[hidden] { display: none !important; }
+	.wrap { max-width: 1200px; margin: 0 auto; padding: 40px 16px 96px; }
+	.serif { font-family: Georgia, 'Times New Roman', serif; font-weight: 400; }
+	.muted { color: var(--muted); }
+	.error { color: var(--error); font-size: 0.9rem; min-height: 1.4em; margin: 12px 0 0; }
+
+	.brand { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 40px; }
+	.brand a { color: var(--ink); text-decoration: none; font-weight: 600; letter-spacing: 0.02em; }
+	.eyebrow { text-transform: uppercase; letter-spacing: 0.14em; font-size: 0.75rem; font-weight: 600; color: var(--accent); margin: 0 0 8px; }
+	h1 { font-size: clamp(2.25rem, 6vw, 3.5rem); line-height: 1.1; margin: 0 0 12px; }
+
+	.btn { font: inherit; font-size: 0.95rem; font-weight: 600; border: 0; border-radius: 999px; padding: 12px 22px; cursor: pointer; background: var(--ink); color: var(--bg); }
+	.btn:disabled { opacity: 0.5; cursor: wait; }
+	.btn--ghost { background: transparent; color: var(--ink); border: 1px solid var(--line); padding: 8px 16px; font-weight: 500; }
+	.btn:focus-visible, input:focus-visible, .card:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+	/* Sign-in */
+	.login { max-width: 420px; margin: 32px auto 0; background: var(--surface); border-radius: 24px; padding: 32px 28px; }
+	.login label { display: block; font-size: 0.85rem; font-weight: 600; margin: 16px 0 6px; }
+	.login input[type=text], .login input[type=password] { width: 100%; font: inherit; font-size: 1rem; padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--bg); color: var(--ink); }
+	.login .remember { display: flex; align-items: center; gap: 8px; font-weight: 400; }
+	.login .btn { width: 100%; margin-top: 24px; }
+
+	/* Library */
+	.head { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; }
+	.stats { display: flex; flex-wrap: wrap; gap: 8px 24px; margin: 4px 0 0; font-size: 0.95rem; }
+	.month { margin: 48px 0 0; }
+	.month h2 { font-size: 1.5rem; margin: 0 0 20px; padding-bottom: 10px; border-bottom: 1px solid var(--line); }
+	.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 28px 20px; }
+	.card { display: block; width: 100%; text-align: left; font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; border-radius: 14px; }
+	.thumb { position: relative; aspect-ratio: 512 / 748; border-radius: 14px; overflow: hidden; background: var(--thumb); }
+	.thumb img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .25s ease; }
+	.card:hover .thumb img { transform: scale(1.03); }
+	.time { position: absolute; right: 8px; bottom: 10px; background: rgba(1,1,1,.75); color: #fff; font-size: 0.75rem; padding: 2px 8px; border-radius: 999px; font-variant-numeric: tabular-nums; }
+	.progress { position: absolute; left: 0; right: 0; bottom: 0; height: 4px; background: rgba(255,255,255,.35); }
+	.progress span { display: block; height: 100%; background: var(--accent); }
+	.title { font-weight: 600; font-size: 0.95rem; margin: 10px 2px 2px; line-height: 1.35; }
+	.sub { font-size: 0.8rem; margin: 0 2px; }
+
+	/* Player */
+	.player { position: fixed; inset: 0; z-index: 100; background: rgba(1,1,1,.94); display: flex; align-items: center; justify-content: center; padding: 16px; }
+	.player__inner { width: 100%; max-width: 1100px; }
+	.player__head { display: flex; justify-content: space-between; align-items: center; gap: 12px; color: #faf9f5; margin-bottom: 12px; }
+	.player__head h2 { font-size: 1.2rem; margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+	.player video { width: 100%; max-height: 80vh; aspect-ratio: 4 / 3; background: #000; border-radius: 12px; display: block; }
+	.player .btn--ghost { color: #faf9f5; border-color: rgba(250,249,245,.4); flex-shrink: 0; }
+	.player .error { color: #f3a48a; }
+</style>
+</head>
+<body>
+<div class="wrap">
+	<div class="brand">
+		<a href="https://yajur.ai">Yajur.ai</a>
+		<button class="btn btn--ghost" id="logout" type="button" hidden>Sign out</button>
+	</div>
+
+	<!-- Sign-in -->
+	<section id="login-view" hidden>
+		<p class="eyebrow" style="text-align:center">Private archive</p>
+		<h1 class="serif" style="text-align:center">Kodai 1994</h1>
+		<p class="muted" style="text-align:center">Recordings from Kodaikanal, April–May 1994. Open to invited members only. Sign in with the account you were given.</p>
+		<form class="login" id="login-form" autocomplete="on">
+			<label for="user">Username</label>
+			<input type="text" id="user" name="username" autocomplete="username" autocapitalize="none" spellcheck="false" required>
+			<label for="pass">Password</label>
+			<input type="password" id="pass" name="password" autocomplete="current-password" required>
+			<label class="remember"><input type="checkbox" id="remember"> Keep me signed in on this device</label>
+			<button class="btn" type="submit" id="login-btn">Sign in</button>
+			<p class="error" id="login-error" role="alert"></p>
+		</form>
+	</section>
+
+	<!-- Library -->
+	<section id="library-view" hidden>
+		<div class="head">
+			<div>
+				<p class="eyebrow">Kodaikanal · April–May 1994</p>
+				<h1 class="serif">Kodai 1994</h1>
+				<p class="stats muted" id="stats"></p>
+			</div>
+		</div>
+		<p class="muted" id="status" aria-live="polite"></p>
+		<div id="months"></div>
+	</section>
+</div>
+
+<!-- Player -->
+<div class="player" id="player" hidden role="dialog" aria-modal="true" aria-labelledby="player-title">
+	<div class="player__inner">
+		<div class="player__head">
+			<h2 class="serif" id="player-title"></h2>
+			<button class="btn btn--ghost" id="close" type="button">Close</button>
+		</div>
+		<video id="video" controls playsinline preload="metadata"></video>
+		<p class="error" id="player-error" role="alert"></p>
+	</div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.6.16/hls.min.js"></script>
+<script>
+(function () {
+	'use strict';
+
+	// Served from the same origin as Jellyfin (videos.yajur.ai), so API paths are relative.
+	var SERVER = '', LIBRARY = 'Kodai 1994';
+	var CLIENT = 'Yajur Kodai 1994', VERSION = '1.0.0', STORE_KEY = 'yajur-kodai-session';
+	var MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+	var $ = function (id) { return document.getElementById(id); };
+
+	// ── Storage (wrapped: private windows / blocked storage must not break the page)
+	function storeGet(store, key) { try { return window[store].getItem(key); } catch (e) { return null; } }
+	function storeSet(store, key, val) { try { window[store].setItem(key, val); } catch (e) {} }
+	function storeDel(store, key) { try { window[store].removeItem(key); } catch (e) {} }
+
+	var deviceId = storeGet('localStorage', 'yajur-kodai-device');
+	if (!deviceId) {
+		deviceId = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(16).slice(2);
+		storeSet('localStorage', 'yajur-kodai-device', deviceId);
+	}
+
+	var session = null; // { token, userId, name }
+	try { session = JSON.parse(storeGet('sessionStorage', STORE_KEY) || storeGet('localStorage', STORE_KEY) || 'null'); } catch (e) {}
+
+	// ── Jellyfin API
+	function authHeader() {
+		var h = 'MediaBrowser Client="' + CLIENT + '", Device="' + (navigator.platform || 'Browser').replace(/"/g, '') +
+			'", DeviceId="' + deviceId + '", Version="' + VERSION + '"';
+		return session ? h + ', Token="' + session.token + '"' : h;
+	}
+
+	function api(path, opts) {
+		opts = opts || {};
+		var headers = { 'Authorization': authHeader() };
+		if (opts.body) headers['Content-Type'] = 'application/json';
+		return fetch(SERVER + path, { method: opts.method || 'GET', headers: headers, body: opts.body ? JSON.stringify(opts.body) : undefined, keepalive: !!opts.keepalive })
+			.then(function (res) {
+				if (res.status === 401 && session) { signOut(true); throw new Error('Your session has expired. Please sign in again.'); }
+				if (!res.ok) throw new Error('Server responded ' + res.status);
+				return res.status === 204 ? null : res.json();
+			});
+	}
+
+	// The collection is pre-encoded as H.264/AAC MP4, so it direct-plays everywhere.
+	// The HLS transcoding profile only matters if a non-web file is ever added.
+	function deviceProfile() {
+		return {
+			MaxStreamingBitrate: 20000000,
+			DirectPlayProfiles: [{ Type: 'Video', Container: 'mp4,m4v', VideoCodec: 'h264', AudioCodec: 'aac,mp3' }],
+			TranscodingProfiles: [{ Type: 'Video', Container: 'ts', Protocol: 'hls', VideoCodec: 'h264', AudioCodec: 'aac', Context: 'Streaming', MaxAudioChannels: '2', MinSegments: 1, BreakOnNonKeyFrames: true }],
+			ContainerProfiles: [], CodecProfiles: [], SubtitleProfiles: []
+		};
+	}
+
+	// ── Views
+	function show(view) {
+		$('login-view').hidden = view !== 'login';
+		$('library-view').hidden = view !== 'library';
+		$('logout').hidden = view !== 'library';
+	}
+
+	function signOut(expired) {
+		closePlayer();
+		if (session && !expired) api('/Sessions/Logout', { method: 'POST' }).catch(function () {});
+		session = null;
+		storeDel('sessionStorage', STORE_KEY);
+		storeDel('localStorage', STORE_KEY);
+		$('months').textContent = '';
+		show('login');
+	}
+
+	$('login-form').addEventListener('submit', function (e) {
+		e.preventDefault();
+		var btn = $('login-btn'), err = $('login-error');
+		btn.disabled = true; err.textContent = '';
+		session = null;
+		api('/Users/AuthenticateByName', { method: 'POST', body: { Username: $('user').value.trim(), Pw: $('pass').value } })
+			.then(function (r) {
+				session = { token: r.AccessToken, userId: r.User.Id, name: r.User.Name };
+				storeSet($('remember').checked ? 'localStorage' : 'sessionStorage', STORE_KEY, JSON.stringify(session));
+				$('pass').value = '';
+				openLibrary();
+			})
+			.catch(function (ex) {
+				err.textContent = /401/.test(ex.message) ? 'Incorrect username or password.'
+					: (ex instanceof TypeError ? 'Can’t reach the video server. Please try again later.' : ex.message);
+			})
+			.then(function () { btn.disabled = false; });
+	});
+
+	$('logout').addEventListener('click', function () { signOut(false); });
+
+	// ── Library
+	// Filenames are "YYYY-MM[-DD] - Title"; the prefix drives ordering and month grouping.
+	function parseName(name) {
+		var m = /^(\d{4})-(\d{2})(?:-(\d{2}))? - (.*)$/.exec(name || '');
+		return m ? { year: m[1], month: +m[2], day: m[3] ? +m[3] : null, title: m[4] } : { year: '', month: 0, day: null, title: name };
+	}
+
+	function fmtDuration(ticks) {
+		if (!ticks) return '';
+		var s = Math.round(ticks / 1e7), h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), sec = s % 60;
+		return (h ? h + ':' + String(m).padStart(2, '0') : String(m)) + ':' + String(sec).padStart(2, '0');
+	}
+
+	function fmtHours(ticks) {
+		var h = ticks / 36e9;
+		return (h >= 10 ? Math.round(h) : h.toFixed(1)) + ' hours';
+	}
+
+	function openLibrary() {
+		show('library');
+		$('status').textContent = 'Loading…';
+		$('months').textContent = '';
+		api('/UserViews?userId=' + session.userId).then(function (views) {
+			var lib = (views.Items || []).filter(function (v) { return v.Name === LIBRARY; })[0];
+			if (!lib) throw new Error('This account doesn’t have access to the ' + LIBRARY + ' collection.');
+			return api('/Items?userId=' + session.userId + '&ParentId=' + lib.Id + '&Recursive=true' +
+				'&IncludeItemTypes=Movie,Video&SortBy=SortName&SortOrder=Ascending&Fields=MediaSources&EnableUserData=true' +
+				'&EnableImageTypes=Primary&ImageTypeLimit=1&Limit=500');
+		}).then(function (r) {
+			var items = r.Items || [];
+			render(items);
+			var total = items.reduce(function (sum, i) { return sum + (i.RunTimeTicks || 0); }, 0);
+			$('stats').textContent = items.length + (items.length === 1 ? ' recording · ' : ' recordings · ') + fmtHours(total) + ' · signed in as ' + session.name;
+			$('status').textContent = items.length ? '' : 'No recordings yet.';
+		}).catch(function (ex) { $('status').textContent = ex.message; });
+	}
+
+	function render(items) {
+		var root = $('months'), groups = {}, order = [];
+		items.forEach(function (item) {
+			var p = parseName(item.Name), key = p.year + '-' + p.month;
+			if (!groups[key]) { groups[key] = { label: p.month ? MONTHS[p.month - 1] + ' ' + p.year : 'Other recordings', items: [] }; order.push(key); }
+			groups[key].items.push({ item: item, parsed: p });
+		});
+		order.forEach(function (key) {
+			var sec = document.createElement('section'); sec.className = 'month';
+			var h = document.createElement('h2'); h.className = 'serif'; h.textContent = groups[key].label;
+			var grid = document.createElement('div'); grid.className = 'grid';
+			groups[key].items.forEach(function (entry) { grid.appendChild(card(entry.item, entry.parsed)); });
+			sec.appendChild(h); sec.appendChild(grid); root.appendChild(sec);
+		});
+	}
+
+	function card(item, parsed) {
+		var el = document.createElement('button');
+		el.type = 'button'; el.className = 'card';
+		var thumb = document.createElement('div'); thumb.className = 'thumb';
+		var tag = item.ImageTags && item.ImageTags.Primary;
+		if (tag) {
+			var img = document.createElement('img');
+			img.loading = 'lazy'; img.alt = '';
+			// <img> can't send the Authorization header, and the gateway requires a token for images.
+			img.src = SERVER + '/Items/' + item.Id + '/Images/Primary?maxHeight=480&quality=85&tag=' + tag + '&ApiKey=' + session.token;
+			thumb.appendChild(img);
+		}
+		var dur = fmtDuration(item.RunTimeTicks);
+		if (dur) { var t = document.createElement('span'); t.className = 'time'; t.textContent = dur; thumb.appendChild(t); }
+		var ud = item.UserData || {};
+		if (ud.PlaybackPositionTicks && item.RunTimeTicks) {
+			var bar = document.createElement('div'); bar.className = 'progress';
+			var fill = document.createElement('span'); fill.style.width = Math.min(100, ud.PlaybackPositionTicks / item.RunTimeTicks * 100) + '%';
+			bar.appendChild(fill); thumb.appendChild(bar);
+		}
+		var title = document.createElement('div'); title.className = 'title'; title.textContent = parsed.title;
+		el.appendChild(thumb); el.appendChild(title);
+		if (ud.PlaybackPositionTicks) {
+			var sub = document.createElement('div'); sub.className = 'sub muted';
+			sub.textContent = 'Resume at ' + fmtDuration(ud.PlaybackPositionTicks);
+			el.appendChild(sub);
+		} else if (ud.Played) {
+			var done = document.createElement('div'); done.className = 'sub muted'; done.textContent = 'Watched';
+			el.appendChild(done);
+		}
+		el.addEventListener('click', function () { play(item, parsed.title); });
+		return el;
+	}
+
+	// ── Player
+	var video = $('video'), hls = null, playing = null, progressTimer = null;
+
+	function progressBody(extra) {
+		var b = { ItemId: playing.itemId, MediaSourceId: playing.mediaSourceId, PlaySessionId: playing.playSessionId,
+			PositionTicks: Math.floor((video.currentTime || 0) * 1e7), IsPaused: video.paused, CanSeek: true };
+		for (var k in extra) b[k] = extra[k];
+		return b;
+	}
+
+	function reportProgress() {
+		if (playing && session) api('/Sessions/Playing/Progress', { method: 'POST', body: progressBody({}) }).catch(function () {});
+	}
+
+	function play(item, title) {
+		closePlayer();
+		$('player-title').textContent = title;
+		$('player-error').textContent = '';
+		$('player').hidden = false;
+		document.body.style.overflow = 'hidden';
+		$('close').focus();
+
+		var resumeAt = (item.UserData && item.UserData.PlaybackPositionTicks || 0) / 1e7;
+		api('/Items/' + item.Id + '/PlaybackInfo?userId=' + session.userId, {
+			method: 'POST',
+			body: { UserId: session.userId, IsPlayback: true, AutoOpenLiveStream: true, DeviceProfile: deviceProfile() }
+		}).then(function (info) {
+			var src = info.MediaSources && info.MediaSources[0];
+			if (!src) throw new Error('This recording has no playable source.');
+			playing = { itemId: item.Id, mediaSourceId: src.Id, playSessionId: info.PlaySessionId };
+			if (src.SupportsDirectPlay || !src.TranscodingUrl) {
+				attach(SERVER + '/Videos/' + item.Id + '/stream?static=true&MediaSourceId=' + src.Id +
+					'&PlaySessionId=' + info.PlaySessionId + '&ApiKey=' + session.token, false, resumeAt);
+			} else {
+				attach(SERVER + src.TranscodingUrl, true, resumeAt);
+			}
+			api('/Sessions/Playing', { method: 'POST', body: progressBody({ PositionTicks: Math.floor(resumeAt * 1e7) }) }).catch(function () {});
+			progressTimer = setInterval(reportProgress, 15000);
+		}).catch(function (ex) { $('player-error').textContent = ex.message; });
+	}
+
+	function attach(url, isHls, resumeAt) {
+		if (resumeAt > 0) video.addEventListener('loadedmetadata', function seek() {
+			video.removeEventListener('loadedmetadata', seek);
+			video.currentTime = resumeAt;
+		});
+		// Safari / iOS play HLS natively; other browsers use hls.js (Media Source Extensions).
+		if (!isHls || video.canPlayType('application/vnd.apple.mpegurl')) {
+			video.src = url;
+		} else if (window.Hls && Hls.isSupported()) {
+			hls = new Hls();
+			hls.on(Hls.Events.ERROR, function (_, d) { if (d.fatal) $('player-error').textContent = 'Playback error (' + d.details + ').'; });
+			hls.loadSource(url);
+			hls.attachMedia(video);
+		} else {
+			$('player-error').textContent = 'This browser can’t play streaming video.';
+			return;
+		}
+		video.play().catch(function () {}); // autoplay may be blocked; controls remain available
+	}
+
+	video.addEventListener('pause', reportProgress);
+
+	function closePlayer() {
+		clearInterval(progressTimer); progressTimer = null;
+		var wasPlaying = playing;
+		if (wasPlaying && session) {
+			// Saves the resume position and stops any server-side transcode for this session.
+			api('/Sessions/Playing/Stopped', { method: 'POST', keepalive: true, body: progressBody({}) })
+				.then(function () { if (!$('library-view').hidden) openLibrary(); })
+				.catch(function () {});
+		}
+		if (hls) { hls.destroy(); hls = null; }
+		video.pause(); video.removeAttribute('src'); video.load();
+		playing = null;
+		$('player').hidden = true;
+		document.body.style.overflow = '';
+	}
+
+	$('close').addEventListener('click', closePlayer);
+	document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !$('player').hidden) closePlayer(); });
+	window.addEventListener('pagehide', function () {
+		if (playing && session) api('/Sessions/Playing/Stopped', { method: 'POST', keepalive: true, body: progressBody({}) }).catch(function () {});
+	});
+
+	// ── Boot
+	if (session) openLibrary(); else show('login');
+})();
+</script>
+</body>
+</html>

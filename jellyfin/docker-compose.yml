@@ -1,0 +1,44 @@
+# Private video library at https://videos.yajur.ai
+#   jellyfin    — streams videos from MEDIA_DIR, handles user login and per-library access
+#   gateway     — serves /kodai1994/ (collection page) and proxies everything else to Jellyfin
+#   cloudflared — publishes the gateway at https://videos.yajur.ai with no open ports
+# Setup: see README.md in this folder.
+
+services:
+  jellyfin:
+    image: jellyfin/jellyfin:12.2
+    container_name: yajur-jellyfin
+    user: "${PUID}:${PGID}"
+    # Localhost only, for admin from this machine. Not 8096: a Tailscale Funnel path on
+    # this host already forwards public traffic to 127.0.0.1:8096.
+    ports:
+      - "127.0.0.1:8099:8096"
+    volumes:
+      - ./config:/config
+      - ./cache:/cache
+      - "${MEDIA_DIR}:/media:ro"
+    environment:
+      - JELLYFIN_PublishedServerUrl=https://videos.yajur.ai
+    restart: unless-stopped
+
+  gateway:
+    image: caddy:2.10.2-alpine
+    container_name: yajur-videos-gateway
+    ports:
+      - "127.0.0.1:8098:80"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./kodai1994/site:/srv/kodai1994:ro
+    depends_on:
+      - jellyfin
+    restart: unless-stopped
+
+  cloudflared:
+    image: cloudflare/cloudflared:2026.10.1
+    container_name: yajur-cloudflared
+    command: tunnel --no-autoupdate run
+    environment:
+      - TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN}
+    depends_on:
+      - gateway
+    restart: unless-stopped

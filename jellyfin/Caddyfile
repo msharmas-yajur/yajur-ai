@@ -1,0 +1,44 @@
+# Gateway for https://videos.yajur.ai (cloudflared → gateway:80)
+#   /kodai1994/  Kodai 1994 collection page (static; signs in against Jellyfin on this origin)
+#   /            redirects members to the collection; Jellyfin's own UI stays at /web/
+#   everything else → Jellyfin (API, images, streams), so yajur.ai/videos/ keeps working
+
+{
+	admin off
+	auto_https off
+}
+
+:80 {
+	redir / /kodai1994/ 302
+	redir /kodai1994 /kodai1994/ 308
+
+	handle_path /kodai1994/* {
+		root * /srv/kodai1994
+		file_server
+		header {
+			Cache-Control "no-cache"
+			X-Frame-Options "DENY"
+			X-Content-Type-Options "nosniff"
+			Referrer-Policy "same-origin"
+		}
+	}
+
+	# Jellyfin serves media by item ID without checking the caller (its OpenAPI marks
+	# /Videos/{id}/stream, /Audio/{id}/stream, subtitles, attachments, and item images
+	# as anonymous), and item IDs are derived from file paths, so they can be guessed.
+	# Require a valid Jellyfin token for all of them: the token comes from the
+	# Authorization header or the ApiKey/api_key query parameter, and /Users/Me only
+	# answers 200 when it is valid. Case-insensitive because Jellyfin's routes are.
+	@media path_regexp media (?i)^/+(videos|audio|livetv)/|^/+items/[^/]+/images/
+	forward_auth @media jellyfin:8096 {
+		uri /Users/Me?{query}
+	}
+
+	handle {
+		reverse_proxy jellyfin:8096 {
+			# Requests only arrive through the tunnel, so Cloudflare's header is the real
+			# client IP. Jellyfin needs it for per-client login lockout and its logs.
+			header_up X-Forwarded-For {http.request.header.Cf-Connecting-IP}
+		}
+	}
+}
