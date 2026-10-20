@@ -14,7 +14,9 @@ if not app.mail_enabled():
     sys.exit("Email is off: set SMTP_HOST (and SMTP_USER/SMTP_PASSWORD) in ~/services/yajur-videos/.env, then run jellyfin/deploy.sh.")
 if not to:
     sys.exit("No recipient: pass an address or set ADMIN_EMAIL.")
-print(f"Sending a test email to {to} via {app.SMTP_HOST}:{app.SMTP_PORT} as {app.SMTP_USER or app.MAIL_FROM} ...")
+print(f"Sending a test email from {app.MAIL_FROM} to {to} via {app.SMTP_HOST}:{app.SMTP_PORT} (signed in as {app.SMTP_USER or app.MAIL_FROM}) ...")
+if app.SMTP_USER and app.MAIL_FROM.lower() != app.SMTP_USER.lower():
+    print("Note: Gmail keeps this From address only if it is a verified \"Send mail as\" alias of the signed-in account; otherwise it substitutes the account address.")
 ok = app.send_mail(to, "Kodai 1994: test email", "This is a test from the Kodai 1994 site. Email is working.\n")
 print("Sent." if ok else "Failed (see the reason above).")
 sys.exit(0 if ok else 1)
