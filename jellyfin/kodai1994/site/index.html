@@ -11,6 +11,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Marcellus&family=Figtree:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/video.js/8.23.4/video-js.min.css">
 <style>
 	/* Palette taken from the 1994 group photo: Kodai pines, khadi whites, the saffron robe. */
 	:root {
@@ -148,24 +149,24 @@
 	.player__head h2 { font: 400 clamp(1.3rem, 3vw, 2rem)/1.15 var(--display); margin: 0; }
 	.player__head p { margin: 4px 0 0; font-size: 0.95rem; }
 	.player__buttons { display: flex; gap: 10px; flex: none; }
-	.stage { position: relative; background: #000; border-radius: 14px; overflow: hidden; }
-	.stage video { display: block; width: 100%; max-height: 78vh; aspect-ratio: 4 / 3; background: #000; }
-	.stage:fullscreen { border-radius: 0; display: grid; place-items: center; }
-	.stage:fullscreen { display: flex; flex-direction: column; justify-content: center; }
-	.stage:fullscreen video { max-height: none; height: calc(100vh - 44px); }
-
-	/* Scrub bar with frame previews (storyboard sprites from package-hls.sh) */
-	.scrub { position: relative; height: 44px; display: flex; align-items: center; padding: 0 14px; background: #000; cursor: pointer; touch-action: none; user-select: none; }
-	.scrub:focus-visible { outline-offset: -3px; }
-	.scrub__track { position: relative; flex: 1; height: 6px; border-radius: 3px; background: rgba(255,255,255,.2); transition: height .12s; }
-	.scrub:hover .scrub__track, .scrub.is-active .scrub__track { height: 10px; }
-	.scrub__buffer, .scrub__fill { position: absolute; top: 0; bottom: 0; left: 0; border-radius: 3px; }
-	.scrub__buffer { background: rgba(255,255,255,.28); }
-	.scrub__fill { background: var(--saffron); }
-	.scrub__preview { position: absolute; bottom: 50px; transform: translateX(-50%); pointer-events: none; text-align: center; z-index: 3; }
-	.scrub__frame { width: 160px; height: 120px; border-radius: 8px; border: 2px solid var(--khadi); background: #111 no-repeat; box-shadow: 0 8px 24px rgba(0,0,0,.6); }
-	.scrub__time { display: inline-block; margin-top: 6px; background: rgba(0,0,0,.85); color: #fff; padding: 2px 10px; border-radius: 999px; font-size: 0.9rem; font-variant-numeric: tabular-nums; }
-	@media (prefers-reduced-motion: reduce) { .scrub__track { transition: none; } }
+	/* Player: Video.js, themed to the page. 4:3 tapes, never taller than the screen. */
+	.stage { max-width: min(100%, calc(76vh * 4 / 3)); margin: 0 auto; border-radius: 14px; overflow: hidden; background: #000; }
+	.video-js { font-family: var(--text); background: #000; }
+	.video-js .vjs-control-bar { background: linear-gradient(180deg, rgba(6,13,9,0), rgba(6,13,9,.92)); height: 3.6em; font-size: 1.05em; }
+	.video-js .vjs-play-progress, .video-js .vjs-volume-level { background: var(--saffron); }
+	.video-js .vjs-play-progress::before { color: var(--saffron); }
+	.video-js .vjs-load-progress div { background: rgba(255,255,255,.32); }
+	.video-js .vjs-slider { background: rgba(255,255,255,.2); }
+	.video-js .vjs-progress-control:hover .vjs-progress-holder { font-size: 1.8em; }
+	.video-js .vjs-mouse-display, .video-js .vjs-time-tooltip { display: none !important; }
+	.video-js .vjs-big-play-button { width: 2.2em; height: 2.2em; line-height: 2.2em; margin: -1.1em 0 0 -1.1em; border: 0; border-radius: 50%; background: rgba(234,122,42,.92); font-size: 3.6em; }
+	.video-js .vjs-big-play-button .vjs-icon-placeholder::before { color: var(--pine-deep); }
+	.video-js .vjs-menu-content { background: rgba(12,25,18,.95) !important; font-family: var(--text); }
+	.video-js .vjs-menu li.vjs-selected { background: var(--khadi); color: var(--pine-deep); }
+	/* Frame preview above the seek bar (storyboard sprites from package-hls.sh) */
+	.sprite-preview { position: absolute; bottom: 3.4em; transform: translateX(-50%); pointer-events: none; text-align: center; z-index: 3; font-size: 10px; }
+	.sprite-preview__frame { width: 160px; height: 120px; border-radius: 8px; border: 2px solid var(--khadi); background: #111 no-repeat; box-shadow: 0 8px 24px rgba(0,0,0,.6); }
+	.sprite-preview__time { display: inline-block; margin-top: 6px; background: rgba(0,0,0,.85); color: #fff; padding: 2px 10px; border-radius: 999px; font-size: 14px; font-variant-numeric: tabular-nums; }
 	.watermark { position: absolute; z-index: 2; pointer-events: none; user-select: none; color: rgba(255,255,255,.32); font-size: clamp(0.75rem, 1.6vw, 1rem); font-weight: 600; letter-spacing: .02em; text-shadow: 0 1px 2px rgba(0,0,0,.6); transition: top 1.2s ease, left 1.2s ease; white-space: nowrap; }
 	.player .error { color: #ffb38a; }
 	/* The player scrolls so comments can sit under the video. */
@@ -326,18 +327,11 @@
 				<p class="muted" id="player-date"></p>
 			</div>
 			<div class="player__buttons">
-				<button class="btn btn--quiet" id="fullscreen" type="button">Full screen</button>
 				<button class="btn btn--quiet" id="close" type="button">Close</button>
 			</div>
 		</div>
 		<div class="stage" id="stage">
-			<video id="video" controls playsinline preload="none"
-				controlslist="nodownload nofullscreen noremoteplayback" disablepictureinpicture disableremoteplayback></video>
-			<div class="watermark" id="watermark" aria-hidden="true"></div>
-			<div class="scrub" id="scrub" role="slider" tabindex="0" aria-label="Seek, with previews" aria-valuemin="0" aria-valuemax="0" aria-valuenow="0" aria-valuetext="0:00">
-				<div class="scrub__track"><div class="scrub__buffer" id="scrub-buffer"></div><div class="scrub__fill" id="scrub-fill"></div></div>
-				<div class="scrub__preview" id="scrub-preview" hidden><div class="scrub__frame" id="scrub-frame"></div><span class="scrub__time" id="scrub-time"></span></div>
-			</div>
+			<video id="video" class="video-js vjs-big-play-centered" playsinline preload="none" disablepictureinpicture></video>
 		</div>
 		<p class="error" id="player-error" role="alert"></p>
 		<div id="player-comments"></div>
@@ -394,7 +388,7 @@
 	</div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.6.16/hls.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/video.js/8.23.4/video.min.js"></script>
 <script>
 (function () {
 	'use strict';
@@ -959,21 +953,52 @@
 		b.addEventListener('click', function () { view = b.dataset.view; storeSet('localStorage', VIEW_KEY, view); render(); });
 	});
 
-	// ── Player: HLS only (no single file to save), watermarked with the viewer's name.
-	var video = $('video'), hls = null, playing = null, progressTimer = null, markTimer = null;
+	// ── Player: Video.js playing HLS only (no single file to save), watermarked with the
+	// viewer's name. Its full screen covers the whole player, so the watermark stays on top
+	// (full-window on iPhone, where native full screen would drop it).
+	var player = videojs('video', {
+		controls: true, fluid: true, aspectRatio: '4:3', preload: 'none',
+		playbackRates: [0.75, 1, 1.25, 1.5, 2],
+		preferFullWindow: true,
+		controlBar: { pictureInPictureToggle: false, remainingTimeDisplay: false },
+		userActions: { hotkeys: true, doubleClick: true },
+		html5: {
+			nativeAudioTracks: false, nativeVideoTracks: false,
+			// Start from a low bandwidth guess so playback begins on the light rendition:
+			// many people share this server's upload. Safari uses its own HLS player.
+			vhs: { overrideNative: !videojs.browser.IS_ANY_SAFARI, bandwidth: 450000, useBandwidthFromLocalStorage: false, limitRenditionByPlayerDimensions: false }
+		}
+	});
+	var playing = null, progressTimer = null, markTimer = null;
+	var watermark = document.createElement('div');
+	watermark.className = 'watermark'; watermark.id = 'watermark'; watermark.setAttribute('aria-hidden', 'true');
+	player.el().appendChild(watermark);
+	player.el().addEventListener('contextmenu', function (ev) { ev.preventDefault(); });
+	function lockDownTech() {
+		var v = player.tech(true) && player.tech(true).el();
+		if (v) { v.disablePictureInPicture = true; v.setAttribute('controlslist', 'nodownload noremoteplayback'); }
+	}
+	player.ready(lockDownTech);
+	player.on('loadstart', lockDownTech);
 
 	function progressBody() {
 		return { ItemId: playing.itemId, MediaSourceId: playing.mediaSourceId, PlaySessionId: playing.playSessionId,
-			PositionTicks: Math.floor((video.currentTime || 0) * 1e7), IsPaused: video.paused, CanSeek: true, PlayMethod: 'DirectStream' };
+			PositionTicks: Math.floor((player.currentTime() || 0) * 1e7), IsPaused: player.paused(), CanSeek: true, PlayMethod: 'DirectStream' };
 	}
 	function reportProgress() {
 		if (playing && session) api('/Sessions/Playing/Progress', { method: 'POST', body: progressBody() }).catch(function () {});
 	}
+	player.on('pause', reportProgress);
+	player.on('error', function () {
+		// A 401/404 on the streams means the sign-in ended or access was removed.
+		capi('/me').then(function () {
+			$('player-error').textContent = 'Playback stopped. Close and press play to try again.';
+		}).catch(function (ex) { if (ex.status === 401) signOut(true); });
+	});
 
 	function moveWatermark() {
-		var wm = $('watermark');
-		wm.style.top = (6 + Math.random() * 80) + '%';
-		wm.style.left = (4 + Math.random() * 62) + '%';
+		watermark.style.top = (6 + Math.random() * 74) + '%';
+		watermark.style.left = (4 + Math.random() * 62) + '%';
 	}
 
 	function play(e) {
@@ -982,7 +1007,7 @@
 		$('player-title').textContent = e.title;
 		$('player-date').textContent = e.longDate;
 		$('player-error').textContent = '';
-		$('watermark').textContent = session.name + ' · ' + new Date().toLocaleDateString('en-GB');
+		watermark.textContent = session.name + ' · ' + new Date().toLocaleDateString('en-GB');
 		moveWatermark(); markTimer = setInterval(moveWatermark, 20000);
 		$('player').hidden = false;
 		$('player').scrollTop = 0;
@@ -990,31 +1015,15 @@
 		$('close').focus();
 		loadStoryboard(e.slug, (item.RunTimeTicks || 0) / 1e7);
 		mountComments($('player-comments'), commentsPanel('video:' + e.slug, {
-			timeOf: function () { return video.currentTime; },
-			seek: function (t) { video.currentTime = t; video.play().catch(function () {}); $('player').scrollTo({ top: 0, behavior: 'smooth' }); }
+			timeOf: function () { return player.currentTime(); },
+			seek: function (t) { player.currentTime(t); player.play().catch(function () {}); $('player').scrollTo({ top: 0, behavior: 'smooth' }); }
 		}));
 
 		var resumeAt = (item.UserData && item.UserData.PlaybackPositionTicks || 0) / 1e7;
-		var url = HLS + e.slug + '/master.m3u8';
-		// Start on the light rendition and let the player step up when there's room:
-		// ~100 people share this server's upload.
-		if (window.Hls && Hls.isSupported()) {
-			hls = new Hls({ startLevel: 0, startPosition: resumeAt > 0 ? resumeAt : -1, maxBufferLength: 30, maxMaxBufferLength: 60 });
-			hls.on(Hls.Events.ERROR, function (_, d) {
-				if (!d.fatal) return;
-				if (d.response && (d.response.code === 401 || d.response.code === 404)) { signOut(true); return; }
-				$('player-error').textContent = 'Playback stopped (' + d.details + '). Close and press play to try again.';
-			});
-			hls.loadSource(url);
-			hls.attachMedia(video);
-		} else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-			video.src = url;
-			if (resumeAt > 0) video.addEventListener('loadedmetadata', function seek() { video.removeEventListener('loadedmetadata', seek); video.currentTime = resumeAt; });
-		} else {
-			$('player-error').textContent = 'This browser can’t play these recordings. Try a current version of Chrome, Safari, Edge, or Firefox.';
-			return;
-		}
-		video.play().catch(function () {}); // autoplay may be blocked; the controls stay available
+		player.src({ src: HLS + e.slug + '/master.m3u8', type: 'application/x-mpegURL' });
+		if (resumeAt > 0) player.one('loadedmetadata', function () { player.currentTime(resumeAt); });
+		var started = player.play();
+		if (started && started.catch) started.catch(function () {}); // autoplay may be blocked; the big play button stays
 
 		// Jellyfin keeps the viewing position so "Continue watching" works on every device.
 		api('/Items/' + item.Id + '/PlaybackInfo?userId=' + session.userId, { method: 'POST', body: { UserId: session.userId, IsPlayback: false } })
@@ -1028,27 +1037,31 @@
 	function closePlayer() {
 		clearInterval(progressTimer); progressTimer = null;
 		clearInterval(markTimer); markTimer = null;
-		if (document.fullscreenElement) document.exitFullscreen().catch(function () {});
+		if (player.isFullscreen()) player.exitFullscreen();
 		if (playing && session) {
 			api('/Sessions/Playing/Stopped', { method: 'POST', keepalive: true, body: progressBody() })
 				.then(function () { if (!$('library-view').hidden) openLibrary(); })
 				.catch(function () {});
 		}
-		if (hls) { hls.destroy(); hls = null; }
-		video.pause(); video.removeAttribute('src'); video.load();
+		player.pause();
+		if (player.currentSrc()) player.reset();
 		playing = null;
-		sb = null; hidePreview(); updateScrub();
+		sb = null; hidePreview();
 		mountComments($('player-comments'), null);
 		$('player').hidden = true;
 		document.body.style.overflow = '';
 	}
 
-	// ── Scrub bar: hover or drag to see the frame at that point, release to jump there.
-	// Storyboard = sprite sheets of one frame every `interval` seconds (package-hls.sh).
-	var sb = null, sbFor = null, scrubDur = 0, dragging = false;
-	var scrub = $('scrub'), preview = $('scrub-preview');
+	// ── Frame previews on the seek bar: hovering (or dragging on a phone) shows the frame
+	// at that point. Storyboard = sprite sheets, one frame every `interval` seconds.
+	var sb = null, sbFor = null, sbRuntime = 0;
+	var progressControl = player.controlBar.progressControl;
+	var preview = document.createElement('div');
+	preview.className = 'sprite-preview'; preview.hidden = true;
+	preview.innerHTML = '<div class="sprite-preview__frame"></div><span class="sprite-preview__time"></span>';
+	progressControl.el().appendChild(preview);
 	function loadStoryboard(slug, runtime) {
-		sb = null; sbFor = slug; scrubDur = runtime || 0;
+		sb = null; sbFor = slug; sbRuntime = runtime || 0;
 		fetch(HLS + slug + '/storyboard/storyboard.json', { credentials: 'same-origin', cache: 'no-store' })
 			.then(function (r) { return r.ok ? r.json() : null; })
 			.then(function (j) {
@@ -1057,16 +1070,14 @@
 				sb = j; new Image().src = j.base + 'sb-001.jpg';
 			}).catch(function () {});
 	}
-	function duration() { return isFinite(video.duration) && video.duration > 0 ? video.duration : scrubDur; }
-	function timeAtX(clientX) {
-		var r = scrub.querySelector('.scrub__track').getBoundingClientRect();
-		return Math.max(0, Math.min(1, (clientX - r.left) / r.width)) * duration();
-	}
-	function showPreview(t, clientX) {
-		var box = scrub.getBoundingClientRect(), half = 82;
-		preview.style.left = Math.max(half, Math.min(box.width - half, clientX - box.left)) + 'px';
-		$('scrub-time').textContent = fmtDuration(t * 1e7);
-		var frame = $('scrub-frame');
+	function showPreview(ev) {
+		var point = ev.touches && ev.touches.length ? ev.touches[0] : ev;
+		var bar = progressControl.seekBar.el().getBoundingClientRect(), box = progressControl.el().getBoundingClientRect();
+		var frac = Math.max(0, Math.min(1, (point.clientX - bar.left) / bar.width));
+		var d = player.duration() || sbRuntime, t = frac * d;
+		preview.style.left = Math.max(84, Math.min(box.width - 84, point.clientX - box.left)) + 'px';
+		preview.querySelector('.sprite-preview__time').textContent = fmtDuration(t * 1e7);
+		var frame = preview.querySelector('.sprite-preview__frame');
 		if (sb) {
 			var per = sb.cols * sb.rows, i = Math.min(Math.floor(t / sb.interval), sb.sheets * per - 1);
 			var sheet = Math.floor(i / per), k = i % per;
@@ -1074,59 +1085,13 @@
 			frame.style.backgroundImage = 'url(' + sb.base + 'sb-' + String(sheet + 1).padStart(3, '0') + '.jpg)';
 			frame.style.backgroundPosition = -(k % sb.cols) * sb.width + 'px ' + -Math.floor(k / sb.cols) * sb.height + 'px';
 		} else {
-			frame.hidden = true; // no storyboard yet: show the time only
+			frame.hidden = true; // no storyboard yet: just the time
 		}
 		preview.hidden = false;
 	}
-	function hidePreview() { preview.hidden = true; scrub.classList.remove('is-active'); }
-	function updateScrub() {
-		var d = duration(), t = video.currentTime || 0;
-		$('scrub-fill').style.width = (d ? Math.min(100, t / d * 100) : 0) + '%';
-		var b = 0;
-		for (var i = 0; i < video.buffered.length; i++) if (video.buffered.start(i) <= t + 1) b = Math.max(b, video.buffered.end(i));
-		$('scrub-buffer').style.width = (d ? Math.min(100, b / d * 100) : 0) + '%';
-		scrub.setAttribute('aria-valuemax', String(Math.floor(d)));
-		scrub.setAttribute('aria-valuenow', String(Math.floor(t)));
-		scrub.setAttribute('aria-valuetext', fmtDuration(t * 1e7) + ' of ' + fmtDuration(d * 1e7));
-	}
-	function seekTo(t) { video.currentTime = Math.max(0, Math.min(duration() - 1, t)); updateScrub(); }
-	['timeupdate', 'progress', 'durationchange', 'seeked'].forEach(function (ev) { video.addEventListener(ev, updateScrub); });
-	scrub.addEventListener('pointerdown', function (ev) {
-		dragging = true; scrub.setPointerCapture(ev.pointerId); scrub.classList.add('is-active');
-		showPreview(timeAtX(ev.clientX), ev.clientX);
-	});
-	scrub.addEventListener('pointermove', function (ev) {
-		if (dragging || ev.pointerType === 'mouse') showPreview(timeAtX(ev.clientX), ev.clientX);
-	});
-	scrub.addEventListener('pointerup', function (ev) {
-		if (!dragging) return;
-		dragging = false; seekTo(timeAtX(ev.clientX));
-		if (ev.pointerType !== 'mouse') hidePreview(); else scrub.classList.remove('is-active');
-	});
-	scrub.addEventListener('pointercancel', function () { dragging = false; hidePreview(); });
-	scrub.addEventListener('pointerleave', function () { if (!dragging) hidePreview(); });
-	scrub.addEventListener('keydown', function (ev) {
-		var step = { ArrowRight: 10, ArrowLeft: -10, PageUp: 60, PageDown: -60 }[ev.key];
-		if (step) seekTo((video.currentTime || 0) + step);
-		else if (ev.key === 'Home') seekTo(0);
-		else if (ev.key === 'End') seekTo(duration());
-		else return;
-		ev.preventDefault(); ev.stopPropagation();
-	});
-
-	// Full screen goes on the stage, not the <video>, so the watermark stays on top.
-	// iPhone only allows native video full screen, where the watermark can't follow.
-	var stage = $('stage');
-	function toggleFullscreen() {
-		if (document.fullscreenElement) { document.exitFullscreen().catch(function () {}); return; }
-		if (stage.requestFullscreen) stage.requestFullscreen().catch(function () {});
-		else if (stage.webkitRequestFullscreen) stage.webkitRequestFullscreen();
-		else if (video.webkitEnterFullscreen) video.webkitEnterFullscreen();
-	}
-	$('fullscreen').addEventListener('click', toggleFullscreen);
-	video.addEventListener('dblclick', function (ev) { ev.preventDefault(); toggleFullscreen(); });
-	stage.addEventListener('contextmenu', function (ev) { ev.preventDefault(); });
-	video.addEventListener('pause', reportProgress);
+	function hidePreview() { preview.hidden = true; }
+	progressControl.on(['mousemove', 'touchstart', 'touchmove'], showPreview);
+	progressControl.on(['mouseleave', 'touchend', 'touchcancel'], hidePreview);
 
 	$('close').addEventListener('click', closePlayer);
 	document.addEventListener('keydown', function (ev) {
@@ -1139,7 +1104,7 @@
 			else if (ev.key === 'ArrowLeft') showPhoto(photoIndex - 1);
 			return;
 		}
-		if (ev.key === 'Escape' && !$('player').hidden && !document.fullscreenElement) closePlayer();
+		if (ev.key === 'Escape' && !$('player').hidden && !player.isFullscreen()) closePlayer();
 	});
 	window.addEventListener('pagehide', function () {
 		if (playing && session) api('/Sessions/Playing/Stopped', { method: 'POST', keepalive: true, body: progressBody() }).catch(function () {});

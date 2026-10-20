@@ -32,7 +32,7 @@ Browser ──https──▶ Cloudflare ──tunnel──▶ cloudflared ──
   tokens). Responses are `Cache-Control: private, no-store`, so Cloudflare never caches them
   (verified: `cf-cache-status: DYNAMIC`, and a request without the cookie still gets 401
   right after a member's request).
-- **No file to download.** The page plays HLS (short segments) through hls.js; there is no
+- **No file to download.** The page plays HLS (short segments) through Video.js; there is no
   single MP4 URL. Jellyfin's own stream/download endpoints (`/Videos`, `/Audio`,
   `/Items/*/Download`, `/Items/*/File`) and its web UI are **blocked at the gateway**, in any
   case or slash variant, even with a valid token. Jellyfin 12.2 would otherwise serve
@@ -116,7 +116,9 @@ journalctl --user -u kodai1994-processing -f        # "converted 9/18, ready to 
   ("May 3rd 1995" → 1994, per the file's own title tag; "Mahajn" → "Mahajan").
 - `kodai1994/package-hls.sh`: each MP4 → HLS with two renditions, `hi` (the MP4's stream,
   copied) and `lo` (480×360, ~0.4 Mbit/s, keyframes aligned with `hi`), plus a still for the
-  page. The player starts on `lo` and steps up when the connection allows.
+  page and storyboard sprites (a frame every 10 s) for the seek-bar previews. The player
+  (Video.js 8, from cdnjs) starts on `lo` and steps up when the connection allows; it
+  offers playback speed, keyboard shortcuts, and full screen that keeps the watermark.
 - `kodai1994/prepare-photos.sh`: the folder's JPEGs → `~/media/kodai1994-hls/photos/`
   (duplicates skipped, EXIF/GPS stripped, display size + thumbnail, `photos.json`). Run it
   by hand after adding photos.
