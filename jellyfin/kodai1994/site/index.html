@@ -187,6 +187,11 @@
 	.thumb__pending { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; padding: 12px; font-size: 0.9rem; font-weight: 500; color: var(--khadi); text-shadow: 0 1px 6px rgba(0,0,0,.8); }
 	.thumb__card { filter: blur(5px) brightness(.42) saturate(.6); transform: scale(1.08); }
 	.is-pending { cursor: default; opacity: .75; }
+	.mk-counts { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+	.mk-count { border: 1px solid var(--line); border-radius: 999px; padding: 1px 10px; font-size: 0.8rem; color: var(--mist); font-variant-numeric: tabular-nums; }
+	.mk-count b { color: var(--khadi); font-weight: 600; margin-left: 4px; }
+	.mk-count--event { border-color: rgba(234,122,42,.45); }
+	.mk-count--event b { color: #f3b083; }
 	.is-pending:hover { background: none; border-color: transparent; }
 
 	/* Gallery: the frames side by side */
@@ -779,7 +784,7 @@
 	$('logout').addEventListener('click', function () { signOut(false); });
 
 	// ── Library
-	var entries = [], ready = {}, photos = [];
+	var entries = [], ready = {}, photos = [], markerCounts = {};
 	var view = storeGet('localStorage', VIEW_KEY);
 	if (['timeline', 'gallery', 'photos'].indexOf(view) < 0) view = 'timeline';
 
@@ -799,9 +804,10 @@
 			fetch(HLS + 'ready.json', { credentials: 'same-origin', cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : []; }).catch(function () { return []; }),
 			fetch(HLS + 'photos/photos.json', { credentials: 'same-origin', cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : []; }).catch(function () { return []; }),
 			capi('/me').catch(function () { return null; }),
-			capi('/counts').catch(function () { return {}; })
+			capi('/counts').catch(function () { return {}; }),
+			capi('/marker-counts').catch(function () { return {}; })
 		]).then(function (res) {
-			me = res[3]; counts = res[4] || {};
+			me = res[3]; counts = res[4] || {}; markerCounts = res[5] || {};
 			refreshRequestBadge();
 			// Link in the request email: ...#requests opens the review panel for the admin.
 			if (location.hash === '#requests' && me && me.isAdmin && $('account').hidden) openAccount();
@@ -882,6 +888,20 @@
 		return parts.join('. ');
 	}
 
+	// "Chapters 0" / "Events 2" under each title; zero when none have been added yet.
+	function markerPills(e) {
+		var c = markerCounts['video:' + e.slug] || { chapter: 0, event: 0 };
+		var row = document.createElement('div'); row.className = 'mk-counts';
+		[['chapter', 'Chapters'], ['event', 'Events']].forEach(function (k) {
+			var pill = document.createElement('span'); pill.className = 'mk-count mk-count--' + k[0];
+			pill.appendChild(document.createTextNode(k[1]));
+			var n = document.createElement('b'); n.textContent = String(c[k[0]] || 0); pill.appendChild(n);
+			pill.setAttribute('aria-label', (c[k[0]] || 0) + ' ' + k[1].toLowerCase());
+			row.appendChild(pill);
+		});
+		return row;
+	}
+
 	function clickable(el, e) {
 		if (ready[e.slug]) el.addEventListener('click', function () { play(e); });
 		else { el.classList.add('is-pending'); el.setAttribute('aria-disabled', 'true'); }
@@ -918,7 +938,7 @@
 					var t = document.createElement('h3'); t.textContent = e.title;
 					var p = document.createElement('p'); p.className = 'muted';
 					p.textContent = [e.title !== e.phrase ? e.phrase : '', note(e)].filter(Boolean).join('. ');
-					text.appendChild(t); text.appendChild(p);
+					text.appendChild(t); text.appendChild(p); text.appendChild(markerPills(e));
 					b.appendChild(thumb(e)); b.appendChild(text);
 					clickable(b, e);
 					items.appendChild(b);
@@ -936,7 +956,7 @@
 			var t = document.createElement('h3'); t.textContent = e.title;
 			var p = document.createElement('p'); p.className = 'muted';
 			p.textContent = [e.longDate, note(e)].filter(Boolean).join('. ');
-			b.appendChild(thumb(e)); b.appendChild(t); b.appendChild(p);
+			b.appendChild(thumb(e)); b.appendChild(t); b.appendChild(p); b.appendChild(markerPills(e));
 			clickable(b, e);
 			grid.appendChild(b);
 		});
