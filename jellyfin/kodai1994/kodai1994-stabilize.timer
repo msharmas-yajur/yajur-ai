@@ -1,0 +1,10 @@
+[Unit]
+Description=Nightly Kodai 1994 video stabilization (until every recording is done)
+
+[Timer]
+OnCalendar=*-*-* 00:30
+# No catch-up after the machine was off: the queue only runs at night.
+Persistent=false
+
+[Install]
+WantedBy=timers.target
