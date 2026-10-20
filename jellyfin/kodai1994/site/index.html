@@ -209,8 +209,15 @@
 	.person { display: grid; grid-template-columns: auto 1fr; gap: 2px 12px; align-items: center; padding: 12px 14px; border: 1px solid var(--line); border-radius: 14px; background: var(--panel); }
 	.person.is-flash { border-color: var(--saffron); box-shadow: 0 0 0 2px rgba(234,122,42,.35); }
 	.person__avatar { grid-row: span 2; width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; background: rgba(243,241,234,.1); font: 400 1.05rem var(--display); color: var(--khadi); letter-spacing: .02em; }
-	.person__name { font-weight: 600; font-size: 1.02rem; line-height: 1.3; overflow-wrap: anywhere; }
+	.person__name { font-weight: 600; font-size: 1.02rem; line-height: 1.3; overflow-wrap: break-word; }
 	.person__meta { font-size: 0.8rem; color: var(--mist); display: flex; flex-wrap: wrap; gap: 2px 10px; }
+	/* Actions: a centred row along the bottom of the card */
+	.person__actions { grid-column: 1 / -1; display: flex; justify-content: center; gap: 8px; margin-top: 8px; padding-top: 6px; border-top: 1px solid var(--line); }
+	.icon-btn { display: grid; place-items: center; width: 32px; height: 32px; border: 0; border-radius: 50%; background: transparent; color: var(--mist); cursor: pointer; }
+	.icon-btn svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+	.icon-btn:hover { background: rgba(243,241,234,.1); color: var(--khadi); }
+	.icon-btn.is-armed { background: var(--saffron); color: var(--pine-deep); }
+	.person__confirm { grid-column: 1 / -1; font-size: .8rem; color: #f3b083; text-align: center; }
 	.person form { grid-column: 1 / -1; display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
 	.person form .field { flex: 1 1 140px; padding: 7px 10px; }
 
@@ -296,6 +303,15 @@
 	.photo { display: block; width: 100%; margin: 0 0 18px; padding: 0; border: 0; background: var(--pine); border-radius: 10px; overflow: hidden; cursor: zoom-in; break-inside: avoid; }
 	.photo img { display: block; width: 100%; height: auto; }
 	.photo:hover img, .photo:focus-visible img { filter: brightness(1.08); }
+	/* Adding photos */
+	.upload { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; margin-top: 28px; padding: 16px 18px; border: 1px dashed var(--line); border-radius: 14px; }
+	.upload.is-over { border-color: var(--saffron); background: rgba(234,122,42,.08); }
+	.upload p { margin: 0; flex: 1 1 260px; font-size: .92rem; }
+	.upload input[type=text] { padding: 9px 12px; border-radius: 10px; border: 1px solid var(--line); background: rgba(0,0,0,.25); color: var(--khadi); font: inherit; }
+	.upload__list { flex-basis: 100%; list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; font-size: .88rem; }
+	.upload__list li.is-error { color: #ffb38a; }
+	.photo--pending { display: grid; place-items: center; aspect-ratio: 4 / 3; color: var(--mist); font-size: .9rem; cursor: default; border: 1px dashed var(--line); background: transparent; }
+	.photo-added { margin: 0 0 14px; font-size: .9rem; display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; }
 
 	.viewer { position: fixed; inset: 0; z-index: 60; background: rgba(6, 13, 9, .96); display: grid; grid-template-rows: auto 1fr; padding: 16px; }
 	.viewer__head { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 0 4px 12px; }
@@ -921,6 +937,98 @@
 
 	// ── Library
 	var entries = [], ready = {}, photos = [], markerCounts = {};
+	var uploads = [], uploadsByPhoto = {}, uploadPoll = null; // GET /photo-uploads
+	function setUploads(list) {
+		uploads = list || []; uploadsByPhoto = {};
+		uploads.forEach(function (u) { if (u.photoId) uploadsByPhoto[u.photoId] = u; });
+	}
+	function reloadPhotos() {
+		return Promise.all([
+			fetch(HLS + 'photos/photos.json', { credentials: 'same-origin', cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : photos; }),
+			capi('/photo-uploads').catch(function () { return uploads; })
+		]).then(function (res) { photos = res[0]; setUploads(res[1]); });
+	}
+	// While any of my photos are still being added, check every few seconds.
+	function watchUploads() {
+		clearTimeout(uploadPoll);
+		if (!uploads.some(function (u) { return u.mine && u.status === 'pending'; })) return;
+		uploadPoll = setTimeout(function () {
+			reloadPhotos().then(function () { if (view === 'photos' && $('viewer').hidden) render(); watchUploads(); });
+		}, 3000);
+	}
+	// Big or unusual files (HEIC from iPhones, >15 MB) become a JPEG in the browser first;
+	// the server strips metadata from the copies it shows either way.
+	var UPLOAD_TYPES = ['image/jpeg', 'image/png', 'image/webp'], UPLOAD_MAX = 15 * 1024 * 1024;
+	function prepareUpload(file) {
+		if (UPLOAD_TYPES.indexOf(file.type) >= 0 && file.size <= UPLOAD_MAX) return Promise.resolve(file);
+		var load = window.createImageBitmap ? createImageBitmap(file, { imageOrientation: 'from-image' }) : Promise.reject(new Error('unsupported'));
+		return load.then(function (bmp) {
+			var k = Math.min(1, 4096 / Math.max(bmp.width, bmp.height));
+			var c = document.createElement('canvas'); c.width = Math.round(bmp.width * k); c.height = Math.round(bmp.height * k);
+			c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height);
+			return new Promise(function (ok, fail) { c.toBlob(function (b) { b ? ok(b) : fail(new Error('encode')); }, 'image/jpeg', 0.92); });
+		}).catch(function () { throw new Error('This browser can’t read that file. Save it as a JPEG and try again.'); });
+	}
+	function uploadOne(file) {
+		return prepareUpload(file).then(function (blob) {
+			return fetch('/kodai1994/api/photo-uploads', { method: 'POST', credentials: 'same-origin', headers: { 'X-Kodai': '1', 'Content-Type': blob.type || 'image/jpeg' }, body: blob })
+				.then(function (res) {
+					return res.json().catch(function () { return {}; }).then(function (d) {
+						if (!res.ok) { var e = new Error(d.error || 'The server answered ' + res.status + '.'); e.status = res.status; throw e; }
+						return d;
+					});
+				});
+		});
+	}
+	var uploadLog = []; // this visit's upload messages; kept when the view re-renders
+	function uploadBar() {
+		var bar = el('div', 'upload'), list = el('ul', 'upload__list');
+		uploadLog.forEach(function (li) { list.appendChild(li); });
+		var input = el('input'); input.type = 'file'; input.multiple = true; input.hidden = true; input.id = 'photo-files';
+		input.accept = 'image/jpeg,image/png,image/webp,image/heic,image/heif';
+		var pick = el('button', 'btn btn--quiet', 'Add photos'); pick.type = 'button'; pick.id = 'add-photos';
+		var nameInput = null;
+		bar.appendChild(el('p', 'muted', 'Have photos from Kodai 1994? Add them here. Only signed-in members see them; location and camera details are removed. You can also drop files here.'));
+		if (!me || !me.displayName) {
+			nameInput = el('input'); nameInput.type = 'text'; nameInput.maxLength = 60; nameInput.placeholder = 'Your name, as others will see it';
+			nameInput.setAttribute('aria-label', 'Your name, as others will see it'); nameInput.id = 'upload-name';
+			bar.appendChild(nameInput);
+		}
+		bar.append(pick, input, list);
+		pick.addEventListener('click', function () {
+			if (nameInput && nameInput.value.trim().length < 2) { nameInput.focus(); nameInput.setCustomValidity('Enter your name first, at least 2 characters.'); nameInput.reportValidity(); return; }
+			input.click();
+		});
+		if (nameInput) nameInput.addEventListener('input', function () { nameInput.setCustomValidity(''); });
+		function send(files) {
+			files = Array.prototype.slice.call(files || []);
+			if (!files.length) return;
+			pick.disabled = true;
+			var setName = nameInput && nameInput.value.trim() ? capi('/me', { method: 'PUT', body: { displayName: nameInput.value } }).then(function (r) { if (me) me.displayName = r.displayName; }) : Promise.resolve();
+			var i = 0, added = 0;
+			function next() {
+				if (i >= files.length) {
+					pick.disabled = false; input.value = '';
+					return reloadPhotos().then(function () { if (added) { render(); watchUploads(); } });
+				}
+				var f = files[i++], li = el('li', '', 'Adding ' + f.name + '…');
+				uploadLog.push(li); list.appendChild(li);
+				return uploadOne(f).then(function () { added++; li.textContent = f.name + ': uploaded, it will appear in a moment.'; })
+					.catch(function (e) { li.className = 'is-error'; li.textContent = f.name + ': ' + e.message; })
+					.then(next);
+			}
+			setName.then(next).catch(function (e) { pick.disabled = false; list.appendChild(Object.assign(el('li', 'is-error', e.message))); });
+		}
+		input.addEventListener('change', function () { send(input.files); });
+		bar.addEventListener('dragover', function (ev) { ev.preventDefault(); bar.classList.add('is-over'); });
+		bar.addEventListener('dragleave', function () { bar.classList.remove('is-over'); });
+		bar.addEventListener('drop', function (ev) {
+			ev.preventDefault(); bar.classList.remove('is-over');
+			if (nameInput && nameInput.value.trim().length < 2) { pick.click(); return; }
+			send(ev.dataTransfer.files);
+		});
+		return bar;
+	}
 	var view = storeGet('localStorage', VIEW_KEY);
 	if (['timeline', 'gallery', 'photos', 'people'].indexOf(view) < 0) view = 'timeline';
 
@@ -941,9 +1049,11 @@
 			fetch(HLS + 'photos/photos.json', { credentials: 'same-origin', cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : []; }).catch(function () { return []; }),
 			capi('/me').catch(function () { return null; }),
 			capi('/counts').catch(function () { return {}; }),
-			capi('/marker-counts').catch(function () { return {}; })
+			capi('/marker-counts').catch(function () { return {}; }),
+			capi('/photo-uploads').catch(function () { return []; })
 		]).then(function (res) {
 			me = res[3]; counts = res[4] || {}; markerCounts = res[5] || {};
+			setUploads(res[6]); watchUploads();
 			refreshRequestBadge();
 			// Link in the request email: ...#requests opens the review panel for the admin.
 			if (location.hash === '#requests' && me && me.isAdmin && $('account').hidden) openAccount();
@@ -1103,7 +1213,9 @@
 	}
 
 	function renderPhotos(root) {
-		if (!photos.length) { var p = document.createElement('p'); p.className = 'muted'; p.textContent = 'No photographs have been added yet.'; root.appendChild(p); return; }
+		root.appendChild(uploadBar());
+		var waiting = uploads.filter(function (u) { return u.mine && (u.status === 'pending' || u.status === 'failed'); });
+		if (!photos.length && !waiting.length) { var p = document.createElement('p'); p.className = 'muted'; p.textContent = 'No photographs have been added yet.'; root.appendChild(p); return; }
 		var grid = document.createElement('div'); grid.className = 'photos';
 		grid.addEventListener('contextmenu', function (ev) { ev.preventDefault(); });
 		grid.addEventListener('dragstart', function (ev) { ev.preventDefault(); });
@@ -1118,6 +1230,17 @@
 			if (n) { var pill = document.createElement('span'); pill.className = 'photo__count'; pill.textContent = plural(n, 'comment'); b.appendChild(pill); }
 			b.addEventListener('click', function () { openPhoto(i); });
 			grid.appendChild(b);
+		});
+		waiting.forEach(function (u) {
+			var t = el('div', 'photo photo--pending');
+			if (u.status === 'pending') t.textContent = 'Adding your photo…';
+			else {
+				t.textContent = '';
+				var msg = el('span', '', u.message || 'That photo couldn’t be added.'), x = el('button', 'btn btn--quiet', 'Dismiss'); x.type = 'button';
+				x.addEventListener('click', function () { capi('/photo-uploads/' + u.id, { method: 'DELETE' }).then(reloadPhotos).then(render); });
+				var box = el('div'); box.style.textAlign = 'center'; box.style.padding = '12px'; box.append(msg, el('br'), x); t.appendChild(box);
+			}
+			grid.appendChild(t);
 		});
 		root.appendChild(grid);
 	}
@@ -1168,9 +1291,11 @@
 				var meta = el('span', 'person__meta');
 				meta.appendChild(el('span', '', plural(pp.photos || 0, 'photo') + ', ' + plural(pp.moments || 0, 'moment')));
 				if (pp.addedBy && pp.addedBy !== 'Member' && pp.addedBy !== 'Admin') meta.appendChild(el('span', '', 'added by ' + pp.addedBy));
+				var acts = el('span', 'person__actions');
 				if (pp.canEdit) {
-					var ren = el('button', 'linkish', 'Rename'); ren.type = 'button';
+					var ren = iconButton('pencil', 'Rename ' + pp.name);
 					ren.addEventListener('click', function () {
+						if (li.querySelector('form')) return;
 						var f = el('form'), fi = el('input', 'field'), ok = el('button', 'btn btn--quiet', 'Save'), no = el('button', 'linkish', 'Cancel');
 						fi.value = pp.name; fi.maxLength = 80; fi.setAttribute('aria-label', 'New name'); ok.type = 'submit'; no.type = 'button';
 						f.appendChild(fi); f.appendChild(ok); f.appendChild(no); li.appendChild(f); fi.focus();
@@ -1181,18 +1306,25 @@
 								.catch(function (ex) { msg.textContent = ex.message; });
 						});
 					});
-					meta.appendChild(ren);
+					acts.appendChild(ren);
 				}
 				if (pp.canDelete) {
-					var del = el('button', 'linkish', 'Remove'); del.type = 'button';
+					var del = iconButton('trash', 'Remove ' + pp.name), ask = null;
+					// First click asks; a second click within 4 s removes.
+					var disarm = function () { del.classList.remove('is-armed'); del.setAttribute('aria-label', 'Remove ' + pp.name); del.title = 'Remove ' + pp.name; if (ask) { ask.remove(); ask = null; } };
 					del.addEventListener('click', function () {
-						if (del.dataset.armed !== '1') { del.dataset.armed = '1'; del.textContent = 'Remove ' + pp.name + '?'; setTimeout(function () { del.dataset.armed = ''; del.textContent = 'Remove'; }, 4000); return; }
+						if (!del.classList.contains('is-armed')) {
+							del.classList.add('is-armed'); del.setAttribute('aria-label', 'Click again to remove ' + pp.name); del.title = 'Click again to remove';
+							ask = el('span', 'person__confirm', 'Remove ' + pp.name + '? Click the bin again.'); li.appendChild(ask);
+							setTimeout(disarm, 4000); return;
+						}
 						capi('/people/' + pp.id, { method: 'DELETE' }).then(function () { msg.textContent = pp.name + ' was removed.'; load(); })
-							.catch(function (ex) { msg.textContent = ex.message; });
+							.catch(function (ex) { disarm(); msg.textContent = ex.message; });
 					});
-					meta.appendChild(del);
+					acts.appendChild(del);
 				}
 				li.appendChild(meta);
+				if (acts.childNodes.length) li.appendChild(acts);
 				grid.appendChild(li);
 			});
 			if (!shown.length) grid.appendChild(el('li', 'muted', people.length ? 'No names match “' + search.value + '”. Add it below if they’re missing.' : 'No names yet.'));
@@ -1346,6 +1478,16 @@
 	// ── Comments on a video ("video:<slug>") or photo ("photo:<id>")
 	// opts.timeOf() → seconds into the video now; opts.seek(seconds) jumps there.
 	function el(tag, cls, text) { var x = document.createElement(tag); if (cls) x.className = cls; if (text != null) x.textContent = text; return x; }
+	// Lucide icons (lucide.dev, ISC licence), inlined: pencil, trash-2.
+	var ICONS = {
+		pencil: '<path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/>',
+		trash: '<path d="M10 11v6"/><path d="M14 11v6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>'
+	};
+	function iconButton(name, label) {
+		var b = el('button', 'icon-btn'); b.type = 'button'; b.title = label; b.setAttribute('aria-label', label);
+		b.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true">' + ICONS[name] + '</svg>';
+		return b;
+	}
 
 	function commentsPanel(target, opts) {
 		opts = opts || {};
@@ -1687,7 +1829,23 @@
 		img.src = photoSrc(ph);
 		showQuality(true);
 		$('viewer-count').textContent = 'Photo ' + (photoIndex + 1) + ' of ' + n;
-		var side = el('div');
+		var side = el('div'), up = uploadsByPhoto[list[photoIndex].id];
+		if (up) {
+			var added = el('p', 'photo-added muted', 'Added by ' + up.uploadedBy + ' · ' + fmtWhen(up.createdAt));
+			if (up.canRemove) {
+				var rm = el('button', 'btn btn--quiet', 'Remove photo'); rm.type = 'button';
+				rm.addEventListener('click', function () {
+					if (rm.dataset.sure !== '1') { rm.dataset.sure = '1'; rm.textContent = 'Remove it for everyone?'; return; }
+					rm.disabled = true;
+					capi('/photo-uploads/' + up.id, { method: 'DELETE' }).then(function () {
+						photos = photos.filter(function (x) { return x.id !== up.photoId; });
+						closePhoto(); reloadPhotos().then(render);
+					}).catch(function (e) { rm.disabled = false; rm.textContent = e.message; });
+				});
+				added.appendChild(rm);
+			}
+			side.appendChild(added);
+		}
 		side.appendChild(photoPeopleSection(list[photoIndex].id));
 		side.appendChild(commentsPanel('photo:' + list[photoIndex].id));
 		mountComments($('viewer-comments'), side);

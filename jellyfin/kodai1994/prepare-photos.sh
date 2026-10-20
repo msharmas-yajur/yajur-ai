@@ -13,6 +13,11 @@
 # spiral on the sign-in page. Those are visible to anyone with the link; the full-size
 # photos stay members-only. Set PUBLIC="" to skip them.
 #
+# Photos members uploaded on the page (ids 101 and up, added by faceid/worker.py) are kept:
+# their files and photos.json entries carry over into the rebuilt DEST. They never go into
+# the public spiral. After a rebuild, restart the worker (docker restart yajur-kodai-faceid)
+# so it sees the new folder.
+#
 # Usage: jellyfin/kodai1994/prepare-photos.sh [SRC] [DEST]
 # Re-running rebuilds DEST (and PUBLIC) from scratch (photos are small).
 set -euo pipefail
@@ -47,7 +52,14 @@ for line in sys.stdin:
     if not line.strip(): continue
     pid, w, h = line.strip().split(",")
     out.append({"id": pid, "src": pid + ".jpg", "thumb": pid + "-thumb.jpg", "w": int(w), "h": int(h)})
-print(json.dumps(out))' > "$tmp/photos.json"
+try:  # keep photos members uploaded (ids from 101)
+    out += [p for p in json.load(open(sys.argv[1])) if int(p["id"]) >= 101]
+except FileNotFoundError:
+    pass
+print(json.dumps(out))' "$DEST/photos.json" > "$tmp/photos.json"
+if [ -d "$DEST" ]; then
+  find "$DEST" -maxdepth 1 -type f -regex '.*/[1-9][0-9][0-9]\(-thumb\)?\.jpg' -exec cp -p {} "$tmp/" \;
+fi
 
 chmod 755 "$tmp"; chmod 644 "$tmp"/*
 

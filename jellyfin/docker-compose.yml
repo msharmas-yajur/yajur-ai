@@ -52,6 +52,8 @@ services:
     volumes:
       - ./kodai1994/community/app.py:/app/app.py:ro
       - ./community-data:/data
+      # originals of photos members upload (kept; never served)
+      - "${MEDIA_DIR}/kodai1994-uploads:/uploads"
     environment:
       - KODAI_LIBRARY_ID=${KODAI_LIBRARY_ID}
       - DATA_DIR=/data
@@ -66,8 +68,8 @@ services:
       - jellyfin
     restart: unless-stopped
 
-  # Face identification worker (kodai1994/faceid/worker.py): runs the queue that members
-  # fill from the Identify page, one run at a time, and writes suggestions for review.
+  # Media worker (kodai1994/faceid/worker.py): adds photos members upload, and runs the
+  # face identification queue members fill from the Identify page, one run at a time.
   # CPU only, capped so videos keep playing smoothly while it works. Not on any network
   # anyone can reach: it only reads files and the community database.
   faceid:
@@ -84,6 +86,9 @@ services:
       # InsightFace buffalo_l: det_10g.onnx + w600k_r50.onnx (non-commercial licence; not in git)
       - "${FACEID_MODELS}:/models:ro"
       - "${MEDIA_DIR}/kodai1994-hls:/media/hls:ro"
+      # uploaded photos are added here (photos.json + web copies); the rest stays read-only
+      - "${MEDIA_DIR}/kodai1994-hls/photos:/media/hls/photos"
+      - "${MEDIA_DIR}/kodai1994-uploads:/uploads"
       - "${MEDIA_DIR}/kodai1994:/media/videos:ro"
       - "${MEDIA_DIR}/kodai1994-identify:/out"
     environment:
