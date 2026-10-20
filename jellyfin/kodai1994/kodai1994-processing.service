@@ -1,0 +1,19 @@
+# systemd user service: converts and packages the Kodai 1994 videos in the background.
+# Installed by jellyfin/deploy.sh into ~/.config/systemd/user/. Survives logout and
+# reboot (user lingering is on); exits by itself once every video is packaged.
+#   status:  systemctl --user status kodai1994-processing
+#   log:     journalctl --user -u kodai1994-processing -f   (encoder log: ~/media/kodai1994-transcode.log)
+[Unit]
+Description=Kodai 1994 video processing (web MP4 + adaptive HLS)
+
+[Service]
+Type=simple
+ExecStart=%h/services/yajur-videos/kodai1994/bin/process.sh
+Restart=on-failure
+RestartSec=60
+Nice=10
+# Keep finished work if the service is stopped mid-way; scripts resume from it.
+KillMode=control-group
+
+[Install]
+WantedBy=default.target

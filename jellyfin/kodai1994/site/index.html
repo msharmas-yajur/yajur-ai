@@ -2,96 +2,187 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="robots" content="noindex, nofollow">
-<title>Kodai 1994 | Yajur.ai</title>
-<link rel="icon" href="https://yajur.ai/favicon.ico">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow, noarchive">
+<meta name="theme-color" content="#0c1912">
+<title>Kodai 1994</title>
+<link rel="icon" type="image/png" href="/kodai1994/brand/favicon.png">
+<link rel="apple-touch-icon" href="/kodai1994/brand/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Marcellus&family=Figtree:wght@400;500;600&display=swap">
 <style>
+	/* Palette taken from the 1994 group photo: Kodai pines, khadi whites, the saffron robe. */
 	:root {
-		--bg: #faf9f5; --surface: #f0eee6; --line: #d6d3c8; --ink: #141413; --muted: #5e5d59;
-		--accent: #d97757; --error: #a8321c; --thumb: #e4e1d6;
-		color-scheme: light;
-	}
-	@media (prefers-color-scheme: dark) {
-		:root:not([data-theme="light"]) {
-			--bg: #1a1a18; --surface: #262624; --line: #3d3d3a; --ink: #f0eee6; --muted: #a6a39b;
-			--accent: #e08a6d; --error: #f3a48a; --thumb: #30302d;
-			color-scheme: dark;
-		}
-	}
-	:root[data-theme="dark"] {
-		--bg: #1a1a18; --surface: #262624; --line: #3d3d3a; --ink: #f0eee6; --muted: #a6a39b;
-		--accent: #e08a6d; --error: #f3a48a; --thumb: #30302d;
+		--pine: #14271d;
+		--pine-deep: #0c1912;
+		--khadi: #f3f1ea;
+		--mist: #a9bdb0;
+		--saffron: #ea7a2a;
+		--line: rgba(243, 241, 234, 0.14);
+		--panel: rgba(12, 25, 18, 0.72);
+		--display: 'Marcellus', 'Trajan Pro', Georgia, serif;
+		--text: 'Figtree', system-ui, -apple-system, sans-serif;
+		--gutter: clamp(16px, 5vw, 64px);
 		color-scheme: dark;
 	}
 	* { box-sizing: border-box; }
 	html, body { margin: 0; }
-	body { background: var(--bg); color: var(--ink); font-family: 'Inter', system-ui, -apple-system, sans-serif; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+	body { background: var(--pine-deep); color: var(--khadi); font: 400 18px/1.55 var(--text); -webkit-font-smoothing: antialiased; }
 	[hidden] { display: none !important; }
-	.wrap { max-width: 1200px; margin: 0 auto; padding: 40px 16px 96px; }
-	.serif { font-family: Georgia, 'Times New Roman', serif; font-weight: 400; }
-	.muted { color: var(--muted); }
-	.error { color: var(--error); font-size: 0.9rem; min-height: 1.4em; margin: 12px 0 0; }
+	button { font: inherit; color: inherit; }
+	:focus-visible { outline: 3px solid var(--saffron); outline-offset: 3px; }
+	.muted { color: var(--mist); }
 
-	.brand { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 40px; }
-	.brand a { color: var(--ink); text-decoration: none; font-weight: 600; letter-spacing: 0.02em; }
-	.eyebrow { text-transform: uppercase; letter-spacing: 0.14em; font-size: 0.75rem; font-weight: 600; color: var(--accent); margin: 0 0 8px; }
-	h1 { font-size: clamp(2.25rem, 6vw, 3.5rem); line-height: 1.1; margin: 0 0 12px; }
+	.btn { display: inline-flex; align-items: center; gap: 12px; border: 0; border-radius: 999px; padding: 14px 26px; font-weight: 600; font-size: 1rem; cursor: pointer; background: var(--saffron); color: var(--pine-deep); }
+	.btn:disabled { opacity: .5; cursor: wait; }
+	.btn svg { width: 18px; height: 18px; flex: none; }
+	.btn--quiet { background: transparent; color: var(--khadi); border: 1px solid var(--line); padding: 10px 18px; font-weight: 500; }
+	.btn--quiet:hover { border-color: var(--mist); }
 
-	.btn { font: inherit; font-size: 0.95rem; font-weight: 600; border: 0; border-radius: 999px; padding: 12px 22px; cursor: pointer; background: var(--ink); color: var(--bg); }
-	.btn:disabled { opacity: 0.5; cursor: wait; }
-	.btn--ghost { background: transparent; color: var(--ink); border: 1px solid var(--line); padding: 8px 16px; font-weight: 500; }
-	.btn:focus-visible, input:focus-visible, .card:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+	/* ── Sign-in (no photo here: it stays behind the login) */
+	.login { min-height: 100vh; display: grid; place-items: center; padding: 48px var(--gutter); background: radial-gradient(120% 80% at 50% 0%, var(--pine) 0%, var(--pine-deep) 70%); }
+	.login__inner { width: 100%; max-width: 440px; text-align: center; }
+	.login h1 { font: 400 clamp(3rem, 12vw, 5.5rem)/1 var(--display); letter-spacing: 0.02em; margin: 0 0 16px; }
+	.login p { margin: 0 auto 32px; max-width: 34ch; }
+	.login form { text-align: left; background: var(--panel); border: 1px solid var(--line); border-radius: 20px; padding: 28px; }
+	.login label { display: block; font-size: 0.9rem; font-weight: 600; margin: 18px 0 6px; }
+	.login label:first-child { margin-top: 0; }
+	.login input[type=text], .login input[type=password] { width: 100%; font: inherit; padding: 13px 15px; border-radius: 12px; border: 1px solid var(--line); background: rgba(0,0,0,.25); color: var(--khadi); }
+	.login .remember { display: flex; gap: 10px; align-items: center; font-weight: 400; }
+	.login .btn { width: 100%; justify-content: center; margin-top: 24px; }
+	.error { color: #ffb38a; font-size: 0.95rem; min-height: 1.5em; margin: 12px 0 0; }
 
-	/* Sign-in */
-	.login { max-width: 420px; margin: 32px auto 0; background: var(--surface); border-radius: 24px; padding: 32px 28px; }
-	.login label { display: block; font-size: 0.85rem; font-weight: 600; margin: 16px 0 6px; }
-	.login input[type=text], .login input[type=password] { width: 100%; font: inherit; font-size: 1rem; padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--bg); color: var(--ink); }
-	.login .remember { display: flex; align-items: center; gap: 8px; font-weight: 400; }
-	.login .btn { width: 100%; margin-top: 24px; }
+	/* ── Library */
+	.backdrop { position: fixed; inset: 0; z-index: -1; background: var(--pine-deep) center / cover no-repeat; }
+	.backdrop::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(12,25,18,.78), rgba(12,25,18,.93)); }
 
-	/* Library */
-	.head { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; }
-	.stats { display: flex; flex-wrap: wrap; gap: 8px 24px; margin: 4px 0 0; font-size: 0.95rem; }
-	.month { margin: 48px 0 0; }
-	.month h2 { font-size: 1.5rem; margin: 0 0 20px; padding-bottom: 10px; border-bottom: 1px solid var(--line); }
-	.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 28px 20px; }
-	.card { display: block; width: 100%; text-align: left; font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; border-radius: 14px; }
-	.thumb { position: relative; aspect-ratio: 512 / 748; border-radius: 14px; overflow: hidden; background: var(--thumb); }
-	.thumb img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .25s ease; }
-	.card:hover .thumb img { transform: scale(1.03); }
-	.time { position: absolute; right: 8px; bottom: 10px; background: rgba(1,1,1,.75); color: #fff; font-size: 0.75rem; padding: 2px 8px; border-radius: 999px; font-variant-numeric: tabular-nums; }
-	.progress { position: absolute; left: 0; right: 0; bottom: 0; height: 4px; background: rgba(255,255,255,.35); }
-	.progress span { display: block; height: 100%; background: var(--accent); }
-	.title { font-weight: 600; font-size: 0.95rem; margin: 10px 2px 2px; line-height: 1.35; }
-	.sub { font-size: 0.8rem; margin: 0 2px; }
+	.bar { position: absolute; top: 0; left: 0; right: 0; z-index: 2; display: flex; justify-content: space-between; align-items: center; padding: 20px var(--gutter); }
+	.logo { display: block; height: 72px; width: auto; filter: drop-shadow(0 2px 10px rgba(0,0,0,.45)); }
+	.login .logo { height: 120px; margin: 0 auto 20px; }
+	.bar .btn--quiet { color: var(--khadi); text-decoration: none; font-weight: 600; padding: 8px 16px; border-radius: 999px; background: rgba(12,25,18,.55); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); border: 1px solid var(--line); }
 
-	/* Player */
-	.player { position: fixed; inset: 0; z-index: 100; background: rgba(1,1,1,.94); display: flex; align-items: center; justify-content: center; padding: 16px; }
-	.player__inner { width: 100%; max-width: 1100px; }
-	.player__head { display: flex; justify-content: space-between; align-items: center; gap: 12px; color: #faf9f5; margin-bottom: 12px; }
-	.player__head h2 { font-size: 1.2rem; margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-	.player video { width: 100%; max-height: 80vh; aspect-ratio: 4 / 3; background: #000; border-radius: 12px; display: block; }
-	.player .btn--ghost { color: #faf9f5; border-color: rgba(250,249,245,.4); flex-shrink: 0; }
-	.player .error { color: #f3a48a; }
+	/* The photo keeps every face clear: text sits beside it, never over it. */
+	.hero { position: relative; display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); min-height: min(82vh, 780px); background: var(--pine-deep); }
+	.hero__photo { position: relative; grid-column: 2; grid-row: 1; background: center 40% / cover no-repeat;
+		-webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 22%), linear-gradient(0deg, transparent 0%, #000 14%);
+		-webkit-mask-composite: source-in; mask-image: linear-gradient(90deg, transparent 0%, #000 22%), linear-gradient(0deg, transparent 0%, #000 14%); mask-composite: intersect; }
+	.hero__photo.is-loaded { animation: focus-in 1.6s ease-out both; }
+	@keyframes focus-in { from { filter: blur(14px) saturate(.6); opacity: .4; } to { filter: none; opacity: 1; } }
+	.hero__text { position: relative; z-index: 1; grid-column: 1; grid-row: 1; align-self: end; padding: 120px 0 64px var(--gutter); }
+	.hero h1 { font: 400 clamp(3.5rem, 8.4vw, 8.5rem)/0.92 var(--display); letter-spacing: 0.01em; margin: 0; white-space: nowrap; }
+	.hero__lede { font-size: clamp(1.05rem, 1.6vw, 1.25rem); max-width: 38ch; margin: 22px 0 30px; color: var(--khadi); }
+	@media (max-width: 900px) {
+		.hero { grid-template-columns: 1fr; min-height: 0; }
+		.hero__photo { grid-column: 1; grid-row: 1; aspect-ratio: 1427 / 986; -webkit-mask-image: linear-gradient(0deg, transparent 0%, #000 28%); mask-image: linear-gradient(0deg, transparent 0%, #000 28%); }
+		.hero__text { grid-row: 2; padding: 0 var(--gutter) 40px; margin-top: -3vw; }
+		.hero h1 { white-space: normal; }
+	}
+	.hero__actions { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; }
+	.hero__resume-detail { font-size: 0.95rem; }
+
+	.controls { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 16px; padding: 8px var(--gutter) 0; }
+	.views { display: inline-flex; padding: 4px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel); }
+	.views button { border: 0; background: transparent; padding: 9px 20px; border-radius: 999px; cursor: pointer; font-weight: 500; color: var(--mist); }
+	.views button[aria-pressed=true] { background: var(--khadi); color: var(--pine-deep); }
+	.status { padding: 0 var(--gutter); }
+	main { padding: 24px var(--gutter) 120px; max-width: 1280px; }
+
+	/* Timeline: a rail through the days of the visit */
+	.month { margin-top: 40px; }
+	.month > h2 { font: 400 clamp(1.8rem, 4vw, 2.6rem)/1.1 var(--display); margin: 0 0 8px; }
+	.days { position: relative; margin: 0; padding: 0; list-style: none; }
+	.days::before { content: ""; position: absolute; top: 12px; bottom: 12px; left: 46px; width: 1px; background: var(--line); }
+	.day { position: relative; display: grid; grid-template-columns: 92px 1fr; gap: 0 28px; padding: 28px 0; }
+	.day__date { position: relative; text-align: center; }
+	.day__num { display: block; font: 400 3.4rem/1 var(--display); background: var(--pine-deep); padding: 4px 0; position: relative; }
+	.day__wd { display: block; font-size: 0.85rem; color: var(--mist); background: var(--pine-deep); position: relative; padding-bottom: 4px; }
+	.day--undated .day__num { font-size: 2rem; padding-top: 14px; }
+	.day__items { display: grid; gap: 16px; }
+	.wd-short { display: none; }
+
+	.entry { display: grid; grid-template-columns: minmax(160px, 260px) 1fr; gap: 20px; align-items: center; width: 100%; text-align: left; padding: 12px; border: 1px solid transparent; border-radius: 18px; background: none; cursor: pointer; }
+	.entry:hover, .entry:focus-visible { background: rgba(243,241,234,.05); border-color: var(--line); }
+	.entry h3 { font-size: 1.2rem; font-weight: 600; line-height: 1.3; margin: 0 0 4px; }
+	.entry p { margin: 0; font-size: 0.95rem; }
+
+	.thumb { position: relative; aspect-ratio: 4 / 3; border-radius: 12px; overflow: hidden; background: linear-gradient(135deg, var(--pine), var(--pine-deep)); }
+	.thumb img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+	.thumb__time { position: absolute; right: 8px; bottom: 10px; background: rgba(0,0,0,.72); color: #fff; font-size: 0.8rem; padding: 2px 9px; border-radius: 999px; font-variant-numeric: tabular-nums; }
+	.thumb__play { position: absolute; inset: 0; margin: auto; width: 56px; height: 56px; border-radius: 50%; background: rgba(234,122,42,.92); display: grid; place-items: center; opacity: 0; transition: opacity .2s; }
+	.thumb__play svg { width: 22px; height: 22px; fill: var(--pine-deep); margin-left: 3px; }
+	.entry:hover .thumb__play, .entry:focus-visible .thumb__play, .card:hover .thumb__play, .card:focus-visible .thumb__play { opacity: 1; }
+	.thumb__progress { position: absolute; left: 0; right: 0; bottom: 0; height: 4px; background: rgba(255,255,255,.25); }
+	.thumb__progress span { display: block; height: 100%; background: var(--saffron); }
+	.thumb__pending { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; padding: 12px; font-size: 0.9rem; font-weight: 500; color: var(--khadi); text-shadow: 0 1px 6px rgba(0,0,0,.8); }
+	.thumb__card { filter: blur(5px) brightness(.42) saturate(.6); transform: scale(1.08); }
+	.is-pending { cursor: default; opacity: .75; }
+	.is-pending:hover { background: none; border-color: transparent; }
+
+	/* Gallery: the frames side by side */
+	.gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 36px 24px; margin-top: 32px; align-items: start; }
+	.card { display: block; width: 100%; text-align: left; border: 0; padding: 0; background: none; cursor: pointer; border-radius: 12px; }
+	.card h3 { font-size: 1.05rem; font-weight: 600; line-height: 1.35; margin: 12px 2px 2px; }
+	.card p { margin: 0 2px; font-size: 0.9rem; }
+
+	/* Photos: the prints at their own proportions */
+	.photos { columns: 4 240px; column-gap: 18px; margin-top: 32px; }
+	.photo { display: block; width: 100%; margin: 0 0 18px; padding: 0; border: 0; background: var(--pine); border-radius: 10px; overflow: hidden; cursor: zoom-in; break-inside: avoid; }
+	.photo img { display: block; width: 100%; height: auto; }
+	.photo:hover img, .photo:focus-visible img { filter: brightness(1.08); }
+
+	.viewer { position: fixed; inset: 0; z-index: 60; background: rgba(6, 13, 9, .96); display: grid; grid-template-rows: auto 1fr; padding: 16px; }
+	.viewer__head { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 0 4px 12px; }
+	.viewer__frame { position: relative; display: grid; place-items: center; min-height: 0; }
+	.viewer__frame img { max-width: 100%; max-height: calc(100vh - 110px); object-fit: contain; border-radius: 6px; user-select: none; -webkit-user-drag: none; -webkit-touch-callout: none; }
+	.viewer__nav { position: absolute; top: 50%; transform: translateY(-50%); width: 52px; height: 52px; border-radius: 50%; border: 1px solid var(--line); background: rgba(12,25,18,.7); cursor: pointer; display: grid; place-items: center; }
+	.viewer__nav svg { width: 22px; height: 22px; fill: var(--khadi); }
+	.viewer__nav--prev { left: 8px; } .viewer__nav--next { right: 8px; }
+	.viewer .watermark { position: absolute; }
+
+	/* ── Player */
+	.player { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; padding: 16px; background: var(--pine-deep) center / cover no-repeat; }
+	.player::before { content: ""; position: absolute; inset: 0; background: rgba(12,25,18,.88); }
+	.player__inner { position: relative; width: 100%; max-width: 1180px; }
+	.player__head { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; margin-bottom: 14px; }
+	.player__head h2 { font: 400 clamp(1.3rem, 3vw, 2rem)/1.15 var(--display); margin: 0; }
+	.player__head p { margin: 4px 0 0; font-size: 0.95rem; }
+	.player__buttons { display: flex; gap: 10px; flex: none; }
+	.stage { position: relative; background: #000; border-radius: 14px; overflow: hidden; }
+	.stage video { display: block; width: 100%; max-height: 78vh; aspect-ratio: 4 / 3; background: #000; }
+	.stage:fullscreen { border-radius: 0; display: grid; place-items: center; }
+	.stage:fullscreen video { max-height: 100vh; height: 100vh; }
+	.watermark { position: absolute; z-index: 2; pointer-events: none; user-select: none; color: rgba(255,255,255,.32); font-size: clamp(0.75rem, 1.6vw, 1rem); font-weight: 600; letter-spacing: .02em; text-shadow: 0 1px 2px rgba(0,0,0,.6); transition: top 1.2s ease, left 1.2s ease; white-space: nowrap; }
+	.player .error { color: #ffb38a; }
+
+	@media (max-width: 640px) {
+		body { font-size: 17px; }
+		.logo { height: 56px; }
+		.login .logo { height: 96px; }
+		.days::before { left: 26px; }
+		.day { grid-template-columns: 52px 1fr; gap: 0 14px; padding: 20px 0; }
+		.day__num { font-size: 2.2rem; }
+		.day__wd { font-size: 0.78rem; }
+		.wd-long { display: none; }
+		.wd-short { display: inline; }
+		.entry { grid-template-columns: 1fr; padding: 8px 0; gap: 10px; }
+		.player__head { flex-direction: column; align-items: flex-start; }
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.hero__photo.is-loaded { animation: none; }
+		.watermark { transition: none; }
+	}
 </style>
 </head>
 <body>
-<div class="wrap">
-	<div class="brand">
-		<a href="https://yajur.ai">Yajur.ai</a>
-		<button class="btn btn--ghost" id="logout" type="button" hidden>Sign out</button>
-	</div>
 
-	<!-- Sign-in -->
-	<section id="login-view" hidden>
-		<p class="eyebrow" style="text-align:center">Private archive</p>
-		<h1 class="serif" style="text-align:center">Kodai 1994</h1>
-		<p class="muted" style="text-align:center">Recordings from Kodaikanal, April–May 1994. Open to invited members only. Sign in with the account you were given.</p>
-		<form class="login" id="login-form" autocomplete="on">
+<!-- Sign-in -->
+<section class="login" id="login-view" hidden>
+	<div class="login__inner">
+		<img class="logo" src="/kodai1994/brand/logo.png" alt="Sri Sathya Sai Centenary Celebrations" width="120" height="120">
+		<h1>Kodai 1994</h1>
+		<p class="muted">Recordings from Kodaikanal, April and May 1994. Sign in with the account you were given.</p>
+		<form id="login-form" autocomplete="on">
 			<label for="user">Username</label>
 			<input type="text" id="user" name="username" autocomplete="username" autocapitalize="none" spellcheck="false" required>
 			<label for="pass">Password</label>
@@ -100,31 +191,76 @@
 			<button class="btn" type="submit" id="login-btn">Sign in</button>
 			<p class="error" id="login-error" role="alert"></p>
 		</form>
-	</section>
+	</div>
+</section>
 
-	<!-- Library -->
-	<section id="library-view" hidden>
-		<div class="head">
-			<div>
-				<p class="eyebrow">Kodaikanal · April–May 1994</p>
-				<h1 class="serif">Kodai 1994</h1>
-				<p class="stats muted" id="stats"></p>
+<!-- Library -->
+<div id="library-view" hidden>
+	<div class="backdrop" id="backdrop"></div>
+	<div class="bar">
+		<img class="logo" src="/kodai1994/brand/logo.png" alt="Sri Sathya Sai Centenary Celebrations" width="72" height="72">
+		<button class="btn btn--quiet" id="logout" type="button">Sign out</button>
+	</div>
+	<header class="hero">
+		<div class="hero__photo" id="hero-photo" role="img" aria-label="Group photo at Kodaikanal, 1994"></div>
+		<div class="hero__text">
+			<h1>Kodai 1994</h1>
+			<p class="hero__lede" id="lede">Recordings from Kodaikanal, April and May 1994.</p>
+			<div class="hero__actions">
+				<button class="btn" id="hero-play" type="button" hidden>
+					<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l13-7.5z" fill="currentColor"/></svg>
+					<span id="hero-play-label">Play</span>
+				</button>
+				<span class="hero__resume-detail muted" id="hero-play-detail"></span>
 			</div>
 		</div>
-		<p class="muted" id="status" aria-live="polite"></p>
-		<div id="months"></div>
-	</section>
+	</header>
+
+	<div class="controls">
+		<div class="views" role="group" aria-label="View">
+			<button type="button" data-view="timeline" aria-pressed="true">Timeline</button>
+			<button type="button" data-view="gallery" aria-pressed="false">Gallery</button>
+			<button type="button" data-view="photos" aria-pressed="false">Photos</button>
+		</div>
+		<span class="muted" id="signed-in"></span>
+	</div>
+	<p class="status muted" id="status" aria-live="polite"></p>
+	<main id="content"></main>
 </div>
 
 <!-- Player -->
 <div class="player" id="player" hidden role="dialog" aria-modal="true" aria-labelledby="player-title">
 	<div class="player__inner">
 		<div class="player__head">
-			<h2 class="serif" id="player-title"></h2>
-			<button class="btn btn--ghost" id="close" type="button">Close</button>
+			<div>
+				<h2 id="player-title"></h2>
+				<p class="muted" id="player-date"></p>
+			</div>
+			<div class="player__buttons">
+				<button class="btn btn--quiet" id="fullscreen" type="button">Full screen</button>
+				<button class="btn btn--quiet" id="close" type="button">Close</button>
+			</div>
 		</div>
-		<video id="video" controls playsinline preload="metadata"></video>
+		<div class="stage" id="stage">
+			<video id="video" controls playsinline preload="none"
+				controlslist="nodownload nofullscreen noremoteplayback" disablepictureinpicture disableremoteplayback></video>
+			<div class="watermark" id="watermark" aria-hidden="true"></div>
+		</div>
 		<p class="error" id="player-error" role="alert"></p>
+	</div>
+</div>
+
+<!-- Photo viewer -->
+<div class="viewer" id="viewer" hidden role="dialog" aria-modal="true" aria-label="Photo viewer">
+	<div class="viewer__head">
+		<span class="muted" id="viewer-count"></span>
+		<button class="btn btn--quiet" id="viewer-close" type="button">Close</button>
+	</div>
+	<div class="viewer__frame" id="viewer-frame">
+		<img id="viewer-img" alt="">
+		<button class="viewer__nav viewer__nav--prev" id="viewer-prev" type="button" aria-label="Previous photo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.5 4 7.5 12l8 8 1.4-1.4L10.3 12l6.6-6.6z"/></svg></button>
+		<button class="viewer__nav viewer__nav--next" id="viewer-next" type="button" aria-label="Next photo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8.5 4-1.4 1.4 6.6 6.6-6.6 6.6L8.5 20l8-8z"/></svg></button>
+		<div class="watermark" id="viewer-mark" aria-hidden="true"></div>
 	</div>
 </div>
 
@@ -133,10 +269,10 @@
 (function () {
 	'use strict';
 
-	// Served from the same origin as Jellyfin (videos.yajur.ai), so API paths are relative.
-	var SERVER = '', LIBRARY = 'Kodai 1994';
-	var CLIENT = 'Yajur Kodai 1994', VERSION = '1.0.0', STORE_KEY = 'yajur-kodai-session';
+	var LIBRARY = 'Kodai 1994', HLS = '/kodai1994/hls/';
+	var CLIENT = 'Yajur Kodai 1994', VERSION = '2.0.0', STORE_KEY = 'yajur-kodai-session', VIEW_KEY = 'yajur-kodai-view';
 	var MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+	var PLAY_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l13-7.5z"/></svg>';
 	var $ = function (id) { return document.getElementById(id); };
 
 	// ── Storage (wrapped: private windows / blocked storage must not break the page)
@@ -150,53 +286,76 @@
 		storeSet('localStorage', 'yajur-kodai-device', deviceId);
 	}
 
-	var session = null; // { token, userId, name }
+	var session = null; // { token, userId, name, remember }
 	try { session = JSON.parse(storeGet('sessionStorage', STORE_KEY) || storeGet('localStorage', STORE_KEY) || 'null'); } catch (e) {}
 
-	// ── Jellyfin API
+	// The gateway serves /kodai1994/hls/ (streams, thumbnails, photo) only with this cookie,
+	// which holds the Jellyfin token. Path-scoped so it never travels to the API.
+	function setMediaCookie() {
+		var c = 'kodai_auth=' + encodeURIComponent(session.token) + '; Path=' + HLS + '; SameSite=Strict';
+		if (location.protocol === 'https:') c += '; Secure';
+		if (session.remember) c += '; Max-Age=2592000';
+		document.cookie = c;
+	}
+	function clearMediaCookie() { document.cookie = 'kodai_auth=; Path=' + HLS + '; Max-Age=0; SameSite=Strict'; }
+
+	// ── Jellyfin API (same origin)
 	function authHeader() {
 		var h = 'MediaBrowser Client="' + CLIENT + '", Device="' + (navigator.platform || 'Browser').replace(/"/g, '') +
 			'", DeviceId="' + deviceId + '", Version="' + VERSION + '"';
 		return session ? h + ', Token="' + session.token + '"' : h;
 	}
-
 	function api(path, opts) {
 		opts = opts || {};
 		var headers = { 'Authorization': authHeader() };
 		if (opts.body) headers['Content-Type'] = 'application/json';
-		return fetch(SERVER + path, { method: opts.method || 'GET', headers: headers, body: opts.body ? JSON.stringify(opts.body) : undefined, keepalive: !!opts.keepalive })
+		return fetch(path, { method: opts.method || 'GET', headers: headers, body: opts.body ? JSON.stringify(opts.body) : undefined, keepalive: !!opts.keepalive })
 			.then(function (res) {
-				if (res.status === 401 && session) { signOut(true); throw new Error('Your session has expired. Please sign in again.'); }
-				if (!res.ok) throw new Error('Server responded ' + res.status);
+				if (res.status === 401 && session) { signOut(true); throw new Error('Your session has ended. Sign in again to keep watching.'); }
+				if (!res.ok) throw new Error('The server answered ' + res.status + '. Try again in a moment.');
 				return res.status === 204 ? null : res.json();
 			});
 	}
 
-	// The collection is pre-encoded as H.264/AAC MP4, so it direct-plays everywhere.
-	// The HLS transcoding profile only matters if a non-web file is ever added.
-	function deviceProfile() {
+	// ── Names: "1994-04-14 - April 14th - Discourse (Tamil New Year)"
+	// Must match slug() in package-hls.sh.
+	function slug(s) { return s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, ''); }
+	function parse(item) {
+		var m = /^(\d{4})-(\d{2})(?:-(\d{2}))? - (.*)$/.exec(item.Name || '') || [null, '1994', '0', null, item.Name];
+		var rest = m[4], phrase = rest, detail = '';
+		var split = /^((?:April|May)(?: [0-9]{1,2}(?:st|nd|rd|th))?(?: & [0-9]{1,2}(?:st|nd|rd|th))?)(?: \(date not recorded\))?(?: - (.*))?$/.exec(rest);
+		if (split) { phrase = split[1]; detail = split[2] || ''; }
+		var year = +m[1], month = +m[2], day = m[3] ? +m[3] : null;
 		return {
-			MaxStreamingBitrate: 20000000,
-			DirectPlayProfiles: [{ Type: 'Video', Container: 'mp4,m4v', VideoCodec: 'h264', AudioCodec: 'aac,mp3' }],
-			TranscodingProfiles: [{ Type: 'Video', Container: 'ts', Protocol: 'hls', VideoCodec: 'h264', AudioCodec: 'aac', Context: 'Streaming', MaxAudioChannels: '2', MinSegments: 1, BreakOnNonKeyFrames: true }],
-			ContainerProfiles: [], CodecProfiles: [], SubtitleProfiles: []
+			item: item, slug: slug(item.Name), year: year, month: month, day: day,
+			title: detail || phrase, phrase: phrase,
+			weekday: day ? new Date(Date.UTC(year, month - 1, day)).toLocaleDateString('en-GB', { weekday: 'long', timeZone: 'UTC' }) : '',
+			weekdayShort: day ? new Date(Date.UTC(year, month - 1, day)).toLocaleDateString('en-GB', { weekday: 'short', timeZone: 'UTC' }) : '',
+			longDate: day ? new Date(Date.UTC(year, month - 1, day)).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' })
+				: MONTHS[month - 1] + ' ' + year + ', date not recorded'
 		};
 	}
+	function fmtDuration(ticks) {
+		if (!ticks) return '';
+		var s = Math.round(ticks / 1e7), h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), sec = s % 60;
+		return (h ? h + ':' + String(m).padStart(2, '0') : String(m)) + ':' + String(sec).padStart(2, '0');
+	}
+	function fmtHours(ticks) { return Math.round(ticks / 36e9) + ' hours'; }
 
 	// ── Views
 	function show(view) {
 		$('login-view').hidden = view !== 'login';
 		$('library-view').hidden = view !== 'library';
-		$('logout').hidden = view !== 'library';
 	}
 
 	function signOut(expired) {
 		closePlayer();
+		if (!$('viewer').hidden) closePhoto();
 		if (session && !expired) api('/Sessions/Logout', { method: 'POST' }).catch(function () {});
 		session = null;
-		storeDel('sessionStorage', STORE_KEY);
-		storeDel('localStorage', STORE_KEY);
-		$('months').textContent = '';
+		storeDel('sessionStorage', STORE_KEY); storeDel('localStorage', STORE_KEY);
+		clearMediaCookie();
+		$('content').textContent = '';
 		show('login');
 	}
 
@@ -207,176 +366,305 @@
 		session = null;
 		api('/Users/AuthenticateByName', { method: 'POST', body: { Username: $('user').value.trim(), Pw: $('pass').value } })
 			.then(function (r) {
-				session = { token: r.AccessToken, userId: r.User.Id, name: r.User.Name };
-				storeSet($('remember').checked ? 'localStorage' : 'sessionStorage', STORE_KEY, JSON.stringify(session));
+				var remember = $('remember').checked;
+				session = { token: r.AccessToken, userId: r.User.Id, name: r.User.Name, remember: remember };
+				storeSet(remember ? 'localStorage' : 'sessionStorage', STORE_KEY, JSON.stringify(session));
 				$('pass').value = '';
 				openLibrary();
 			})
 			.catch(function (ex) {
-				err.textContent = /401/.test(ex.message) ? 'Incorrect username or password.'
-					: (ex instanceof TypeError ? 'Can’t reach the video server. Please try again later.' : ex.message);
+				err.textContent = /401/.test(ex.message) ? 'That username and password don’t match. Check them and try again.'
+					: (ex instanceof TypeError ? 'Can’t reach the video server. Check your connection and try again.' : ex.message);
 			})
 			.then(function () { btn.disabled = false; });
 	});
-
 	$('logout').addEventListener('click', function () { signOut(false); });
 
 	// ── Library
-	// Filenames are "YYYY-MM[-DD] - Title"; the prefix drives ordering and month grouping.
-	function parseName(name) {
-		var m = /^(\d{4})-(\d{2})(?:-(\d{2}))? - (.*)$/.exec(name || '');
-		return m ? { year: m[1], month: +m[2], day: m[3] ? +m[3] : null, title: m[4] } : { year: '', month: 0, day: null, title: name };
-	}
-
-	function fmtDuration(ticks) {
-		if (!ticks) return '';
-		var s = Math.round(ticks / 1e7), h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), sec = s % 60;
-		return (h ? h + ':' + String(m).padStart(2, '0') : String(m)) + ':' + String(sec).padStart(2, '0');
-	}
-
-	function fmtHours(ticks) {
-		var h = ticks / 36e9;
-		return (h >= 10 ? Math.round(h) : h.toFixed(1)) + ' hours';
-	}
+	var entries = [], ready = {}, photos = [];
+	var view = storeGet('localStorage', VIEW_KEY);
+	if (['timeline', 'gallery', 'photos'].indexOf(view) < 0) view = 'timeline';
 
 	function openLibrary() {
+		setMediaCookie();
 		show('library');
-		$('status').textContent = 'Loading…';
-		$('months').textContent = '';
-		api('/UserViews?userId=' + session.userId).then(function (views) {
-			var lib = (views.Items || []).filter(function (v) { return v.Name === LIBRARY; })[0];
-			if (!lib) throw new Error('This account doesn’t have access to the ' + LIBRARY + ' collection.');
-			return api('/Items?userId=' + session.userId + '&ParentId=' + lib.Id + '&Recursive=true' +
-				'&IncludeItemTypes=Movie,Video&SortBy=SortName&SortOrder=Ascending&Fields=MediaSources&EnableUserData=true' +
-				'&EnableImageTypes=Primary&ImageTypeLimit=1&Limit=500');
-		}).then(function (r) {
-			var items = r.Items || [];
-			render(items);
-			var total = items.reduce(function (sum, i) { return sum + (i.RunTimeTicks || 0); }, 0);
-			$('stats').textContent = items.length + (items.length === 1 ? ' recording · ' : ' recordings · ') + fmtHours(total) + ' · signed in as ' + session.name;
-			$('status').textContent = items.length ? '' : 'No recordings yet.';
+		$('signed-in').textContent = 'Signed in as ' + session.name;
+		$('status').textContent = 'Loading the recordings…';
+		loadPhoto();
+		Promise.all([
+			api('/UserViews?userId=' + session.userId).then(function (views) {
+				var lib = (views.Items || []).filter(function (v) { return v.Name === LIBRARY; })[0];
+				if (!lib) throw new Error('This account can’t open the ' + LIBRARY + ' recordings. Ask whoever sent you the link to check your access.');
+				return api('/Items?userId=' + session.userId + '&ParentId=' + lib.Id + '&Recursive=true&IncludeItemTypes=Movie,Video' +
+					'&SortBy=SortName&SortOrder=Ascending&EnableUserData=true&EnableImageTypes=Primary&Limit=500');
+			}),
+			fetch(HLS + 'ready.json', { credentials: 'same-origin', cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : []; }).catch(function () { return []; }),
+			fetch(HLS + 'photos/photos.json', { credentials: 'same-origin', cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : []; }).catch(function () { return []; })
+		]).then(function (res) {
+			ready = {}; res[1].forEach(function (s) { ready[s] = true; });
+			photos = res[2];
+			entries = (res[0].Items || []).map(parse).sort(function (a, b) {
+				return (a.year - b.year) || (a.month - b.month) || ((a.day || 99) - (b.day || 99)) || a.item.Name.localeCompare(b.item.Name);
+			});
+			renderHero();
+			render();
+			$('status').textContent = entries.length ? '' : 'No recordings have been added yet.';
 		}).catch(function (ex) { $('status').textContent = ex.message; });
 	}
 
-	function render(items) {
-		var root = $('months'), groups = {}, order = [];
-		items.forEach(function (item) {
-			var p = parseName(item.Name), key = p.year + '-' + p.month;
-			if (!groups[key]) { groups[key] = { label: p.month ? MONTHS[p.month - 1] + ' ' + p.year : 'Other recordings', items: [] }; order.push(key); }
-			groups[key].items.push({ item: item, parsed: p });
-		});
-		order.forEach(function (key) {
-			var sec = document.createElement('section'); sec.className = 'month';
-			var h = document.createElement('h2'); h.className = 'serif'; h.textContent = groups[key].label;
-			var grid = document.createElement('div'); grid.className = 'grid';
-			groups[key].items.forEach(function (entry) { grid.appendChild(card(entry.item, entry.parsed)); });
-			sec.appendChild(h); sec.appendChild(grid); root.appendChild(sec);
-		});
+	function loadPhoto() {
+		var photo = new Image();
+		photo.onload = function () {
+			$('hero-photo').style.backgroundImage = 'url(' + HLS + 'backdrop.jpg)';
+			$('hero-photo').classList.add('is-loaded');
+		};
+		photo.src = HLS + 'backdrop.jpg';
+		$('backdrop').style.backgroundImage = 'url(' + HLS + 'backdrop-blur.jpg)';
+		$('player').style.backgroundImage = 'url(' + HLS + 'backdrop-blur.jpg)';
 	}
 
-	function card(item, parsed) {
-		var el = document.createElement('button');
-		el.type = 'button'; el.className = 'card';
-		var thumb = document.createElement('div'); thumb.className = 'thumb';
-		var tag = item.ImageTags && item.ImageTags.Primary;
-		if (tag) {
+	function renderHero() {
+		var total = entries.reduce(function (s, e) { return s + (e.item.RunTimeTicks || 0); }, 0);
+		var waiting = entries.filter(function (e) { return !ready[e.slug]; }).length;
+		$('lede').textContent = entries.length + ' recordings from Kodaikanal, ' + fmtHours(total) + ' in all, filmed between 3 April and 3 May 1994' +
+			(photos.length ? ', and ' + photos.length + ' photographs.' : '.') +
+			(waiting ? ' ' + waiting + ' are still being prepared and will appear here when they’re ready.' : '');
+		var watching = entries.filter(function (e) { return ready[e.slug] && e.item.UserData && e.item.UserData.PlaybackPositionTicks > 0; })
+			.sort(function (a, b) { return (b.item.UserData.LastPlayedDate || '').localeCompare(a.item.UserData.LastPlayedDate || ''); })[0];
+		var first = entries.filter(function (e) { return ready[e.slug]; })[0];
+		var target = watching || first;
+		$('hero-play').hidden = !target;
+		if (!target) { $('hero-play-detail').textContent = ''; return; }
+		$('hero-play-label').textContent = watching ? 'Continue watching' : 'Start with ' + target.phrase;
+		$('hero-play-detail').textContent = watching ? target.title + ', from ' + fmtDuration(target.item.UserData.PlaybackPositionTicks) : '';
+		$('hero-play').onclick = function () { play(target); };
+	}
+
+	function thumb(e) {
+		var t = document.createElement('div'); t.className = 'thumb';
+		if (ready[e.slug]) {
 			var img = document.createElement('img');
-			img.loading = 'lazy'; img.alt = '';
-			// <img> can't send the Authorization header, and the gateway requires a token for images.
-			img.src = SERVER + '/Items/' + item.Id + '/Images/Primary?maxHeight=480&quality=85&tag=' + tag + '&ApiKey=' + session.token;
-			thumb.appendChild(img);
+			img.loading = 'lazy'; img.alt = ''; img.src = HLS + e.slug + '/thumb.jpg';
+			img.onerror = function () { img.remove(); };
+			t.appendChild(img);
+			var p = document.createElement('span'); p.className = 'thumb__play'; p.innerHTML = PLAY_ICON; t.appendChild(p);
+		} else {
+			var tag = e.item.ImageTags && e.item.ImageTags.Primary;
+			if (tag) {
+				var card = document.createElement('img');
+				card.className = 'thumb__card'; card.loading = 'lazy'; card.alt = '';
+				card.src = '/Items/' + e.item.Id + '/Images/Primary?maxWidth=400&quality=70&tag=' + tag + '&ApiKey=' + encodeURIComponent(session.token);
+				t.appendChild(card);
+			}
+			var w = document.createElement('span'); w.className = 'thumb__pending'; w.textContent = 'Being prepared'; t.appendChild(w);
 		}
-		var dur = fmtDuration(item.RunTimeTicks);
-		if (dur) { var t = document.createElement('span'); t.className = 'time'; t.textContent = dur; thumb.appendChild(t); }
-		var ud = item.UserData || {};
-		if (ud.PlaybackPositionTicks && item.RunTimeTicks) {
-			var bar = document.createElement('div'); bar.className = 'progress';
-			var fill = document.createElement('span'); fill.style.width = Math.min(100, ud.PlaybackPositionTicks / item.RunTimeTicks * 100) + '%';
-			bar.appendChild(fill); thumb.appendChild(bar);
+		var dur = fmtDuration(e.item.RunTimeTicks);
+		if (dur) { var d = document.createElement('span'); d.className = 'thumb__time'; d.textContent = dur; t.appendChild(d); }
+		var ud = e.item.UserData || {};
+		if (ready[e.slug] && ud.PlaybackPositionTicks && e.item.RunTimeTicks) {
+			var bar = document.createElement('div'); bar.className = 'thumb__progress';
+			var fill = document.createElement('span'); fill.style.width = Math.min(100, ud.PlaybackPositionTicks / e.item.RunTimeTicks * 100) + '%';
+			bar.appendChild(fill); t.appendChild(bar);
 		}
-		var title = document.createElement('div'); title.className = 'title'; title.textContent = parsed.title;
-		el.appendChild(thumb); el.appendChild(title);
-		if (ud.PlaybackPositionTicks) {
-			var sub = document.createElement('div'); sub.className = 'sub muted';
-			sub.textContent = 'Resume at ' + fmtDuration(ud.PlaybackPositionTicks);
-			el.appendChild(sub);
-		} else if (ud.Played) {
-			var done = document.createElement('div'); done.className = 'sub muted'; done.textContent = 'Watched';
-			el.appendChild(done);
-		}
-		el.addEventListener('click', function () { play(item, parsed.title); });
-		return el;
+		return t;
 	}
 
-	// ── Player
-	var video = $('video'), hls = null, playing = null, progressTimer = null;
-
-	function progressBody(extra) {
-		var b = { ItemId: playing.itemId, MediaSourceId: playing.mediaSourceId, PlaySessionId: playing.playSessionId,
-			PositionTicks: Math.floor((video.currentTime || 0) * 1e7), IsPaused: video.paused, CanSeek: true };
-		for (var k in extra) b[k] = extra[k];
-		return b;
+	function note(e) {
+		var ud = e.item.UserData || {};
+		if (!ready[e.slug]) return 'Available soon';
+		if (ud.PlaybackPositionTicks) return 'Continue from ' + fmtDuration(ud.PlaybackPositionTicks);
+		if (ud.Played) return 'Watched';
+		return '';
 	}
 
+	function clickable(el, e) {
+		if (ready[e.slug]) el.addEventListener('click', function () { play(e); });
+		else { el.classList.add('is-pending'); el.setAttribute('aria-disabled', 'true'); }
+	}
+
+	function renderTimeline(root) {
+		var months = [];
+		entries.forEach(function (e) {
+			var key = e.year + '-' + e.month, m = months[months.length - 1];
+			if (!m || m.key !== key) { m = { key: key, label: MONTHS[e.month - 1] + ' ' + e.year, days: [] }; months.push(m); }
+			var dkey = e.day || 'undated', d = m.days.filter(function (x) { return x.key === dkey; })[0];
+			if (!d) { d = { key: dkey, entry: e, items: [] }; m.days.push(d); }
+			d.items.push(e);
+		});
+		months.forEach(function (m) {
+			// Undated recordings close their month.
+			m.days.sort(function (a, b) { return (a.key === 'undated' ? 99 : a.key) - (b.key === 'undated' ? 99 : b.key); });
+			var sec = document.createElement('section'); sec.className = 'month';
+			var h = document.createElement('h2'); h.textContent = m.label; sec.appendChild(h);
+			var list = document.createElement('ol'); list.className = 'days';
+			m.days.forEach(function (d) {
+				var li = document.createElement('li'); li.className = 'day' + (d.key === 'undated' ? ' day--undated' : '');
+				var date = document.createElement('div'); date.className = 'day__date';
+				var num = document.createElement('span'); num.className = 'day__num'; num.textContent = d.key === 'undated' ? '–' : d.key;
+				var wd = document.createElement('span'); wd.className = 'day__wd';
+				var wdLong = document.createElement('span'); wdLong.className = 'wd-long'; wdLong.textContent = d.key === 'undated' ? 'Date not recorded' : d.entry.weekday;
+				var wdShort = document.createElement('span'); wdShort.className = 'wd-short'; wdShort.textContent = d.key === 'undated' ? 'Undated' : d.entry.weekdayShort;
+				wd.appendChild(wdLong); wd.appendChild(wdShort);
+				date.appendChild(num); date.appendChild(wd);
+				var items = document.createElement('div'); items.className = 'day__items';
+				d.items.forEach(function (e) {
+					var b = document.createElement('button'); b.type = 'button'; b.className = 'entry';
+					var text = document.createElement('div');
+					var t = document.createElement('h3'); t.textContent = e.title;
+					var p = document.createElement('p'); p.className = 'muted';
+					p.textContent = [e.title !== e.phrase ? e.phrase : '', note(e)].filter(Boolean).join('. ');
+					text.appendChild(t); text.appendChild(p);
+					b.appendChild(thumb(e)); b.appendChild(text);
+					clickable(b, e);
+					items.appendChild(b);
+				});
+				li.appendChild(date); li.appendChild(items); list.appendChild(li);
+			});
+			sec.appendChild(list); root.appendChild(sec);
+		});
+	}
+
+	function renderGallery(root) {
+		var grid = document.createElement('div'); grid.className = 'gallery';
+		entries.forEach(function (e) {
+			var b = document.createElement('button'); b.type = 'button'; b.className = 'card';
+			var t = document.createElement('h3'); t.textContent = e.title;
+			var p = document.createElement('p'); p.className = 'muted';
+			p.textContent = [e.longDate, note(e)].filter(Boolean).join('. ');
+			b.appendChild(thumb(e)); b.appendChild(t); b.appendChild(p);
+			clickable(b, e);
+			grid.appendChild(b);
+		});
+		root.appendChild(grid);
+	}
+
+	function renderPhotos(root) {
+		if (!photos.length) { var p = document.createElement('p'); p.className = 'muted'; p.textContent = 'No photographs have been added yet.'; root.appendChild(p); return; }
+		var grid = document.createElement('div'); grid.className = 'photos';
+		photos.forEach(function (ph, i) {
+			var b = document.createElement('button'); b.type = 'button'; b.className = 'photo';
+			b.setAttribute('aria-label', 'Open photo ' + (i + 1) + ' of ' + photos.length);
+			var img = document.createElement('img');
+			img.loading = 'lazy'; img.alt = ''; img.src = HLS + 'photos/' + ph.thumb;
+			img.width = ph.w; img.height = ph.h; // reserves the space before it loads
+			b.appendChild(img);
+			b.addEventListener('click', function () { openPhoto(i); });
+			grid.appendChild(b);
+		});
+		root.appendChild(grid);
+	}
+
+	function render() {
+		var root = $('content'); root.textContent = '';
+		document.querySelectorAll('.views button').forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.view === view)); });
+		({ timeline: renderTimeline, gallery: renderGallery, photos: renderPhotos })[view](root);
+	}
+
+	// ── Photo viewer
+	var photoIndex = 0, lastFocus = null;
+	function showPhoto(i) {
+		photoIndex = (i + photos.length) % photos.length;
+		$('viewer-img').src = HLS + 'photos/' + photos[photoIndex].src;
+		$('viewer-count').textContent = 'Photo ' + (photoIndex + 1) + ' of ' + photos.length;
+		var mark = $('viewer-mark');
+		mark.style.top = (8 + Math.random() * 76) + '%'; mark.style.left = (6 + Math.random() * 58) + '%';
+		[photoIndex + 1, photoIndex - 1].forEach(function (k) { new Image().src = HLS + 'photos/' + photos[(k + photos.length) % photos.length].src; });
+	}
+	function openPhoto(i) {
+		lastFocus = document.activeElement;
+		$('viewer-mark').textContent = session.name + ' · ' + new Date().toLocaleDateString('en-GB');
+		showPhoto(i);
+		$('viewer').hidden = false;
+		document.body.style.overflow = 'hidden';
+		$('viewer-close').focus();
+	}
+	function closePhoto() {
+		$('viewer').hidden = true; $('viewer-img').removeAttribute('src');
+		document.body.style.overflow = '';
+		if (lastFocus) lastFocus.focus();
+	}
+	$('viewer-prev').addEventListener('click', function () { showPhoto(photoIndex - 1); });
+	$('viewer-next').addEventListener('click', function () { showPhoto(photoIndex + 1); });
+	$('viewer-close').addEventListener('click', closePhoto);
+	$('viewer-frame').addEventListener('contextmenu', function (ev) { ev.preventDefault(); });
+	$('viewer-img').addEventListener('dragstart', function (ev) { ev.preventDefault(); });
+	var touchX = null;
+	$('viewer-frame').addEventListener('touchstart', function (ev) { touchX = ev.touches[0].clientX; }, { passive: true });
+	$('viewer-frame').addEventListener('touchend', function (ev) {
+		if (touchX === null) return;
+		var dx = ev.changedTouches[0].clientX - touchX; touchX = null;
+		if (Math.abs(dx) > 40) showPhoto(photoIndex + (dx < 0 ? 1 : -1));
+	});
+	document.querySelectorAll('.views button').forEach(function (b) {
+		b.addEventListener('click', function () { view = b.dataset.view; storeSet('localStorage', VIEW_KEY, view); render(); });
+	});
+
+	// ── Player: HLS only (no single file to save), watermarked with the viewer's name.
+	var video = $('video'), hls = null, playing = null, progressTimer = null, markTimer = null;
+
+	function progressBody() {
+		return { ItemId: playing.itemId, MediaSourceId: playing.mediaSourceId, PlaySessionId: playing.playSessionId,
+			PositionTicks: Math.floor((video.currentTime || 0) * 1e7), IsPaused: video.paused, CanSeek: true, PlayMethod: 'DirectStream' };
+	}
 	function reportProgress() {
-		if (playing && session) api('/Sessions/Playing/Progress', { method: 'POST', body: progressBody({}) }).catch(function () {});
+		if (playing && session) api('/Sessions/Playing/Progress', { method: 'POST', body: progressBody() }).catch(function () {});
 	}
 
-	function play(item, title) {
+	function moveWatermark() {
+		var wm = $('watermark');
+		wm.style.top = (6 + Math.random() * 80) + '%';
+		wm.style.left = (4 + Math.random() * 62) + '%';
+	}
+
+	function play(e) {
 		closePlayer();
-		$('player-title').textContent = title;
+		var item = e.item;
+		$('player-title').textContent = e.title;
+		$('player-date').textContent = e.longDate;
 		$('player-error').textContent = '';
+		$('watermark').textContent = session.name + ' · ' + new Date().toLocaleDateString('en-GB');
+		moveWatermark(); markTimer = setInterval(moveWatermark, 20000);
 		$('player').hidden = false;
 		document.body.style.overflow = 'hidden';
 		$('close').focus();
 
 		var resumeAt = (item.UserData && item.UserData.PlaybackPositionTicks || 0) / 1e7;
-		api('/Items/' + item.Id + '/PlaybackInfo?userId=' + session.userId, {
-			method: 'POST',
-			body: { UserId: session.userId, IsPlayback: true, AutoOpenLiveStream: true, DeviceProfile: deviceProfile() }
-		}).then(function (info) {
-			var src = info.MediaSources && info.MediaSources[0];
-			if (!src) throw new Error('This recording has no playable source.');
-			playing = { itemId: item.Id, mediaSourceId: src.Id, playSessionId: info.PlaySessionId };
-			if (src.SupportsDirectPlay || !src.TranscodingUrl) {
-				attach(SERVER + '/Videos/' + item.Id + '/stream?static=true&MediaSourceId=' + src.Id +
-					'&PlaySessionId=' + info.PlaySessionId + '&ApiKey=' + session.token, false, resumeAt);
-			} else {
-				attach(SERVER + src.TranscodingUrl, true, resumeAt);
-			}
-			api('/Sessions/Playing', { method: 'POST', body: progressBody({ PositionTicks: Math.floor(resumeAt * 1e7) }) }).catch(function () {});
-			progressTimer = setInterval(reportProgress, 15000);
-		}).catch(function (ex) { $('player-error').textContent = ex.message; });
-	}
-
-	function attach(url, isHls, resumeAt) {
-		if (resumeAt > 0) video.addEventListener('loadedmetadata', function seek() {
-			video.removeEventListener('loadedmetadata', seek);
-			video.currentTime = resumeAt;
-		});
-		// Safari / iOS play HLS natively; other browsers use hls.js (Media Source Extensions).
-		if (!isHls || video.canPlayType('application/vnd.apple.mpegurl')) {
-			video.src = url;
-		} else if (window.Hls && Hls.isSupported()) {
-			hls = new Hls();
-			hls.on(Hls.Events.ERROR, function (_, d) { if (d.fatal) $('player-error').textContent = 'Playback error (' + d.details + ').'; });
+		var url = HLS + e.slug + '/master.m3u8';
+		// Start on the light rendition and let the player step up when there's room:
+		// ~100 people share this server's upload.
+		if (window.Hls && Hls.isSupported()) {
+			hls = new Hls({ startLevel: 0, startPosition: resumeAt > 0 ? resumeAt : -1, maxBufferLength: 30, maxMaxBufferLength: 60 });
+			hls.on(Hls.Events.ERROR, function (_, d) {
+				if (!d.fatal) return;
+				if (d.response && (d.response.code === 401 || d.response.code === 404)) { signOut(true); return; }
+				$('player-error').textContent = 'Playback stopped (' + d.details + '). Close and press play to try again.';
+			});
 			hls.loadSource(url);
 			hls.attachMedia(video);
+		} else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+			video.src = url;
+			if (resumeAt > 0) video.addEventListener('loadedmetadata', function seek() { video.removeEventListener('loadedmetadata', seek); video.currentTime = resumeAt; });
 		} else {
-			$('player-error').textContent = 'This browser can’t play streaming video.';
+			$('player-error').textContent = 'This browser can’t play these recordings. Try a current version of Chrome, Safari, Edge, or Firefox.';
 			return;
 		}
-		video.play().catch(function () {}); // autoplay may be blocked; controls remain available
-	}
+		video.play().catch(function () {}); // autoplay may be blocked; the controls stay available
 
-	video.addEventListener('pause', reportProgress);
+		// Jellyfin keeps the viewing position so "Continue watching" works on every device.
+		api('/Items/' + item.Id + '/PlaybackInfo?userId=' + session.userId, { method: 'POST', body: { UserId: session.userId, IsPlayback: false } })
+			.then(function (info) {
+				playing = { itemId: item.Id, mediaSourceId: (info.MediaSources && info.MediaSources[0] || {}).Id || item.Id, playSessionId: info.PlaySessionId };
+				api('/Sessions/Playing', { method: 'POST', body: progressBody() }).catch(function () {});
+				progressTimer = setInterval(reportProgress, 15000);
+			}).catch(function () {});
+	}
 
 	function closePlayer() {
 		clearInterval(progressTimer); progressTimer = null;
-		var wasPlaying = playing;
-		if (wasPlaying && session) {
-			// Saves the resume position and stops any server-side transcode for this session.
-			api('/Sessions/Playing/Stopped', { method: 'POST', keepalive: true, body: progressBody({}) })
+		clearInterval(markTimer); markTimer = null;
+		if (document.fullscreenElement) document.exitFullscreen().catch(function () {});
+		if (playing && session) {
+			api('/Sessions/Playing/Stopped', { method: 'POST', keepalive: true, body: progressBody() })
 				.then(function () { if (!$('library-view').hidden) openLibrary(); })
 				.catch(function () {});
 		}
@@ -387,10 +675,32 @@
 		document.body.style.overflow = '';
 	}
 
+	// Full screen goes on the stage, not the <video>, so the watermark stays on top.
+	// iPhone only allows native video full screen, where the watermark can't follow.
+	var stage = $('stage');
+	function toggleFullscreen() {
+		if (document.fullscreenElement) { document.exitFullscreen().catch(function () {}); return; }
+		if (stage.requestFullscreen) stage.requestFullscreen().catch(function () {});
+		else if (stage.webkitRequestFullscreen) stage.webkitRequestFullscreen();
+		else if (video.webkitEnterFullscreen) video.webkitEnterFullscreen();
+	}
+	$('fullscreen').addEventListener('click', toggleFullscreen);
+	video.addEventListener('dblclick', function (ev) { ev.preventDefault(); toggleFullscreen(); });
+	stage.addEventListener('contextmenu', function (ev) { ev.preventDefault(); });
+	video.addEventListener('pause', reportProgress);
+
 	$('close').addEventListener('click', closePlayer);
-	document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !$('player').hidden) closePlayer(); });
+	document.addEventListener('keydown', function (ev) {
+		if (!$('viewer').hidden) {
+			if (ev.key === 'Escape') closePhoto();
+			else if (ev.key === 'ArrowRight') showPhoto(photoIndex + 1);
+			else if (ev.key === 'ArrowLeft') showPhoto(photoIndex - 1);
+			return;
+		}
+		if (ev.key === 'Escape' && !$('player').hidden && !document.fullscreenElement) closePlayer();
+	});
 	window.addEventListener('pagehide', function () {
-		if (playing && session) api('/Sessions/Playing/Stopped', { method: 'POST', keepalive: true, body: progressBody({}) }).catch(function () {});
+		if (playing && session) api('/Sessions/Playing/Stopped', { method: 'POST', keepalive: true, body: progressBody() }).catch(function () {});
 	});
 
 	// ── Boot

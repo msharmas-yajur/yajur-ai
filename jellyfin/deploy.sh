@@ -21,6 +21,16 @@ mkdir -p "$DEST/kodai1994/site"
 find "$DEST/kodai1994/site" -mindepth 1 -delete
 cp -r "$HERE/kodai1994/site/." "$DEST/kodai1994/site/"
 
+# Kodai 1994 processing pipeline: scripts + systemd user service (runs until all
+# videos are converted and packaged; resumes after reboot).
+mkdir -p "$DEST/kodai1994/bin" "$HOME/.config/systemd/user"
+install -m 755 "$HERE/kodai1994/transcode.sh" "$HERE/kodai1994/package-hls.sh" "$HERE/kodai1994/process.sh" "$DEST/kodai1994/bin/"
+install -m 644 "$HERE/kodai1994/kodai1994-processing.service" "$HOME/.config/systemd/user/"
+systemctl --user daemon-reload
+systemctl --user enable kodai1994-processing.service >/dev/null 2>&1
+# start is a no-op while it's running; restart it by hand to pick up script changes.
+systemctl --user start kodai1994-processing.service
+
 if [ ! -f "$DEST/.env" ]; then
   install -m 600 "$HERE/.env.example" "$DEST/.env"
   echo "Created $DEST/.env from .env.example — fill it in, then re-run." >&2

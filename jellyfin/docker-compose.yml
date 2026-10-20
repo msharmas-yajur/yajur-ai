@@ -29,6 +29,13 @@ services:
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - ./kodai1994/site:/srv/kodai1994:ro
+      # HLS output of kodai1994/package-hls.sh, plus the backdrop photo (members only)
+      - "${MEDIA_DIR}/kodai1994-hls:/srv/kodai1994-hls:ro"
+      # logo + favicon (public; kept out of the repository)
+      - "${MEDIA_DIR}/kodai1994-brand:/srv/kodai1994-brand:ro"
+    environment:
+      # Jellyfin ItemId of the "Kodai 1994" library; HLS access is checked against it
+      - KODAI_LIBRARY_ID=${KODAI_LIBRARY_ID}
     depends_on:
       - jellyfin
     restart: unless-stopped

@@ -9,13 +9,16 @@
 #   DEST Jellyfin library folder (served read-only at /media/kodai1994)
 #
 # Usage: jellyfin/kodai1994/transcode.sh [SRC] [DEST]
+#   JOBS=n   videos encoded at once (default 1: one at a time keeps the machine responsive)
+#   LIMIT=n  convert at most n videos that aren't done yet, then stop (default: all)
 # Safe to re-run: finished files are skipped; partial output is written as
 # ".name.part" (ignored by Jellyfin) and renamed only when ffmpeg succeeds.
 set -euo pipefail
 
 SRC=${1:-"$HOME/Downloads/Kodai - 1994"}
 DEST=${2:-"$HOME/media/kodai1994"}
-JOBS=${JOBS:-4}
+JOBS=${JOBS:-1}
+LIMIT=${LIMIT:-0}
 mkdir -p "$DEST"
 
 # source file (without "Kodai - " prefix)  |  published title
@@ -65,7 +68,11 @@ while IFS='|' read -r file _; do
   [ -f "$SRC/Kodai - $file" ] || { echo "MISSING: $SRC/Kodai - $file" >&2; exit 1; }
 done <<<"$MAP"
 
+todo=0
 while IFS='|' read -r file title; do
+  [ -s "$DEST/$title.mp4" ] && continue
+  [ "$LIMIT" -gt 0 ] && [ "$todo" -ge "$LIMIT" ] && break
+  todo=$((todo + 1))
   printf '%s\0%s\0' "$SRC/Kodai - $file" "$title"
 done <<<"$MAP" | xargs -0 -n 2 -P "$JOBS" bash -c 'convert "$1" "$2" "'"$DEST"'"' _
 

@@ -1,7 +1,10 @@
 # Gateway for https://videos.yajur.ai (cloudflared → gateway:80)
-#   /kodai1994/  Kodai 1994 collection page (static; signs in against Jellyfin on this origin)
-#   /            redirects members to the collection; Jellyfin's own UI stays at /web/
-#   everything else → Jellyfin (API, images, streams), so yajur.ai/videos/ keeps working
+#   /kodai1994/       Kodai 1994 collection page (static; signs in against Jellyfin)
+#   /kodai1994/hls/   the collection's HLS streams, thumbnails, and backdrop: members only
+#   /                 redirects to the collection
+#   everything else → Jellyfin API (sign-in, listings, progress), minus playback/download
+#
+# `route` keeps the blocks below in the order written (Caddy would otherwise sort them).
 
 {
 	admin off
@@ -9,41 +12,68 @@
 }
 
 :80 {
-	# Unlisted: links are shared privately, so nothing on this host may be indexed
-	# (Jellyfin's own pages included).
-	header X-Robots-Tag "noindex, nofollow, noarchive"
-	handle /robots.txt {
-		respond "User-agent: *
+	route {
+		# Unlisted: links are shared privately, so nothing on this host may be indexed.
+		header X-Robots-Tag "noindex, nofollow, noarchive"
+		handle /robots.txt {
+			respond "User-agent: *
 Disallow: /
 " 200
-	}
-
-	redir / /kodai1994/ 302
-	redir /kodai1994 /kodai1994/ 308
-
-	handle_path /kodai1994/* {
-		root * /srv/kodai1994
-		file_server
-		header {
-			Cache-Control "no-cache"
-			X-Frame-Options "DENY"
-			X-Content-Type-Options "nosniff"
-			Referrer-Policy "same-origin"
 		}
-	}
 
-	# Jellyfin serves media by item ID without checking the caller (its OpenAPI marks
-	# /Videos/{id}/stream, /Audio/{id}/stream, subtitles, attachments, and item images
-	# as anonymous), and item IDs are derived from file paths, so they can be guessed.
-	# Require a valid Jellyfin token for all of them: the token comes from the
-	# Authorization header or the ApiKey/api_key query parameter, and /Users/Me only
-	# answers 200 when it is valid. Case-insensitive because Jellyfin's routes are.
-	@media path_regexp media (?i)^/+(videos|audio|livetv)/|^/+items/[^/]+/images/
-	forward_auth @media jellyfin:8096 {
-		uri /Users/Me?{query}
-	}
+		# No public playback or download through Jellyfin. Its stream endpoints hand out
+		# the whole file (and are anonymous in 12.2, by guessable item ID); members watch
+		# the HLS copies below instead. Its web UI is for the admin, on 127.0.0.1:8099.
+		# Case-insensitive because Jellyfin's routes are.
+		@blocked path_regexp blocked (?i)^/+(videos|audio|livetv|web)(/|$)|^/+items/[^/]+/(download|file)(/|$)
+		handle @blocked {
+			respond 404
+		}
 
-	handle {
+		redir / /kodai1994/ 302
+		redir /kodai1994 /kodai1994/ 308
+
+		# HLS playlists/segments, thumbnails, and the backdrop photo. A request passes only
+		# if the kodai_auth cookie (set by the page at sign-in, scoped to this path) holds
+		# a Jellyfin token whose user can see the Kodai 1994 library: GET /Items/<library>
+		# answers 200 for such a user, 404 for other users, 401 for bad tokens.
+		# no-store keeps Cloudflare (and browsers) from caching members-only bytes.
+		handle_path /kodai1994/hls/* {
+			forward_auth jellyfin:8096 {
+				uri /Items/{$KODAI_LIBRARY_ID}
+				header_up Authorization `MediaBrowser Token="{http.request.cookie.kodai_auth}"`
+			}
+			header Cache-Control "private, no-store"
+			root * /srv/kodai1994-hls
+			file_server
+		}
+
+		# Logo and favicon: public, because the sign-in page shows them. Kept out of the
+		# repository (third-party emblem), in MEDIA_DIR/kodai1994-brand.
+		handle_path /kodai1994/brand/* {
+			header Cache-Control "public, max-age=86400"
+			root * /srv/kodai1994-brand
+			file_server
+		}
+
+		handle_path /kodai1994/* {
+			root * /srv/kodai1994
+			file_server
+			header {
+				Cache-Control "no-cache"
+				X-Frame-Options "DENY"
+				X-Content-Type-Options "nosniff"
+				Referrer-Policy "same-origin"
+			}
+		}
+
+		# Item images are anonymous in Jellyfin 12.2 too; require a valid token
+		# (Authorization header or ApiKey= query) for them and any other media path.
+		@media path_regexp media (?i)^/+items/[^/]+/images/
+		forward_auth @media jellyfin:8096 {
+			uri /Users/Me?{query}
+		}
+
 		reverse_proxy jellyfin:8096 {
 			# Requests only arrive through the tunnel, so Cloudflare's header is the real
 			# client IP. Jellyfin needs it for per-client login lockout and its logs.
