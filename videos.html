@@ -1,0 +1,323 @@
+---
+layout: default
+title: "Video Library"
+description: "Private Yajur.ai video library — sign in to watch."
+permalink: /videos/
+robots: "noindex, nofollow"
+sitemap: false
+copilot: false
+---
+
+<style>
+	.vl { max-width: 1200px; margin: 0 auto; padding: 48px 16px 96px; font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+	.vl[hidden], .vl [hidden] { display: none !important; }
+	.vl h1 { font-family: Georgia, 'Times New Roman', serif; font-weight: 400; font-size: clamp(2rem, 5vw, 3rem); margin: 0 0 8px; }
+	.vl__muted { color: #5e5d59; font-size: 0.95rem; }
+	.vl__error { color: #a8321c; font-size: 0.9rem; min-height: 1.4em; margin: 12px 0 0; }
+
+	/* Sign-in */
+	.vl-login { max-width: 420px; margin: 24px auto 0; background: #f0eee6; border-radius: 24px; padding: 32px 28px; }
+	.vl-login label { display: block; font-size: 0.85rem; font-weight: 600; margin: 16px 0 6px; }
+	.vl-login input[type=text], .vl-login input[type=password] { width: 100%; font: inherit; font-size: 1rem; padding: 12px 14px; border: 1px solid #d6d3c8; border-radius: 12px; background: #faf9f5; color: #010101; }
+	.vl-login input:focus { outline: 2px solid #d97757; outline-offset: 1px; }
+	.vl-login__remember { display: flex !important; align-items: center; gap: 8px; font-weight: 400 !important; }
+	.vl-btn { font: inherit; font-size: 0.95rem; font-weight: 600; border: 0; border-radius: 999px; padding: 12px 22px; cursor: pointer; background: #010101; color: #faf9f5; }
+	.vl-btn:disabled { opacity: 0.5; cursor: wait; }
+	.vl-btn--ghost { background: transparent; color: #010101; border: 1px solid #c9c6ba; padding: 8px 16px; }
+	.vl-login .vl-btn { width: 100%; margin-top: 24px; }
+
+	/* Library */
+	.vl-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin: 24px 0; }
+	.vl-bar input[type=search] { flex: 1 1 220px; font: inherit; font-size: 1rem; padding: 10px 14px; border: 1px solid #d6d3c8; border-radius: 999px; background: #faf9f5; }
+	.vl-bar select { font: inherit; font-size: 0.9rem; padding: 9px 12px; border: 1px solid #d6d3c8; border-radius: 999px; background: #faf9f5; }
+	.vl-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 24px; }
+	.vl-card { display: block; width: 100%; text-align: left; font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+	.vl-card__thumb { position: relative; aspect-ratio: 16 / 9; border-radius: 16px; overflow: hidden; background: #e4e1d6; }
+	.vl-card__thumb img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .25s ease; }
+	.vl-card:hover .vl-card__thumb img, .vl-card:focus-visible .vl-card__thumb img { transform: scale(1.04); }
+	.vl-card:focus-visible { outline: 2px solid #d97757; outline-offset: 4px; border-radius: 16px; }
+	.vl-card__time { position: absolute; right: 8px; bottom: 8px; background: rgba(1,1,1,.75); color: #fff; font-size: 0.75rem; padding: 2px 8px; border-radius: 999px; }
+	.vl-card__title { font-weight: 600; font-size: 1rem; margin: 10px 2px 2px; line-height: 1.35; }
+
+	/* Player */
+	.vl-player { position: fixed; inset: 0; z-index: 10000; background: rgba(1,1,1,.92); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 16px; }
+	.vl-player__inner { width: 100%; max-width: 1200px; }
+	.vl-player__head { display: flex; justify-content: space-between; align-items: center; gap: 12px; color: #faf9f5; margin-bottom: 12px; }
+	.vl-player__head h2 { font-family: Georgia, serif; font-weight: 400; font-size: 1.25rem; margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+	.vl-player video { width: 100%; max-height: 80vh; background: #000; border-radius: 12px; }
+	.vl-player .vl-btn--ghost { color: #faf9f5; border-color: rgba(250,249,245,.4); flex-shrink: 0; }
+	.vl-player .vl__error { color: #f3a48a; }
+</style>
+
+<section class="vl" id="vl" data-server="{{ site.jellyfin_url }}">
+	<!-- Sign-in -->
+	<div id="vl-login-view" hidden>
+		<h1 style="text-align:center">Video Library</h1>
+		<p class="vl__muted" style="text-align:center">Private to invited members. Sign in with the account you were given.</p>
+		<form class="vl-login" id="vl-login-form" autocomplete="on">
+			<label for="vl-user">Username</label>
+			<input type="text" id="vl-user" name="username" autocomplete="username" autocapitalize="none" spellcheck="false" required>
+			<label for="vl-pass">Password</label>
+			<input type="password" id="vl-pass" name="password" autocomplete="current-password" required>
+			<label class="vl-login__remember"><input type="checkbox" id="vl-remember"> Keep me signed in on this device</label>
+			<button class="vl-btn" type="submit" id="vl-login-btn">Sign in</button>
+			<p class="vl__error" id="vl-login-error" role="alert"></p>
+		</form>
+	</div>
+
+	<!-- Library -->
+	<div id="vl-library-view" hidden>
+		<div style="display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap">
+			<div>
+				<h1>Video Library</h1>
+				<p class="vl__muted" id="vl-greeting"></p>
+			</div>
+			<button class="vl-btn vl-btn--ghost" id="vl-logout" type="button">Sign out</button>
+		</div>
+		<div class="vl-bar">
+			<input type="search" id="vl-search" placeholder="Search videos" aria-label="Search videos">
+			<select id="vl-sort" aria-label="Sort">
+				<option value="DateCreated:Descending">Newest first</option>
+				<option value="SortName:Ascending">Title A–Z</option>
+			</select>
+			<select id="vl-quality" aria-label="Streaming quality">
+				<option value="20000000">Auto (best)</option>
+				<option value="8000000">High · 8 Mbps</option>
+				<option value="3000000">Medium · 3 Mbps</option>
+				<option value="1500000">Data saver · 1.5 Mbps</option>
+			</select>
+		</div>
+		<p class="vl__muted" id="vl-status" aria-live="polite"></p>
+		<div class="vl-grid" id="vl-grid"></div>
+	</div>
+
+	<!-- Player -->
+	<div class="vl-player" id="vl-player" hidden role="dialog" aria-modal="true" aria-labelledby="vl-player-title">
+		<div class="vl-player__inner">
+			<div class="vl-player__head">
+				<h2 id="vl-player-title"></h2>
+				<button class="vl-btn vl-btn--ghost" id="vl-close" type="button">Close</button>
+			</div>
+			<video id="vl-video" controls playsinline preload="metadata"></video>
+			<p class="vl__error" id="vl-player-error" role="alert"></p>
+		</div>
+	</div>
+</section>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.6.16/hls.min.js"></script>
+<script>
+(function () {
+	'use strict';
+
+	var root = document.getElementById('vl');
+	var SERVER = (root.dataset.server || '').replace(/\/+$/, '');
+	var CLIENT = 'Yajur Videos', VERSION = '1.0.0', STORE_KEY = 'yajur-videos-session';
+	var $ = function (id) { return document.getElementById(id); };
+
+	// ── Storage (wrapped: private windows / blocked storage must not break the page)
+	function storeGet(store, key) { try { return window[store].getItem(key); } catch (e) { return null; } }
+	function storeSet(store, key, val) { try { window[store].setItem(key, val); } catch (e) {} }
+	function storeDel(store, key) { try { window[store].removeItem(key); } catch (e) {} }
+
+	var deviceId = storeGet('localStorage', 'yajur-videos-device');
+	if (!deviceId) {
+		deviceId = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(16).slice(2);
+		storeSet('localStorage', 'yajur-videos-device', deviceId);
+	}
+
+	var session = null; // { token, userId, name }
+	try { session = JSON.parse(storeGet('sessionStorage', STORE_KEY) || storeGet('localStorage', STORE_KEY) || 'null'); } catch (e) {}
+
+	// ── Jellyfin API
+	function authHeader() {
+		var h = 'MediaBrowser Client="' + CLIENT + '", Device="' + (navigator.platform || 'Browser').replace(/"/g, '') +
+			'", DeviceId="' + deviceId + '", Version="' + VERSION + '"';
+		return session ? h + ', Token="' + session.token + '"' : h;
+	}
+
+	function api(path, opts) {
+		opts = opts || {};
+		var headers = { 'Authorization': authHeader() };
+		if (opts.body) headers['Content-Type'] = 'application/json';
+		return fetch(SERVER + path, { method: opts.method || 'GET', headers: headers, body: opts.body ? JSON.stringify(opts.body) : undefined })
+			.then(function (res) {
+				if (res.status === 401 && session) { signOut(true); throw new Error('Your session has expired. Please sign in again.'); }
+				if (!res.ok) throw new Error('Server responded ' + res.status);
+				return res.status === 204 ? null : res.json();
+			});
+	}
+
+	// Browser capabilities: H.264/AAC MP4 plays directly everywhere; anything else
+	// (MKV, HEVC, AC3, …) is transcoded by Jellyfin to adaptive HLS.
+	function deviceProfile(maxBitrate) {
+		return {
+			MaxStreamingBitrate: maxBitrate,
+			DirectPlayProfiles: [{ Type: 'Video', Container: 'mp4,m4v', VideoCodec: 'h264', AudioCodec: 'aac,mp3' }],
+			TranscodingProfiles: [{ Type: 'Video', Container: 'ts', Protocol: 'hls', VideoCodec: 'h264', AudioCodec: 'aac', Context: 'Streaming', MaxAudioChannels: '2', MinSegments: 1, BreakOnNonKeyFrames: true }],
+			ContainerProfiles: [], CodecProfiles: [],
+			SubtitleProfiles: [{ Format: 'vtt', Method: 'External' }]
+		};
+	}
+
+	// ── Views
+	function show(view) {
+		$('vl-login-view').hidden = view !== 'login';
+		$('vl-library-view').hidden = view !== 'library';
+	}
+
+	function signOut(expired) {
+		if (session && !expired) api('/Sessions/Logout', { method: 'POST' }).catch(function () {});
+		session = null;
+		storeDel('sessionStorage', STORE_KEY);
+		storeDel('localStorage', STORE_KEY);
+		$('vl-grid').textContent = '';
+		closePlayer();
+		show('login');
+	}
+
+	$('vl-login-form').addEventListener('submit', function (e) {
+		e.preventDefault();
+		var btn = $('vl-login-btn'), err = $('vl-login-error');
+		btn.disabled = true; err.textContent = '';
+		session = null;
+		api('/Users/AuthenticateByName', { method: 'POST', body: { Username: $('vl-user').value.trim(), Pw: $('vl-pass').value } })
+			.then(function (r) {
+				session = { token: r.AccessToken, userId: r.User.Id, name: r.User.Name };
+				storeSet($('vl-remember').checked ? 'localStorage' : 'sessionStorage', STORE_KEY, JSON.stringify(session));
+				$('vl-pass').value = '';
+				openLibrary();
+			})
+			.catch(function (ex) {
+				err.textContent = /401/.test(ex.message) ? 'Incorrect username or password.'
+					: (ex instanceof TypeError ? 'Can’t reach the video server. Please try again later.' : ex.message);
+			})
+			.then(function () { btn.disabled = false; });
+	});
+
+	$('vl-logout').addEventListener('click', function () { signOut(false); });
+
+	// ── Library
+	var searchTimer;
+	function openLibrary() {
+		show('library');
+		$('vl-greeting').textContent = 'Signed in as ' + session.name;
+		loadItems();
+	}
+
+	function loadItems() {
+		var sort = $('vl-sort').value.split(':'), q = $('vl-search').value.trim();
+		$('vl-status').textContent = 'Loading…';
+		var params = 'userId=' + session.userId + '&Recursive=true&IncludeItemTypes=Movie,Video,Episode,MusicVideo' +
+			'&Fields=Overview&EnableImageTypes=Primary,Thumb&ImageTypeLimit=1&Limit=500' +
+			'&SortBy=' + sort[0] + '&SortOrder=' + sort[1] + (q ? '&searchTerm=' + encodeURIComponent(q) : '');
+		api('/Items?' + params).then(function (r) {
+			renderGrid(r.Items || []);
+			$('vl-status').textContent = r.Items && r.Items.length ? '' : (q ? 'No videos match “' + q + '”.' : 'No videos yet.');
+		}).catch(function (ex) { $('vl-status').textContent = ex.message; });
+	}
+
+	function fmtDuration(ticks) {
+		if (!ticks) return '';
+		var s = Math.round(ticks / 1e7), h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), sec = s % 60;
+		var mm = h ? String(m).padStart(2, '0') : String(m);
+		return (h ? h + ':' : '') + mm + ':' + String(sec).padStart(2, '0');
+	}
+
+	function renderGrid(items) {
+		var grid = $('vl-grid');
+		grid.textContent = '';
+		items.forEach(function (item) {
+			var card = document.createElement('button');
+			card.type = 'button'; card.className = 'vl-card';
+			var thumb = document.createElement('div'); thumb.className = 'vl-card__thumb';
+			var tag = item.ImageTags && item.ImageTags.Primary;
+			if (tag) {
+				var img = document.createElement('img');
+				img.loading = 'lazy'; img.alt = '';
+				img.src = SERVER + '/Items/' + item.Id + '/Images/Primary?maxWidth=480&quality=85&tag=' + tag + '&ApiKey=' + session.token;
+				thumb.appendChild(img);
+			}
+			var dur = fmtDuration(item.RunTimeTicks);
+			if (dur) { var t = document.createElement('span'); t.className = 'vl-card__time'; t.textContent = dur; thumb.appendChild(t); }
+			var title = document.createElement('div'); title.className = 'vl-card__title'; title.textContent = item.Name;
+			card.appendChild(thumb); card.appendChild(title);
+			card.addEventListener('click', function () { play(item); });
+			grid.appendChild(card);
+		});
+	}
+
+	$('vl-search').addEventListener('input', function () { clearTimeout(searchTimer); searchTimer = setTimeout(loadItems, 300); });
+	$('vl-sort').addEventListener('change', loadItems);
+
+	// ── Player
+	var video = $('vl-video'), hls = null, playing = null; // playing: { itemId, mediaSourceId, playSessionId }
+
+	function play(item) {
+		closePlayer();
+		var bitrate = parseInt($('vl-quality').value, 10);
+		$('vl-player-title').textContent = item.Name;
+		$('vl-player-error').textContent = '';
+		$('vl-player').hidden = false;
+		document.body.style.overflow = 'hidden';
+		$('vl-close').focus();
+
+		api('/Items/' + item.Id + '/PlaybackInfo?userId=' + session.userId, {
+			method: 'POST',
+			body: { UserId: session.userId, MaxStreamingBitrate: bitrate, IsPlayback: true, AutoOpenLiveStream: true, DeviceProfile: deviceProfile(bitrate) }
+		}).then(function (info) {
+			var src = info.MediaSources && info.MediaSources[0];
+			if (!src) throw new Error('This video has no playable source.');
+			playing = { itemId: item.Id, mediaSourceId: src.Id, playSessionId: info.PlaySessionId };
+
+			if (src.SupportsDirectPlay || !src.TranscodingUrl) {
+				attach(SERVER + '/Videos/' + item.Id + '/stream?static=true&MediaSourceId=' + src.Id +
+					'&PlaySessionId=' + info.PlaySessionId + '&ApiKey=' + session.token, false);
+			} else {
+				attach(SERVER + src.TranscodingUrl, true);
+			}
+			api('/Sessions/Playing', { method: 'POST', body: { ItemId: item.Id, MediaSourceId: src.Id, PlaySessionId: info.PlaySessionId } }).catch(function () {});
+		}).catch(function (ex) { $('vl-player-error').textContent = ex.message; });
+	}
+
+	function attach(url, isHls) {
+		// Safari / iOS play HLS natively; other browsers use hls.js (Media Source Extensions).
+		if (!isHls || video.canPlayType('application/vnd.apple.mpegurl')) {
+			video.src = url;
+		} else if (window.Hls && Hls.isSupported()) {
+			hls = new Hls();
+			hls.on(Hls.Events.ERROR, function (_, d) {
+				if (d.fatal) $('vl-player-error').textContent = 'Playback error (' + d.details + '). Try a lower quality.';
+			});
+			hls.loadSource(url);
+			hls.attachMedia(video);
+		} else {
+			$('vl-player-error').textContent = 'This browser can’t play streaming video.';
+			return;
+		}
+		video.play().catch(function () {}); // autoplay may be blocked; controls remain available
+	}
+
+	function closePlayer() {
+		var position = Math.floor((video.currentTime || 0) * 1e7);
+		if (hls) { hls.destroy(); hls = null; }
+		video.pause(); video.removeAttribute('src'); video.load();
+		if (playing && session) {
+			// Tells Jellyfin to stop any transcode for this session, freeing CPU on the server.
+			api('/Sessions/Playing/Stopped', { method: 'POST', body: {
+				ItemId: playing.itemId, MediaSourceId: playing.mediaSourceId, PlaySessionId: playing.playSessionId,
+				PositionTicks: position
+			} }).catch(function () {});
+		}
+		playing = null;
+		$('vl-player').hidden = true;
+		document.body.style.overflow = '';
+	}
+
+	$('vl-close').addEventListener('click', closePlayer);
+	document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !$('vl-player').hidden) closePlayer(); });
+
+	// ── Boot
+	if (!SERVER) { show('login'); $('vl-login-error').textContent = 'Video server is not configured.'; $('vl-login-btn').disabled = true; return; }
+	if (session) openLibrary(); else show('login');
+})();
+</script>
