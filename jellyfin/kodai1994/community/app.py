@@ -29,8 +29,10 @@ Routes (JSON):
   POST   /people                   {name}  add a name; 409 with the existing entry if already listed
   PUT    /people/<id>              {name}  rename (admin)
   DELETE /people/<id>              remove (admin, or the member who added it)
-  POST   /markers                  {target, kind: chapter|event, title, position}
-  PUT    /markers/<id>             {title?, position?, kind?}  own marker, or any for the admin
+  POST   /markers                  chapter: {target, kind: "chapter", title, position}
+                                   event:   {target, kind: "event", people: [person ids], position}
+                                   (an event's name is its people's names, comma-separated)
+  PUT    /markers/<id>             {title?, people?, position?, kind?}  own marker, or any for the admin
   DELETE /markers/<id>             own marker, or any for the admin
   POST   /access-requests          {name, email, message?}    public: the sign-in page's form
   GET    /admin/requests           pending requests (admin)
@@ -164,6 +166,13 @@ CREATE TABLE IF NOT EXISTS people (
     deleted_at  TEXT
 );
 CREATE UNIQUE INDEX IF NOT EXISTS people_by_key ON people (name_key) WHERE deleted_at IS NULL;
+CREATE TABLE IF NOT EXISTS marker_people (   -- who is tagged in an event, in the order they were added
+    marker_id   INTEGER NOT NULL,
+    person_id   INTEGER NOT NULL,
+    ord         INTEGER NOT NULL,
+    PRIMARY KEY (marker_id, person_id)
+);
+CREATE INDEX IF NOT EXISTS marker_people_by_person ON marker_people (person_id);
 CREATE TABLE IF NOT EXISTS access_requests (
     id          INTEGER PRIMARY KEY,
     name        TEXT NOT NULL,
@@ -384,24 +393,47 @@ class Handler(BaseHTTPRequestHandler):
             raise ApiError(409, "Choose the name others will see before adding.")
 
     @staticmethod
-    def marker_fields(data, partial=False):
-        out = {}
-        if "kind" in data or not partial:
-            kind = str(data.get("kind", ""))
-            if kind not in ("chapter", "event"):
-                raise ApiError(400, "Choose Chapter or Event.")
-            out["kind"] = kind
-        if "title" in data or not partial:
-            title = clean(data.get("title"), 100)
-            if len(title) < 2:
-                raise ApiError(400, "Give it a short title, at least 2 characters.")
-            out["title"] = title
-        if "position" in data or not partial:
-            pos = data.get("position")
-            if not isinstance(pos, (int, float)) or not 0 <= pos < 86400:
-                raise ApiError(400, "Enter a time within the recording, like 1:02:10.")
-            out["position_s"] = int(pos)
-        return out
+    def chapter_title(data):
+        title = clean(data.get("title"), 100)
+        if len(title) < 2:
+            raise ApiError(400, "Give the chapter a short title, at least 2 characters.")
+        return title
+
+    @staticmethod
+    def position(data):
+        pos = data.get("position")
+        if not isinstance(pos, (int, float)) or not 0 <= pos < 86400:
+            raise ApiError(400, "Enter a time within the recording, like 1:02:10.")
+        return int(pos)
+
+    @staticmethod
+    def tagged_people(data):
+        """Validated person rows for an event, in the order given."""
+        ids = data.get("people")
+        if not isinstance(ids, list) or not ids:
+            raise ApiError(400, "Tag at least one person who appears at this moment.")
+        if len(ids) > 20:
+            raise ApiError(400, "Tag at most 20 people in one event.")
+        seen, rows = set(), []
+        for i in ids:
+            if not isinstance(i, int) or i in seen:
+                raise ApiError(400, "That list of people isn't valid. Reload the page and try again.")
+            seen.add(i)
+            r = query("SELECT id, name FROM people WHERE id = ? AND deleted_at IS NULL", (i,))
+            if not r:
+                raise ApiError(400, "Someone you tagged was removed from the People list. Reload the page and try again.")
+            rows.append(r[0])
+        return rows
+
+    @staticmethod
+    def event_title(rows):
+        return ", ".join(r["name"] for r in rows)[:500]
+
+    @staticmethod
+    def link_people(mid, rows):
+        execute("DELETE FROM marker_people WHERE marker_id = ?", (mid,))
+        for i, r in enumerate(rows):
+            execute("INSERT INTO marker_people (marker_id, person_id, ord) VALUES (?, ?, ?)", (mid, r["id"], i))
 
     def get_markers(self, params):
         who = self.member()
@@ -412,9 +444,21 @@ class Handler(BaseHTTPRequestHandler):
                      "COALESCE(p.display_name, p.username, 'Member') AS author "
                      "FROM markers m LEFT JOIN profiles p ON p.user_id = m.user_id "
                      "WHERE m.target = ? AND m.deleted_at IS NULL ORDER BY m.position_s, m.id", (target,))
-        return 200, [{"id": r["id"], "kind": r["kind"], "title": r["title"], "position": r["position_s"],
-                      "author": r["author"], "createdAt": r["created_at"], "mine": r["user_id"] == who["id"],
-                      "canEdit": r["user_id"] == who["id"] or who["isAdmin"]} for r in rows]
+        tags = {}
+        for t in query("SELECT mp.marker_id, pe.id, pe.name FROM marker_people mp "
+                       "JOIN people pe ON pe.id = mp.person_id AND pe.deleted_at IS NULL "
+                       "JOIN markers m ON m.id = mp.marker_id AND m.target = ? AND m.deleted_at IS NULL "
+                       "ORDER BY mp.marker_id, mp.ord", (target,)):
+            tags.setdefault(t["marker_id"], []).append({"id": t["id"], "name": t["name"]})
+        out = []
+        for r in rows:
+            people = tags.get(r["id"], [])
+            # Events show their people's current names, so renames on the People list carry through.
+            title = ", ".join(x["name"] for x in people) if (r["kind"] == "event" and people) else r["title"]
+            out.append({"id": r["id"], "kind": r["kind"], "title": title, "people": people, "position": r["position_s"],
+                        "author": r["author"], "createdAt": r["created_at"], "mine": r["user_id"] == who["id"],
+                        "canEdit": r["user_id"] == who["id"] or who["isAdmin"]})
+        return 200, out
 
     def get_marker_counts(self, params):
         self.member()
@@ -429,12 +473,19 @@ class Handler(BaseHTTPRequestHandler):
         target = str(data.get("target", ""))
         if not VIDEO_TARGET.match(target):
             raise ApiError(400, "Unknown video.")
-        f = self.marker_fields(data)
+        kind = str(data.get("kind", ""))
+        if kind not in ("chapter", "event"):
+            raise ApiError(400, "Choose Chapter or Event.")
+        pos = self.position(data)
+        people = self.tagged_people(data) if kind == "event" else None
+        title = self.event_title(people) if people else self.chapter_title(data)
         self.need_name(who)
         if not allow(("marker", who["id"]), 20, 60):
             raise ApiError(429, "You're adding quickly. Wait a minute and try again.")
         mid = execute("INSERT INTO markers (target, user_id, kind, title, position_s, created_at) VALUES (?, ?, ?, ?, ?, ?)",
-                      (target, who["id"], f["kind"], f["title"], f["position_s"], now()))
+                      (target, who["id"], kind, title, pos, now()))
+        if people:
+            self.link_people(mid, people)
         return 201, {"id": mid}
 
     def own_marker(self, who, mid):
@@ -446,11 +497,26 @@ class Handler(BaseHTTPRequestHandler):
 
     def put_marker(self, params, mid):
         who = self.member()
-        f = self.marker_fields(self.read_json(), partial=True)
+        data = self.read_json()
         self.own_marker(who, mid)
-        if f:
-            cols = ", ".join(f"{k} = ?" for k in f)
-            execute(f"UPDATE markers SET {cols}, updated_at = ? WHERE id = ?", (*f.values(), now(), int(mid)))
+        current = query("SELECT kind FROM markers WHERE id = ?", (int(mid),))[0]
+        kind = str(data.get("kind", current["kind"]))
+        if kind not in ("chapter", "event"):
+            raise ApiError(400, "Choose Chapter or Event.")
+        sets = {"kind": kind}
+        if "position" in data:
+            sets["position_s"] = self.position(data)
+        if kind == "event":
+            if "people" in data or current["kind"] != "event":
+                people = self.tagged_people(data)
+                sets["title"] = self.event_title(people)
+                self.link_people(int(mid), people)
+        else:
+            if "title" in data or current["kind"] != "chapter":
+                sets["title"] = self.chapter_title(data)
+            execute("DELETE FROM marker_people WHERE marker_id = ?", (int(mid),))
+        cols = ", ".join(f"{k} = ?" for k in sets)  # keys are fixed names above, never user input
+        execute(f"UPDATE markers SET {cols}, updated_at = ? WHERE id = ?", (*sets.values(), now(), int(mid)))
         return 200, {"id": int(mid)}
 
     def delete_marker(self, params, mid):
