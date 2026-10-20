@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Kodai 1994 face identification worker.
+"""Kodai 1994 media worker: face identification, and photos members upload.
 
 Runs queued identification runs (table identify_runs, written by community/app.py when a
 member presses "Identify faces"), one at a time, and writes suggestions for people to
@@ -9,6 +9,13 @@ those change only when a member confirms a suggestion on the Identify page.
 Models (InsightFace buffalo_l, non-commercial licence; not in the repository):
   det_10g.onnx    SCRFD face detector (boxes + 5 landmarks)
   w600k_r50.onnx  ArcFace recogniser (512-d embedding of a 112x112 aligned face)
+
+Uploaded photos (table photo_uploads, originals in UPLOAD_DIR): each one is decoded
+(which also rejects anything that isn't really an image), turned upright, re-encoded
+without metadata (no GPS, no phone details) as NN.jpg (<= 2048 px) and NN-thumb.jpg
+(<= 640 px) next to the folder's photos, added to photos.json with an id from 101 up
+(prepare-photos.sh keeps those when it rebuilds), and queued for face identification.
+Removing one takes it off photos.json and deletes its web copies; the original stays.
 
 References: every face marked on a photo (photo_faces) plus every video face a member
 confirmed. A video is read at SAMPLE_FPS; detections in consecutive frames are joined
@@ -36,6 +43,9 @@ HLS = os.environ.get("HLS_DIR", "/media/hls")          # photos/, photos.json
 VIDEOS = os.environ.get("VIDEOS_DIR", "/media/videos")  # the library's .mp4 files
 OUT = os.environ.get("OUT_DIR", "/out")                 # face crops, served at /kodai1994/faces/
 THREADS = int(os.environ.get("THREADS") or 4)
+PHOTOS = os.path.join(HLS, "photos")                    # mounted read-write for uploads
+UPLOADS = os.environ.get("UPLOAD_DIR", "/uploads")
+FIRST_UPLOAD_ID = 101    # 01-99: the folder's photos (prepare-photos.sh); 101-999: uploads
 
 SAMPLE_FPS = 2.0
 VIDEO_DET = 640          # detector input size for 640x480 video frames
@@ -247,9 +257,82 @@ class Cancelled(Exception):
     pass
 
 
+# ── Uploaded photos
+def fit(img, edge):
+    h, w = img.shape[:2]
+    k = min(1.0, edge / max(h, w))
+    return img if k == 1 else cv2.resize(img, (round(w * k), round(h * k)), interpolation=cv2.INTER_AREA)
+
+
+def write_atomic(path, write):
+    base, ext = os.path.splitext(path)
+    tmp = base + ".tmp" + ext  # keep the extension: imwrite picks the format from it
+    write(tmp)
+    os.chmod(tmp, 0o644)
+    os.replace(tmp, path)
+
+
+def save_photos_json(lst):
+    def w(tmp):
+        with open(tmp, "w") as f:
+            json.dump(lst, f)
+    write_atomic(os.path.join(PHOTOS, "photos.json"), w)
+
+
+def add_upload(db, u):
+    img = cv2.imread(os.path.join(UPLOADS, u["file"]), cv2.IMREAD_COLOR)  # applies the EXIF rotation
+    if img is None:
+        raise ValueError("That file couldn't be read as a photo.")
+    if min(img.shape[:2]) < 200:
+        raise ValueError("That photo is too small (at least 200 pixels on each side).")
+    lst = list(photos().values())
+    nid = max([int(p["id"]) for p in lst if int(p["id"]) >= FIRST_UPLOAD_ID] + [FIRST_UPLOAD_ID - 1]) + 1
+    if nid > 999:
+        raise ValueError("The photo collection is full.")
+    pid = str(nid)
+    full = fit(img, 2048)
+    # imwrite writes no metadata: EXIF, GPS and phone details are dropped here.
+    write_atomic(os.path.join(PHOTOS, pid + ".jpg"), lambda t: cv2.imwrite(t, full, [cv2.IMWRITE_JPEG_QUALITY, 90]) or None)
+    write_atomic(os.path.join(PHOTOS, pid + "-thumb.jpg"), lambda t: cv2.imwrite(t, fit(img, 640), [cv2.IMWRITE_JPEG_QUALITY, 85]) or None)
+    lst.append({"id": pid, "src": pid + ".jpg", "thumb": pid + "-thumb.jpg", "w": full.shape[1], "h": full.shape[0]})
+    save_photos_json(lst)
+    with db:
+        db.execute("UPDATE photo_uploads SET status = 'ready', photo_id = ?, processed_at = ? WHERE id = ?", (pid, now(), u["id"]))
+        db.execute("INSERT INTO identify_runs (target, requested_by, created_at) VALUES (?, ?, ?)", ("photo:" + pid, u["user_id"], now()))
+    log(f"upload {u['id']} -> photo {pid} {full.shape[1]}x{full.shape[0]}")
+
+
+def remove_upload(db, u):
+    pid = u["photo_id"]
+    save_photos_json([p for p in photos().values() if p["id"] != pid])
+    for f in (os.path.join(PHOTOS, pid + ".jpg"), os.path.join(PHOTOS, pid + "-thumb.jpg"),
+              os.path.join(HLS, "photos-enhanced", pid + ".jpg")):
+        try:
+            os.remove(f)
+        except OSError:
+            pass
+    db.execute("UPDATE photo_uploads SET status = 'removed' WHERE id = ?", (u["id"],))
+    db.commit()
+    log(f"upload {u['id']} (photo {pid}) removed")
+
+
+def process_uploads(db):
+    for u in db.execute("SELECT * FROM photo_uploads WHERE status IN ('pending', 'remove') ORDER BY id").fetchall():
+        try:
+            (add_upload if u["status"] == "pending" else remove_upload)(db, u)
+        except Exception as e:
+            db.rollback()
+            msg = str(e) if isinstance(e, ValueError) else "That photo couldn't be added. Try another copy of it."
+            if not isinstance(e, ValueError):
+                traceback.print_exc()
+            db.execute("UPDATE photo_uploads SET status = 'failed', message = ?, processed_at = ? WHERE id = ?", (msg, now(), u["id"]))
+            db.commit()
+
+
 def progress(db, run_id, frac, message=None):
     db.execute("UPDATE identify_runs SET progress = ?, message = COALESCE(?, message) WHERE id = ?", (round(frac, 3), message, run_id))
     db.commit()
+    process_uploads(db)  # new photos shouldn't wait for a long video run
     if db.execute("SELECT status FROM identify_runs WHERE id = ?", (run_id,)).fetchone()["status"] == "cancelled":
         raise Cancelled()
 
@@ -425,13 +508,14 @@ def process(db, run, det, rec):
 def loop():
     det, rec = Detector(), Recogniser()
     db = connect()
-    while not db.execute("SELECT 1 FROM sqlite_master WHERE name = 'identify_runs'").fetchone():
+    while not db.execute("SELECT 1 FROM sqlite_master WHERE name = 'photo_uploads'").fetchone():
         time.sleep(5)  # the community service creates the tables
     # A run interrupted by a restart goes back to the front of the queue.
     db.execute("UPDATE identify_runs SET status = 'queued', progress = 0 WHERE status = 'running'")
     db.commit()
     log("faceid worker ready")
     while True:
+        process_uploads(db)
         run = db.execute("SELECT * FROM identify_runs WHERE status = 'queued' ORDER BY id LIMIT 1").fetchone()
         if not run:
             time.sleep(5)

@@ -88,6 +88,7 @@
 	.who h3 { font: 400 1.25rem/1.2 var(--display); margin: 10px 0 2px; overflow-wrap: anywhere; }
 	.who p { margin: 0 0 10px; font-size: .82rem; }
 	.who .btn { width: 100%; margin-top: 6px; }
+	.more { grid-column: 1 / -1; justify-self: start; }
 	.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(214px, 1fr)); gap: 12px; }
 	.card { display: flex; flex-direction: column; gap: 8px; padding: 10px; border: 1px solid var(--line); border-radius: 12px; background: var(--panel); }
 	.card.is-hot { border-color: var(--saffron); }
@@ -414,9 +415,13 @@
 		groups.forEach(function (g) {
 			g.items.sort(function (a, b) { return (a.start == null ? 0 : a.start) - (b.start == null ? 0 : b.start); });
 			g.best = Math.max.apply(null, g.items.map(function (s) { return s.score || 0; }));
+			g.likely = g.items.filter(function (s) { return (s.score || 0) >= LIKELY; }).length;
 		});
-		// Recognised people first (best match first), then unrecognised groups (most seen first).
-		groups.sort(function (a, b) { return (!a.personId) - (!b.personId) || (a.personId ? b.best - a.best : b.items.length - a.items.length); });
+		// Recognised people first (most likely matches, then best match), then unrecognised
+		// groups (most seen first).
+		groups.sort(function (a, b) {
+			return (!a.personId) - (!b.personId) || (a.personId ? (b.likely - a.likely) || (b.best - a.best) : b.items.length - a.items.length);
+		});
 		var unknownN = 0;
 		groups.forEach(function (g) { box.appendChild(renderGroup(g, g.personId ? null : ++unknownN)); });
 	}
@@ -430,11 +435,14 @@
 		var name = p ? p.name : g.key === 'x' ? 'Skipped faces' : 'Unknown person ' + unknownN;
 		who.append(face, el('h3', '', name));
 		var pend = g.items.filter(function (s) { return s.status === 'pending'; });
-		who.appendChild(el('p', 'muted', plural(g.items.length, state.current.kind === 'video' ? 'moment' : 'face') +
-			(p && !p.portrait ? ' · no 1994 face marked' : '')));
-		if (pend.length > 1 && p) {
-			var all = el('button', 'btn btn--yes btn--small', 'Confirm all ' + pend.length); all.type = 'button';
-			all.addEventListener('click', function () { bulk(all, pend, 'confirm', g.personId); });
+		var likelyPend = pend.filter(function (s) { return (s.score || 0) >= LIKELY; });
+		var unit = state.current.kind === 'video' ? 'moment' : 'face';
+		who.appendChild(el('p', 'muted', plural(g.items.length, unit) +
+			(p && state.filter === 'pending' ? ' · ' + g.likely + ' likely' : '') + (p && !p.portrait ? ' · no 1994 face marked' : '')));
+		if (likelyPend.length > 1 && p) {
+			// Only the likely ones: possible matches are wrong too often to confirm unseen.
+			var all = el('button', 'btn btn--yes btn--small', 'Confirm ' + likelyPend.length + ' likely'); all.type = 'button';
+			all.addEventListener('click', function () { bulk(all, likelyPend, 'confirm', g.personId); });
 			who.appendChild(all);
 		} else if (pend.length > 1 && !p) {
 			var nameAll = el('button', 'btn btn--small', 'Name all ' + pend.length + '…'); nameAll.type = 'button';
@@ -446,7 +454,20 @@
 			skipAll.addEventListener('click', function () { bulk(skipAll, pend, 'reject'); });
 			who.append(nameAll, skipAll);
 		}
-		g.items.forEach(function (s) { cards.appendChild(renderCard(s, p)); });
+		// Likely matches first; possible ones folded away (most of them are someone else).
+		var shown = g.items, folded = [];
+		if (p && state.filter === 'pending') {
+			shown = g.items.filter(function (s) { return (s.score || 0) >= LIKELY; });
+			folded = g.items.filter(function (s) { return (s.score || 0) < LIKELY; })
+				.sort(function (a, b) { return (b.score || 0) - (a.score || 0); });
+			if (!shown.length) { shown = folded.slice(0, 4); folded = folded.slice(4); }
+		}
+		shown.forEach(function (s) { cards.appendChild(renderCard(s, p)); });
+		if (folded.length) {
+			var more = el('button', 'btn btn--quiet btn--small more', 'Show ' + plural(folded.length, 'possible match').replace('matchs', 'matches')); more.type = 'button';
+			more.addEventListener('click', function () { more.remove(); folded.forEach(function (s) { cards.appendChild(renderCard(s, p)); }); });
+			cards.appendChild(more);
+		}
 		sec.append(who, cards);
 		return sec;
 	}

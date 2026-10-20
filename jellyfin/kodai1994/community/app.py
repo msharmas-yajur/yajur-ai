@@ -44,6 +44,10 @@ Routes (JSON):
                                    (an event's name is its people's names, comma-separated)
   PUT    /markers/<id>             {title?, people?, position?, kind?}  own marker, or any for the admin
   DELETE /markers/<id>             own marker, or any for the admin
+  POST   /photo-uploads            body: the image (image/jpeg, png or webp, up to 15 MB); the
+                                   worker (faceid/worker.py) adds it to the Photos page
+  GET    /photo-uploads            uploaded photos: who added them, and any still being processed
+  DELETE /photo-uploads/<id>       remove an uploaded photo (whoever added it, or the admin)
   GET    /identify/runs            latest identification run per video/photo, with review counts
   POST   /identify/runs            {target}  queue face identification (faceid/worker.py runs it)
   DELETE /identify/runs/<id>       cancel a queued or running run (whoever started it, or the admin)
@@ -56,6 +60,7 @@ Routes (JSON):
   POST   /admin/requests/<id>/approve   creates the account, returns its password (admin)
   POST   /admin/requests/<id>/reject    (admin)
 """
+import hashlib
 import json
 import os
 import re
@@ -76,6 +81,10 @@ JELLYFIN = os.environ.get("JELLYFIN_URL", "http://jellyfin:8096")
 LIBRARY_ID = os.environ["KODAI_LIBRARY_ID"]
 LIBRARY_NAME = os.environ.get("KODAI_LIBRARY_NAME", "Kodai 1994")
 DB_PATH = os.path.join(os.environ.get("DATA_DIR", "/data"), "community.db")
+UPLOAD_DIR = os.environ.get("UPLOAD_DIR", "/uploads")   # originals of uploaded photos (never served)
+MAX_UPLOAD = 15 * 1024 * 1024
+IMAGE_TYPES = {"image/jpeg": ("jpg", (b"\xff\xd8\xff",)), "image/png": ("png", (b"\x89PNG\r\n\x1a\n",)),
+               "image/webp": ("webp", (b"RIFF",))}
 SITE_URL = os.environ.get("SITE_URL", "https://videos.yajur.ai/kodai1994/")
 CLIENT = 'MediaBrowser Client="Kodai 1994 community", Device="server", DeviceId="kodai-community", Version="1.0"'
 SMTP_HOST = os.environ.get("SMTP_HOST", "")
@@ -254,6 +263,21 @@ CREATE TABLE IF NOT EXISTS identify_refs (       -- worker cache: embedding of e
     x REAL, y REAL, w REAL, h REAL,
     embedding BLOB
 );
+-- Photos members upload on the Photos page (faceid/worker.py processes them)
+CREATE TABLE IF NOT EXISTS photo_uploads (
+    id          INTEGER PRIMARY KEY,
+    user_id     TEXT NOT NULL,
+    file        TEXT NOT NULL,                  -- original, under UPLOAD_DIR
+    sha256      TEXT NOT NULL,
+    status      TEXT NOT NULL DEFAULT 'pending',   -- pending, ready, failed, remove, removed
+    photo_id    TEXT,                           -- its id in photos.json once ready
+    message     TEXT,
+    created_at  TEXT NOT NULL,
+    processed_at TEXT,
+    removed_at  TEXT,
+    removed_by  TEXT
+);
+CREATE INDEX IF NOT EXISTS photo_uploads_by_status ON photo_uploads (status);
 CREATE TABLE IF NOT EXISTS access_requests (
     id          INTEGER PRIMARY KEY,
     name        TEXT NOT NULL,
@@ -803,6 +827,65 @@ class Handler(BaseHTTPRequestHandler):
         execute("UPDATE people SET portrait_face = ? WHERE id = ?", (face, int(pid)))
         return 200, {"portrait": face}
 
+    # ── photos uploaded by members
+    def post_photo_upload(self, params):
+        who = self.member()
+        ctype = (self.headers.get("Content-Type") or "").split(";")[0].strip().lower()
+        if ctype not in IMAGE_TYPES:
+            raise ApiError(415, "Choose a photo: JPEG, PNG or WebP.")
+        length = int(self.headers.get("Content-Length") or 0)
+        if not length:
+            raise ApiError(400, "That file is empty.")
+        if length > MAX_UPLOAD:
+            raise ApiError(413, "That photo is too large (15 MB at most).")
+        self.need_name(who)
+        if not allow(("upload", who["id"]), 60, 3600):
+            raise ApiError(429, "You've added a lot of photos. Wait a while and try again.")
+        if query("SELECT COUNT(*) AS n FROM photo_uploads WHERE status = 'pending'")[0]["n"] >= 200:
+            raise ApiError(503, "Lots of photos are waiting to be added. Try again in a few minutes.")
+        data = self.rfile.read(length)
+        ext, magics = IMAGE_TYPES[ctype]
+        if not data.startswith(magics) or (ext == "webp" and data[8:12] != b"WEBP"):
+            raise ApiError(415, "That file isn't a JPEG, PNG or WebP photo.")
+        digest = hashlib.sha256(data).hexdigest()
+        dup = query("SELECT photo_id FROM photo_uploads WHERE sha256 = ? AND status IN ('pending', 'ready')", (digest,))
+        if dup:
+            raise ApiError(409, "This photo has already been added.")
+        name = f"{secrets.token_hex(12)}.{ext}"
+        os.makedirs(UPLOAD_DIR, exist_ok=True)
+        with open(os.path.join(UPLOAD_DIR, name), "wb") as f:
+            f.write(data)
+        uid = execute("INSERT INTO photo_uploads (user_id, file, sha256, created_at) VALUES (?, ?, ?, ?)", (who["id"], name, digest, now()))
+        return 201, {"id": uid, "status": "pending"}
+
+    def get_photo_uploads(self, params):
+        who = self.member()
+        rows = query("SELECT u.id, u.user_id, u.status, u.photo_id, u.message, u.created_at, "
+                     "COALESCE(p.display_name, p.username, 'Member') AS uploader FROM photo_uploads u "
+                     "LEFT JOIN profiles p ON p.user_id = u.user_id WHERE u.status IN ('pending', 'ready', 'failed') "
+                     "AND (u.status != 'failed' OR u.user_id = ?) ORDER BY u.id", (who["id"],))
+        return 200, [{"id": r["id"], "status": r["status"], "photoId": r["photo_id"], "message": r["message"],
+                      "uploadedBy": r["uploader"], "createdAt": r["created_at"], "mine": r["user_id"] == who["id"],
+                      "canRemove": r["user_id"] == who["id"] or who["isAdmin"]} for r in rows]
+
+    def delete_photo_upload(self, params, uid):
+        who = self.member()
+        row = query("SELECT user_id, status, photo_id FROM photo_uploads WHERE id = ?", (int(uid),))
+        if not row or row[0]["status"] in ("remove", "removed"):
+            raise ApiError(404, "That photo was already removed.")
+        if row[0]["user_id"] != who["id"] and not who["isAdmin"]:
+            raise ApiError(403, "Only the person who added this photo, or the administrator, can remove it.")
+        # The worker takes it off the page and deletes its web copies; the original stays on disk.
+        status = "remove" if row[0]["status"] == "ready" else "removed"
+        execute("UPDATE photo_uploads SET status = ?, removed_at = ?, removed_by = ? WHERE id = ?", (status, now(), who["id"], int(uid)))
+        if row[0]["photo_id"]:
+            pid = row[0]["photo_id"]
+            execute("UPDATE people SET portrait_face = NULL WHERE portrait_face IN (SELECT id FROM photo_faces WHERE photo_id = ?)", (pid,))
+            execute("DELETE FROM photo_faces WHERE photo_id = ?", (pid,))
+            execute("DELETE FROM photo_people WHERE photo_id = ?", (pid,))
+            execute("DELETE FROM identify_suggestions WHERE target = ? AND status = 'pending'", ("photo:" + pid,))
+        return 200, {"removed": int(uid)}
+
     # ── face identification: queue runs, review what the worker suggests
     EVENT_MERGE_S = 3    # people confirmed within this many seconds share one event
     DUPLICATE_S = 10     # already tagged this close to the moment: don't tag again
@@ -1069,18 +1152,21 @@ ROUTES = {
             (r"/people", Handler.get_people), (r"/people/(\d+)", Handler.get_person), (r"/photo-tags", Handler.get_photo_tags),
             (r"/photo-faces", Handler.get_photo_faces),
             (r"/identify/runs", Handler.get_identify_runs), (r"/identify/suggestions", Handler.get_identify_suggestions),
+            (r"/photo-uploads", Handler.get_photo_uploads),
             (r"/admin/requests", Handler.get_requests)],
     "PUT": [(r"/me", Handler.put_me), (r"/markers/(\d+)", Handler.put_marker), (r"/people/(\d+)", Handler.put_person),
             (r"/people/(\d+)/portrait", Handler.put_portrait)],
     "POST": [(r"/comments", Handler.post_comment), (r"/markers", Handler.post_marker), (r"/people", Handler.post_person),
              (r"/photo-tags", Handler.post_photo_tag), (r"/photo-faces", Handler.post_photo_face),
              (r"/identify/runs", Handler.post_identify_run), (r"/identify/suggestions/(\d+)", Handler.review_suggestion),
+             (r"/photo-uploads", Handler.post_photo_upload),
              (r"/access-requests", Handler.post_access_request),
              (r"/admin/requests/(\d+)/approve", Handler.approve_request),
              (r"/admin/requests/(\d+)/reject", Handler.reject_request)],
     "DELETE": [(r"/comments/(\d+)", Handler.delete_comment), (r"/markers/(\d+)", Handler.delete_marker),
                (r"/people/(\d+)", Handler.delete_person), (r"/photo-tags/(\d+)", Handler.delete_photo_tag),
-               (r"/photo-faces/(\d+)", Handler.delete_photo_face), (r"/identify/runs/(\d+)", Handler.cancel_identify_run)],
+               (r"/photo-faces/(\d+)", Handler.delete_photo_face), (r"/identify/runs/(\d+)", Handler.cancel_identify_run),
+               (r"/photo-uploads/(\d+)", Handler.delete_photo_upload)],
 }
 
 if __name__ == "__main__":
