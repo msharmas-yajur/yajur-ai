@@ -9,12 +9,17 @@
 # photos.json lists them in order: alphabetical by source filename (the WhatsApp
 # exports sort by the time they were sent; "KODAI1994.jpeg" sorts first).
 #
+# It also writes small square crops (320 px, metadata stripped) to PUBLIC for the
+# spiral on the sign-in page. Those are visible to anyone with the link; the full-size
+# photos stay members-only. Set PUBLIC="" to skip them.
+#
 # Usage: jellyfin/kodai1994/prepare-photos.sh [SRC] [DEST]
-# Re-running rebuilds DEST from scratch (photos are small).
+# Re-running rebuilds DEST (and PUBLIC) from scratch (photos are small).
 set -euo pipefail
 
 SRC=${1:-"$HOME/Downloads/Kodai - 1994"}
 DEST=${2:-"$HOME/media/kodai1994-hls/photos"}
+PUBLIC=${PUBLIC-"$HOME/media/kodai1994-brand/spiral"}
 tmp=$(mktemp -d "$(dirname "$DEST")/.photos.XXXXXX")
 trap 'rm -rf "$tmp"' EXIT
 
@@ -45,6 +50,24 @@ for line in sys.stdin:
 print(json.dumps(out))' > "$tmp/photos.json"
 
 chmod 755 "$tmp"; chmod 644 "$tmp"/*
+
+# Public sign-in spiral: square crops from the thumbnails.
+if [ -n "$PUBLIC" ]; then
+  ptmp=$(mktemp -d "$(dirname "$PUBLIC")/.spiral.XXXXXX")
+  ids=()
+  for e in "${entries[@]}"; do
+    id=${e%%,*}
+    ffmpeg -v error -nostdin -y -i "$tmp/$id-thumb.jpg" -map_metadata -1 \
+      -vf "scale=320:320:force_original_aspect_ratio=increase,crop=320:320" -q:v 5 "$ptmp/$id.jpg"
+    ids+=("$id")
+  done
+  printf '%s\n' "${ids[@]}" | python3 -I -c 'import json,sys; print(json.dumps([l.strip() + ".jpg" for l in sys.stdin if l.strip()]))' > "$ptmp/spiral.json"
+  chmod 755 "$ptmp"; chmod 644 "$ptmp"/*
+  rm -rf "$PUBLIC.old"; [ -d "$PUBLIC" ] && mv "$PUBLIC" "$PUBLIC.old"
+  mv "$ptmp" "$PUBLIC"; rm -rf "$PUBLIC.old"
+  echo "${#ids[@]} public spiral crops in $PUBLIC"
+fi
+
 rm -rf "$DEST.old"; [ -d "$DEST" ] && mv "$DEST" "$DEST.old"
 mv "$tmp" "$DEST"; rm -rf "$DEST.old"
 trap - EXIT

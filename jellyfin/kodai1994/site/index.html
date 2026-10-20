@@ -42,9 +42,26 @@
 	.btn--quiet:hover { border-color: var(--mist); }
 
 	/* ── Sign-in (no photo here: it stays behind the login) */
-	.login { min-height: 100vh; display: grid; place-items: center; padding: 48px var(--gutter); background: radial-gradient(120% 80% at 50% 0%, var(--pine) 0%, var(--pine-deep) 70%); }
+	.login { min-height: 100vh; display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); align-items: center; background: radial-gradient(120% 80% at 30% 0%, var(--pine) 0%, var(--pine-deep) 70%); }
+	.login__inner { justify-self: center; padding: 48px var(--gutter); }
+	.login__spiral { height: 100vh; min-height: 560px; position: relative; }
+	@media (max-width: 900px) {
+		.login { grid-template-columns: minmax(0, 1fr); align-items: start; }
+		.login__spiral { height: 300px; min-height: 0; }
+		.login__inner { padding-top: 8px; }
+	}
+
+	/* Photo spiral on the sign-in page: a vanilla port of React Bits' InfiniteSpiral */
+	.spiral { position: relative; width: 100%; height: 100%; min-height: 260px; overflow: hidden; isolation: isolate; perspective: 1000px; cursor: grab; touch-action: pan-x; user-select: none; }
+	.spiral.is-dragging { cursor: grabbing; }
+	.spiral__stage { position: absolute; inset: 0; transform-style: preserve-3d; }
+	.spiral__item { position: absolute; top: 50%; left: 50%; display: block; overflow: hidden; border: 1px solid rgba(243,241,234,.28); background: rgba(243,241,234,.08); box-shadow: 0 14px 38px rgba(0,0,0,.35); transform-style: preserve-3d; backface-visibility: hidden; will-change: transform, opacity, filter; }
+	.spiral__item { background-size: cover; background-position: center; -webkit-touch-callout: none; }
+	.spiral, .photos, .viewer__frame { -webkit-touch-callout: none; }
+	.photos img { -webkit-user-drag: none; user-select: none; }
 	.login__inner { width: 100%; max-width: 440px; text-align: center; }
-	.login h1 { font: 400 clamp(3rem, 12vw, 5.5rem)/1 var(--display); letter-spacing: 0.02em; margin: 0 0 16px; }
+	.login h1 { font: 400 clamp(2.8rem, 4.4vw, 4.6rem)/1 var(--display); letter-spacing: 0.02em; margin: 0 0 16px; white-space: nowrap; }
+	@media (max-width: 900px) { .login h1 { font-size: clamp(2.8rem, 13vw, 4.6rem); } }
 	.login p { margin: 0 auto 32px; max-width: 34ch; }
 	.login form { text-align: left; background: var(--panel); border: 1px solid var(--line); border-radius: 20px; padding: 28px; }
 	.login label { display: block; font-size: 0.9rem; font-weight: 600; margin: 18px 0 6px; }
@@ -292,6 +309,7 @@
 
 <!-- Sign-in -->
 <section class="login" id="login-view" hidden>
+	<div class="login__spiral" id="login-spiral" role="img" aria-label="Photographs from Kodaikanal, 1994"></div>
 	<div class="login__inner">
 		<img class="logo" src="/kodai1994/brand/logo.png" alt="Sri Sathya Sai Centenary Celebrations" width="120" height="120">
 		<h1>Kodai 1994</h1>
@@ -543,10 +561,105 @@
 	}
 	function fmtHours(ticks) { return Math.round(ticks / 36e9) + ' hours'; }
 
+	// ── Photo spiral on the sign-in page. A vanilla-JS port of React Bits' <InfiniteSpiral />
+	// (auto motion + drag, eases to a stop on hover, pauses off-screen and for reduced
+	// motion). Uses the public 320 px crops from prepare-photos.sh; full photos stay private.
+	function createSpiral(root, items, o) {
+		o = Object.assign({ speed: 0.55, radius: 170, cardWidth: 110, cardHeight: 110, verticalSpacing: 62, perspective: 1000,
+			cardsPerTurn: 7, cardRadius: 10, centerScale: 1.2, edgeFade: 0.3, edgeBlur: 6 }, o || {});
+		var clamp = function (v, a, b) { return Math.min(Math.max(v, a), b); };
+		var modulo = function (v, d) { return ((v % d) + d) % d; };
+		var smoothstep = function (a, b, v) { var x = clamp((v - a) / (b - a || 1), 0, 1); return x * x * (3 - 2 * x); };
+		var stage = document.createElement('div'); stage.className = 'spiral__stage';
+		root.classList.add('spiral'); root.style.perspective = o.perspective + 'px'; root.textContent = ''; root.appendChild(stage);
+		items.forEach(function (src) { new Image().src = src; });
+		var cards = items.map(function (src) {
+			var c = document.createElement('div'); c.className = 'spiral__item';
+			c.style.width = o.cardWidth + 'px'; c.style.height = o.cardHeight + 'px'; c.style.borderRadius = o.cardRadius + 'px';
+			// A painted background, not an <img>: no "Save image as" or drag-out.
+			c.style.backgroundImage = 'url("' + src + '")';
+			stage.appendChild(c); return c;
+		});
+		var progress = 0, target = 0, autoSpeed = 0, hovered = false, visible = true, dragging = false, lastY = 0, settled = false;
+		var frame = null, prev = 0, bounds = root.getBoundingClientRect();
+		var reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
+		new ResizeObserver(function () { bounds = root.getBoundingClientRect(); }).observe(root);
+		new IntersectionObserver(function (e) { visible = e[0].isIntersecting; }, { threshold: 0.02 }).observe(root);
+		root.addEventListener('contextmenu', function (ev) { ev.preventDefault(); });
+		root.addEventListener('dragstart', function (ev) { ev.preventDefault(); });
+		root.addEventListener('mouseenter', function () { hovered = true; });
+		root.addEventListener('mouseleave', function () { hovered = false; });
+		root.addEventListener('pointerdown', function (ev) {
+			if (ev.button !== 0) return;
+			dragging = true; lastY = ev.clientY; target = progress;
+			root.setPointerCapture(ev.pointerId); root.classList.add('is-dragging');
+		});
+		root.addEventListener('pointermove', function (ev) {
+			if (!dragging) return;
+			target -= (ev.clientY - lastY) / Math.max(o.verticalSpacing, 1); lastY = ev.clientY;
+		});
+		var stopDrag = function (ev) {
+			if (!dragging) return; dragging = false; root.classList.remove('is-dragging');
+			if (root.hasPointerCapture(ev.pointerId)) root.releasePointerCapture(ev.pointerId);
+		};
+		root.addEventListener('pointerup', stopDrag); root.addEventListener('pointercancel', stopDrag);
+
+		function render(time) {
+			var dt = Math.min((time - prev) / 1000, 0.05); prev = time;
+			var want = visible && !reduced.matches && !dragging && !hovered ? o.speed : 0;
+			autoSpeed += (want - autoSpeed) * (1 - Math.exp(-dt * 7));
+			target += autoSpeed * dt;
+			progress += (target - progress) * (1 - Math.exp(-dt * (dragging ? 22 : 11)));
+			if (!dragging && Math.abs(autoSpeed) < 1e-3 && Math.abs(target - progress) < 1e-3) {
+				autoSpeed = 0; progress = target;
+				if (settled) { frame = requestAnimationFrame(render); return; }
+				settled = true;
+			} else {
+				settled = false;
+			}
+			var count = cards.length, half = count / 2;
+			var w = Math.max(bounds.width, 1), h = Math.max(bounds.height, 1);
+			var fit = Math.min(1, w / (o.cardWidth * 2.8), h / (o.cardHeight * 2.35));
+			var r = Math.min(o.radius, Math.max(72, w * 0.36)) * fit;
+			var fadeStart = clamp(1 - o.edgeFade, 0, 0.98), turn = Math.max(o.cardsPerTurn, 1);
+			cards.forEach(function (card, i) {
+				var off = modulo(i - progress + half, count) - half;
+				var edge = Math.min(Math.abs(off) / Math.max(half, 1), 1);
+				var opacity = 1 - smoothstep(fadeStart, 1, edge);
+				var focus = 1 - Math.min(Math.abs(off) / Math.max(turn * 0.65, 1), 1);
+				var scale = (1 + (o.centerScale - 1) * focus) * fit;
+				var a = off * (360 / turn) * Math.PI / 180;
+				var x = Math.sin(a) * r, z = Math.cos(a) * r;
+				var depthScale = clamp(o.perspective / Math.max(o.perspective - z, 1), 0.72, 1.45);
+				var blur = o.edgeBlur * smoothstep(0.35, 1, edge);
+				card.style.transform = 'translate(-50%, -50%) translate3d(' + x + 'px, ' + off * o.verticalSpacing * fit + 'px, 0) scale(' + scale * depthScale + ')';
+				card.style.opacity = opacity.toFixed(3);
+				card.style.filter = blur > 0.01 ? 'blur(' + blur.toFixed(2) + 'px)' : 'none';
+				card.style.zIndex = String(Math.round((z / Math.max(r, 1) + 1) / 2 * 100000) + i);
+			});
+			frame = requestAnimationFrame(render);
+		}
+		return {
+			start: function () { if (frame === null) { prev = performance.now(); bounds = root.getBoundingClientRect(); frame = requestAnimationFrame(render); } },
+			stop: function () { if (frame !== null) { cancelAnimationFrame(frame); frame = null; } }
+		};
+	}
+	var spiral = null;
+	function loadSpiral() {
+		fetch('/kodai1994/brand/spiral/spiral.json').then(function (r) { return r.ok ? r.json() : []; }).then(function (files) {
+			if (!files.length) return;
+			var srcs = files.map(function (f) { return '/kodai1994/brand/spiral/' + f; });
+			while (srcs.length < 21) srcs = srcs.concat(srcs.slice(0, 21 - srcs.length)); // a fuller helix
+			spiral = createSpiral($('login-spiral'), srcs);
+			if (!$('login-view').hidden) spiral.start();
+		}).catch(function () {});
+	}
+
 	// ── Views
 	function show(view) {
 		$('login-view').hidden = view !== 'login';
 		$('library-view').hidden = view !== 'library';
+		if (spiral) { if (view === 'login') spiral.start(); else spiral.stop(); }
 	}
 
 	function signOut(expired) {
@@ -751,6 +864,8 @@
 	function renderPhotos(root) {
 		if (!photos.length) { var p = document.createElement('p'); p.className = 'muted'; p.textContent = 'No photographs have been added yet.'; root.appendChild(p); return; }
 		var grid = document.createElement('div'); grid.className = 'photos';
+		grid.addEventListener('contextmenu', function (ev) { ev.preventDefault(); });
+		grid.addEventListener('dragstart', function (ev) { ev.preventDefault(); });
 		photos.forEach(function (ph, i) {
 			var b = document.createElement('button'); b.type = 'button'; b.className = 'photo';
 			b.setAttribute('aria-label', 'Open photo ' + (i + 1) + ' of ' + photos.length);
@@ -1335,6 +1450,7 @@
 	});
 
 	// ── Boot
+	loadSpiral();
 	if (session) openLibrary(); else show('login');
 })();
 </script>
