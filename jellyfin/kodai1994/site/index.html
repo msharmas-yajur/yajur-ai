@@ -169,6 +169,48 @@
 	.sprite-preview__time { display: inline-block; margin-top: 6px; background: rgba(0,0,0,.85); color: #fff; padding: 2px 10px; border-radius: 999px; font-size: 14px; font-variant-numeric: tabular-nums; }
 	.watermark { position: absolute; z-index: 2; pointer-events: none; user-select: none; color: rgba(255,255,255,.32); font-size: clamp(0.75rem, 1.6vw, 1rem); font-weight: 600; letter-spacing: .02em; text-shadow: 0 1px 2px rgba(0,0,0,.6); transition: top 1.2s ease, left 1.2s ease; white-space: nowrap; }
 	.player .error { color: #ffb38a; }
+	/* Player layout: video + comments on the left, chapters & events on the right. */
+	.player__inner { max-width: 1440px; }
+	.player__body { display: grid; grid-template-columns: minmax(0, 1fr) 360px; grid-template-areas: "main side" "comments ."; gap: 0 28px; }
+	.player__main { grid-area: main; }
+	.player__comments { grid-area: comments; }
+	.player__side { grid-area: side; position: relative; min-height: 320px; }
+	.markers { position: absolute; inset: 0; display: flex; flex-direction: column; border: 1px solid var(--line); border-radius: 16px; background: var(--panel); overflow: hidden; }
+	.markers__head { padding: 16px 16px 10px; border-bottom: 1px solid var(--line); display: grid; gap: 10px; }
+	.markers__head h3 { font: 400 1.3rem/1.2 var(--display); margin: 0; }
+	.markers__filter { display: inline-flex; gap: 4px; }
+	.markers__filter button { border: 1px solid var(--line); background: none; color: var(--mist); border-radius: 999px; padding: 4px 12px; font-size: 0.85rem; cursor: pointer; }
+	.markers__filter button[aria-pressed=true] { background: var(--khadi); color: var(--pine-deep); border-color: var(--khadi); }
+	.markers__list { list-style: none; margin: 0; padding: 6px; overflow-y: auto; flex: 1; min-height: 0; }
+	.marker { display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; padding: 8px 10px; border-radius: 10px; }
+	.marker.is-current { background: rgba(234,122,42,.14); }
+	.marker__time { grid-row: span 2; align-self: start; border: 0; background: rgba(243,241,234,.08); color: var(--khadi); border-radius: 8px; padding: 4px 8px; font-variant-numeric: tabular-nums; font-size: 0.9rem; cursor: pointer; }
+	.marker__time:hover { background: var(--saffron); color: var(--pine-deep); }
+	.marker__title { border: 0; background: none; padding: 0; text-align: left; color: var(--khadi); font-weight: 600; font-size: 0.98rem; line-height: 1.35; cursor: pointer; }
+	.marker--chapter .marker__title { font-family: var(--display); font-weight: 400; font-size: 1.08rem; }
+	.marker__meta { font-size: 0.8rem; color: var(--mist); display: flex; flex-wrap: wrap; gap: 2px 10px; }
+	.kind { border-radius: 999px; padding: 0 7px; font-size: 0.72rem; border: 1px solid var(--line); }
+	.kind--event { border-color: rgba(234,122,42,.6); color: #f3b083; }
+	.markers__empty { padding: 14px 16px; margin: 0; color: var(--mist); font-size: 0.92rem; }
+	.markers__add { border-top: 1px solid var(--line); padding: 12px 16px 16px; display: grid; gap: 8px; }
+	.markers__add label { font-size: 0.85rem; font-weight: 600; }
+	.markers__add .field { padding: 9px 11px; }
+	.markers__row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+	.markers__row .field { width: 110px; font-variant-numeric: tabular-nums; }
+	.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 999px; padding: 3px; }
+	.seg label { font-weight: 500; padding: 4px 12px; border-radius: 999px; cursor: pointer; font-size: 0.88rem; }
+	.seg input { position: absolute; opacity: 0; pointer-events: none; }
+	.seg label:has(input:checked) { background: var(--khadi); color: var(--pine-deep); }
+	.seg label:has(input:focus-visible) { outline: 3px solid var(--saffron); }
+	/* Marker ticks on the seek bar */
+	.mk-tick { position: absolute; top: 50%; width: 3px; height: 160%; transform: translate(-50%, -50%); background: var(--khadi); border-radius: 2px; pointer-events: none; opacity: .85; }
+	.mk-tick--event { width: 7px; height: 7px; border-radius: 50%; background: var(--saffron); box-shadow: 0 0 0 1.5px rgba(0,0,0,.6); }
+	@media (max-width: 1000px) {
+		.player__body { grid-template-columns: minmax(0, 1fr); grid-template-areas: "main" "side" "comments"; }
+		.player__side { min-height: 0; margin-top: 20px; }
+		.markers { position: static; max-height: 70vh; }
+	}
+
 	/* The player scrolls so comments can sit under the video. */
 	.player { overflow-y: auto; place-items: start center; padding: 24px 16px 64px; background-attachment: fixed; }
 
@@ -330,11 +372,16 @@
 				<button class="btn btn--quiet" id="close" type="button">Close</button>
 			</div>
 		</div>
-		<div class="stage" id="stage">
-			<video id="video" class="video-js vjs-big-play-centered" playsinline preload="none" disablepictureinpicture></video>
+		<div class="player__body">
+			<div class="player__main">
+				<div class="stage" id="stage">
+					<video id="video" class="video-js vjs-big-play-centered" playsinline preload="none" disablepictureinpicture></video>
+				</div>
+				<p class="error" id="player-error" role="alert"></p>
+			</div>
+			<aside class="player__side" id="player-markers" aria-label="Chapters and events"></aside>
+			<div class="player__comments" id="player-comments"></div>
 		</div>
-		<p class="error" id="player-error" role="alert"></p>
-		<div id="player-comments"></div>
 	</div>
 </div>
 
@@ -953,6 +1000,179 @@
 		b.addEventListener('click', function () { view = b.dataset.view; storeSet('localStorage', VIEW_KEY, view); render(); });
 	});
 
+	// ── Chapters & tagged events on a video, beside the player. Any member can add them;
+	// people edit or delete their own (the admin, any). Clicking one jumps there.
+	function parseTime(text) {
+		var parts = String(text || '').trim().split(':').map(Number);
+		if (!parts.length || parts.length > 3 || parts.some(function (n) { return !isFinite(n) || n < 0; })) return null;
+		return parts.reduce(function (acc, n) { return acc * 60 + n; }, 0);
+	}
+	var markerState = null; // { slug, items, filter, root }
+
+	function markersPanel(slug) {
+		var st = markerState = { slug: slug, items: [], filter: 'all' };
+		var root = st.root = el('section', 'markers');
+		var head = el('div', 'markers__head');
+		head.appendChild(el('h3', '', 'Chapters & events'));
+		var filter = el('div', 'markers__filter'); filter.setAttribute('role', 'group'); filter.setAttribute('aria-label', 'Show');
+		[['all', 'All'], ['chapter', 'Chapters'], ['event', 'Events']].forEach(function (f) {
+			var b = el('button', '', f[1]); b.type = 'button'; b.dataset.filter = f[0]; b.setAttribute('aria-pressed', String(f[0] === 'all'));
+			b.addEventListener('click', function () {
+				st.filter = f[0];
+				filter.querySelectorAll('button').forEach(function (x) { x.setAttribute('aria-pressed', String(x === b)); });
+				renderList();
+			});
+			filter.appendChild(b);
+		});
+		head.appendChild(filter); root.appendChild(head);
+		var list = el('ol', 'markers__list'); root.appendChild(list);
+		var empty = el('p', 'markers__empty', 'Loading…'); root.appendChild(empty);
+
+		// Add form, collapsed behind one button so the list gets the space
+		var addWrap = el('div', 'markers__add');
+		var open = el('button', 'btn btn--quiet', 'Add a chapter or event'); open.type = 'button';
+		var form = el('form'); form.hidden = true; form.style.display = 'grid'; form.style.gap = '8px';
+		var seg = el('div', 'seg'); seg.setAttribute('role', 'radiogroup'); seg.setAttribute('aria-label', 'Type');
+		['chapter', 'event'].forEach(function (k, i) {
+			var l = el('label'), r = el('input'); r.type = 'radio'; r.name = 'kind-' + slug; r.value = k; r.checked = i === 0;
+			l.appendChild(r); l.appendChild(document.createTextNode(k === 'chapter' ? 'Chapter' : 'Event')); seg.appendChild(l);
+		});
+		var hint = el('p', 'hint', 'A chapter starts a section of the tape; an event tags one moment.');
+		var titleLabel = el('label', '', 'Title'); titleLabel.htmlFor = 'mk-title-' + slug;
+		var title = el('input', 'field'); title.id = 'mk-title-' + slug; title.maxLength = 100; title.required = true; title.placeholder = 'For example, Morning darshan';
+		var timeLabel = el('label', '', 'Time'); timeLabel.htmlFor = 'mk-time-' + slug;
+		var row = el('div', 'markers__row');
+		var time = el('input', 'field'); time.id = 'mk-time-' + slug; time.inputMode = 'numeric'; time.placeholder = '1:02:10'; time.required = true;
+		var now = el('button', 'linkish', 'Use current time'); now.type = 'button';
+		row.appendChild(time); row.appendChild(now);
+		var nameLabel, nameInput;
+		if (!me || !me.displayName) {
+			nameLabel = el('label', '', 'Your name, as others will see it'); nameLabel.htmlFor = 'mk-name-' + slug;
+			nameInput = el('input', 'field'); nameInput.id = 'mk-name-' + slug; nameInput.maxLength = 60; nameInput.required = true; nameInput.autocomplete = 'name';
+		}
+		var actions = el('div', 'form-actions');
+		var add = el('button', 'btn', 'Add'); add.type = 'submit';
+		var cancel = el('button', 'linkish', 'Cancel'); cancel.type = 'button';
+		actions.appendChild(add); actions.appendChild(cancel);
+		var err = el('p', 'error'); err.setAttribute('role', 'alert');
+		[seg, hint, titleLabel, title, timeLabel, row].forEach(function (x) { form.appendChild(x); });
+		if (nameInput) { form.appendChild(nameLabel); form.appendChild(nameInput); }
+		form.appendChild(actions); form.appendChild(err);
+		addWrap.appendChild(open); addWrap.appendChild(form); root.appendChild(addWrap);
+
+		function useNow() { time.value = fmtDuration(Math.floor(player.currentTime() || 0) * 1e7); }
+		now.addEventListener('click', useNow);
+		open.addEventListener('click', function () { form.hidden = false; open.hidden = true; useNow(); title.focus(); });
+		cancel.addEventListener('click', function () { form.hidden = true; open.hidden = false; err.textContent = ''; });
+		form.addEventListener('submit', function (ev) {
+			ev.preventDefault(); err.textContent = '';
+			var pos = parseTime(time.value);
+			if (pos === null) { err.textContent = 'Enter the time as hours:minutes:seconds, like 1:02:10.'; return; }
+			add.disabled = true;
+			var setName = nameInput ? capi('/me', { method: 'PUT', body: { displayName: nameInput.value } }).then(function (r) { if (me) me.displayName = r.displayName; }) : Promise.resolve();
+			setName.then(function () {
+				return capi('/markers', { method: 'POST', body: { target: 'video:' + slug, kind: form.querySelector('input[type=radio]:checked').value, title: title.value, position: pos } });
+			}).then(function () {
+				title.value = ''; form.hidden = true; open.hidden = false;
+				if (nameInput) { nameLabel.remove(); nameInput.remove(); nameInput = null; }
+				return load();
+			}).catch(function (ex) { err.textContent = ex.message; })
+			  .then(function () { add.disabled = false; });
+		});
+
+		function renderList() {
+			list.textContent = '';
+			var shown = st.items.filter(function (m) { return st.filter === 'all' || m.kind === st.filter; });
+			empty.hidden = shown.length > 0;
+			empty.textContent = st.items.length ? 'Nothing of this type yet.' : 'No chapters or events yet. Add the first one while you watch.';
+			shown.forEach(function (m) { list.appendChild(markerRow(m)); });
+			highlightCurrent();
+		}
+		function markerRow(m) {
+			var li = el('li', 'marker marker--' + m.kind); li.dataset.id = m.id; li.dataset.pos = m.position;
+			var jump = function () { player.currentTime(m.position); player.play().catch(function () {}); };
+			var t = el('button', 'marker__time', fmtDuration(m.position * 1e7)); t.type = 'button';
+			t.setAttribute('aria-label', 'Play from ' + fmtDuration(m.position * 1e7) + ': ' + m.title);
+			t.addEventListener('click', jump);
+			var name = el('button', 'marker__title', m.title); name.type = 'button'; name.addEventListener('click', jump);
+			var meta = el('div', 'marker__meta');
+			meta.appendChild(el('span', 'kind kind--' + m.kind, m.kind === 'chapter' ? 'Chapter' : 'Event'));
+			meta.appendChild(el('span', '', 'added by ' + m.author));
+			if (m.canEdit) {
+				var edit = el('button', 'linkish', 'Edit'); edit.type = 'button';
+				edit.addEventListener('click', function () { editRow(li, m); });
+				var del = el('button', 'linkish', 'Delete'); del.type = 'button';
+				del.addEventListener('click', function () {
+					if (del.dataset.armed !== '1') { del.dataset.armed = '1'; del.textContent = 'Delete it?'; setTimeout(function () { del.dataset.armed = ''; del.textContent = 'Delete'; }, 4000); return; }
+					capi('/markers/' + m.id, { method: 'DELETE' }).then(load).catch(function (ex) { err.textContent = ex.message; });
+				});
+				meta.appendChild(edit); meta.appendChild(del);
+			}
+			li.appendChild(t); li.appendChild(name); li.appendChild(meta);
+			return li;
+		}
+		function editRow(li, m) {
+			li.textContent = '';
+			var f = el('form'); f.style.display = 'grid'; f.style.gap = '6px'; f.style.gridColumn = '1 / -1';
+			var ti = el('input', 'field'); ti.value = m.title; ti.maxLength = 100; ti.setAttribute('aria-label', 'Title');
+			var r = el('div', 'markers__row');
+			var tm = el('input', 'field'); tm.value = fmtDuration(m.position * 1e7); tm.setAttribute('aria-label', 'Time');
+			var kind = el('select', 'field'); kind.setAttribute('aria-label', 'Type'); kind.style.width = 'auto';
+			[['chapter', 'Chapter'], ['event', 'Event']].forEach(function (o) { var op = el('option', '', o[1]); op.value = o[0]; op.selected = o[0] === m.kind; kind.appendChild(op); });
+			r.appendChild(tm); r.appendChild(kind);
+			var a = el('div', 'form-actions'), save = el('button', 'btn', 'Save'), back = el('button', 'linkish', 'Cancel');
+			save.type = 'submit'; back.type = 'button'; a.appendChild(save); a.appendChild(back);
+			var e2 = el('p', 'error'); e2.setAttribute('role', 'alert');
+			[ti, r, a, e2].forEach(function (x) { f.appendChild(x); });
+			li.appendChild(f); ti.focus();
+			back.addEventListener('click', renderList);
+			f.addEventListener('submit', function (ev) {
+				ev.preventDefault();
+				var pos = parseTime(tm.value);
+				if (pos === null) { e2.textContent = 'Enter the time as hours:minutes:seconds, like 1:02:10.'; return; }
+				capi('/markers/' + m.id, { method: 'PUT', body: { title: ti.value, position: pos, kind: kind.value } }).then(load)
+					.catch(function (ex) { e2.textContent = ex.message; });
+			});
+		}
+		function load() {
+			return capi('/markers?target=' + encodeURIComponent('video:' + slug)).then(function (items) {
+				if (markerState !== st) return;
+				st.items = items; renderList(); renderTicks();
+			}).catch(function (ex) { empty.hidden = false; empty.textContent = ex.message; });
+		}
+		st.load = load;
+		load();
+		return root;
+	}
+	function highlightCurrent() {
+		if (!markerState || !markerState.root) return;
+		var t = player.currentTime() || 0, current = null;
+		markerState.items.forEach(function (m) { if (m.kind === 'chapter' && m.position <= t + 0.5) current = m.id; });
+		markerState.root.querySelectorAll('.marker').forEach(function (li) {
+			var on = Number(li.dataset.id) === current;
+			li.classList.toggle('is-current', on);
+			if (on) li.setAttribute('aria-current', 'true'); else li.removeAttribute('aria-current');
+		});
+	}
+	function renderTicks() {
+		var bar = player.controlBar.progressControl.seekBar.el();
+		bar.querySelectorAll('.mk-tick').forEach(function (x) { x.remove(); });
+		var d = player.duration() || sbRuntime;
+		if (!markerState || !d) return;
+		markerState.items.forEach(function (m) {
+			var tick = el('div', 'mk-tick mk-tick--' + m.kind);
+			tick.style.left = Math.min(100, m.position / d * 100) + '%';
+			tick.title = fmtDuration(m.position * 1e7) + ' ' + m.title;
+			bar.appendChild(tick);
+		});
+	}
+	function mountMarkers(slug) {
+		var slot = $('player-markers');
+		slot.textContent = '';
+		if (!slug) { markerState = null; renderTicks(); return; }
+		slot.appendChild(markersPanel(slug));
+	}
+
 	// ── Player: Video.js playing HLS only (no single file to save), watermarked with the
 	// viewer's name. Its full screen covers the whole player, so the watermark stays on top
 	// (full-window on iPhone, where native full screen would drop it).
@@ -989,6 +1209,8 @@
 		if (playing && session) api('/Sessions/Playing/Progress', { method: 'POST', body: progressBody() }).catch(function () {});
 	}
 	player.on('pause', reportProgress);
+	player.on('timeupdate', highlightCurrent);
+	player.on('durationchange', function () { renderTicks(); });
 	player.on('error', function () {
 		// A 401/404 on the streams means the sign-in ended or access was removed.
 		capi('/me').then(function () {
@@ -1014,6 +1236,7 @@
 		document.body.style.overflow = 'hidden';
 		$('close').focus();
 		loadStoryboard(e.slug, (item.RunTimeTicks || 0) / 1e7);
+		mountMarkers(e.slug);
 		mountComments($('player-comments'), commentsPanel('video:' + e.slug, {
 			timeOf: function () { return player.currentTime(); },
 			seek: function (t) { player.currentTime(t); player.play().catch(function () {}); $('player').scrollTo({ top: 0, behavior: 'smooth' }); }
@@ -1047,6 +1270,7 @@
 		if (player.currentSrc()) player.reset();
 		playing = null;
 		sb = null; hidePreview();
+		mountMarkers(null);
 		mountComments($('player-comments'), null);
 		$('player').hidden = true;
 		document.body.style.overflow = '';

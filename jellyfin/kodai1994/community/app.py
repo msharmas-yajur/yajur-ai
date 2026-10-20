@@ -23,6 +23,10 @@ Routes (JSON):
   GET    /counts                   {target: number of comments}
   POST   /comments                 {target, body, position?}  position = seconds into a video
   DELETE /comments/<id>            own comment, or any comment for the admin
+  GET    /markers?target=video:...  chapters and tagged events on a video, by time
+  POST   /markers                  {target, kind: chapter|event, title, position}
+  PUT    /markers/<id>             {title?, position?, kind?}  own marker, or any for the admin
+  DELETE /markers/<id>             own marker, or any for the admin
   POST   /access-requests          {name, email, message?}    public: the sign-in page's form
   GET    /admin/requests           pending requests (admin)
   POST   /admin/requests/<id>/approve   creates the account, returns its password (admin)
@@ -58,6 +62,7 @@ MAIL_FROM = os.environ.get("MAIL_FROM") or SMTP_USER
 ADMIN_EMAIL = os.environ.get("ADMIN_EMAIL", "")
 
 TARGET = re.compile(r"^(video:[a-z0-9-]{1,120}|photo:[0-9]{2,3})$")
+VIDEO_TARGET = re.compile(r"^video:[a-z0-9-]{1,120}$")
 EMAIL = re.compile(r"^[^@\s]{1,64}@[^@\s]{1,190}\.[^@\s]{2,}$")
 CONTROL = re.compile(r"[\x00-\x08\x0b-\x1f\x7f]")
 LOGIN_ATTEMPTS = 5          # same policy as add-viewer.py
@@ -130,6 +135,18 @@ CREATE TABLE IF NOT EXISTS comments (
     deleted_at  TEXT
 );
 CREATE INDEX IF NOT EXISTS comments_by_target ON comments (target, created_at);
+CREATE TABLE IF NOT EXISTS markers (
+    id          INTEGER PRIMARY KEY,
+    target      TEXT NOT NULL,
+    user_id     TEXT NOT NULL,
+    kind        TEXT NOT NULL CHECK (kind IN ('chapter', 'event')),
+    title       TEXT NOT NULL,
+    position_s  INTEGER NOT NULL,
+    created_at  TEXT NOT NULL,
+    updated_at  TEXT,
+    deleted_at  TEXT
+);
+CREATE INDEX IF NOT EXISTS markers_by_target ON markers (target, position_s);
 CREATE TABLE IF NOT EXISTS access_requests (
     id          INTEGER PRIMARY KEY,
     name        TEXT NOT NULL,
@@ -344,6 +361,80 @@ class Handler(BaseHTTPRequestHandler):
         execute("UPDATE comments SET deleted_at = ? WHERE id = ?", (now(), int(cid)))
         return 200, {"deleted": int(cid)}
 
+    # ── chapters and tagged events
+    def need_name(self, who):
+        if not query("SELECT 1 FROM profiles WHERE user_id = ? AND display_name IS NOT NULL", (who["id"],)):
+            raise ApiError(409, "Choose the name others will see before adding.")
+
+    @staticmethod
+    def marker_fields(data, partial=False):
+        out = {}
+        if "kind" in data or not partial:
+            kind = str(data.get("kind", ""))
+            if kind not in ("chapter", "event"):
+                raise ApiError(400, "Choose Chapter or Event.")
+            out["kind"] = kind
+        if "title" in data or not partial:
+            title = clean(data.get("title"), 100)
+            if len(title) < 2:
+                raise ApiError(400, "Give it a short title, at least 2 characters.")
+            out["title"] = title
+        if "position" in data or not partial:
+            pos = data.get("position")
+            if not isinstance(pos, (int, float)) or not 0 <= pos < 86400:
+                raise ApiError(400, "Enter a time within the recording, like 1:02:10.")
+            out["position_s"] = int(pos)
+        return out
+
+    def get_markers(self, params):
+        who = self.member()
+        target = urllib.parse.unquote(params.get("target", ""))
+        if not VIDEO_TARGET.match(target):
+            raise ApiError(400, "Unknown video.")
+        rows = query("SELECT m.id, m.user_id, m.kind, m.title, m.position_s, m.created_at, "
+                     "COALESCE(p.display_name, p.username, 'Member') AS author "
+                     "FROM markers m LEFT JOIN profiles p ON p.user_id = m.user_id "
+                     "WHERE m.target = ? AND m.deleted_at IS NULL ORDER BY m.position_s, m.id", (target,))
+        return 200, [{"id": r["id"], "kind": r["kind"], "title": r["title"], "position": r["position_s"],
+                      "author": r["author"], "createdAt": r["created_at"], "mine": r["user_id"] == who["id"],
+                      "canEdit": r["user_id"] == who["id"] or who["isAdmin"]} for r in rows]
+
+    def post_marker(self, params):
+        who = self.member()
+        data = self.read_json()
+        target = str(data.get("target", ""))
+        if not VIDEO_TARGET.match(target):
+            raise ApiError(400, "Unknown video.")
+        f = self.marker_fields(data)
+        self.need_name(who)
+        if not allow(("marker", who["id"]), 20, 60):
+            raise ApiError(429, "You're adding quickly. Wait a minute and try again.")
+        mid = execute("INSERT INTO markers (target, user_id, kind, title, position_s, created_at) VALUES (?, ?, ?, ?, ?, ?)",
+                      (target, who["id"], f["kind"], f["title"], f["position_s"], now()))
+        return 201, {"id": mid}
+
+    def own_marker(self, who, mid):
+        row = query("SELECT user_id FROM markers WHERE id = ? AND deleted_at IS NULL", (int(mid),))
+        if not row:
+            raise ApiError(404, "That marker was already removed.")
+        if row[0]["user_id"] != who["id"] and not who["isAdmin"]:
+            raise ApiError(403, "You can only change markers you added.")
+
+    def put_marker(self, params, mid):
+        who = self.member()
+        f = self.marker_fields(self.read_json(), partial=True)
+        self.own_marker(who, mid)
+        if f:
+            cols = ", ".join(f"{k} = ?" for k in f)
+            execute(f"UPDATE markers SET {cols}, updated_at = ? WHERE id = ?", (*f.values(), now(), int(mid)))
+        return 200, {"id": int(mid)}
+
+    def delete_marker(self, params, mid):
+        who = self.member()
+        self.own_marker(who, mid)
+        execute("UPDATE markers SET deleted_at = ? WHERE id = ?", (now(), int(mid)))
+        return 200, {"deleted": int(mid)}
+
     def post_access_request(self, params):
         ip = self.headers.get("X-Client-IP", "") or self.client_address[0]
         data = self.read_json()
@@ -423,12 +514,14 @@ class Handler(BaseHTTPRequestHandler):
 
 ROUTES = {
     "GET": [(r"/me", Handler.get_me), (r"/comments", Handler.get_comments), (r"/counts", Handler.get_counts),
+            (r"/markers", Handler.get_markers),
             (r"/admin/requests", Handler.get_requests)],
-    "PUT": [(r"/me", Handler.put_me)],
-    "POST": [(r"/comments", Handler.post_comment), (r"/access-requests", Handler.post_access_request),
+    "PUT": [(r"/me", Handler.put_me), (r"/markers/(\d+)", Handler.put_marker)],
+    "POST": [(r"/comments", Handler.post_comment), (r"/markers", Handler.post_marker),
+             (r"/access-requests", Handler.post_access_request),
              (r"/admin/requests/(\d+)/approve", Handler.approve_request),
              (r"/admin/requests/(\d+)/reject", Handler.reject_request)],
-    "DELETE": [(r"/comments/(\d+)", Handler.delete_comment)],
+    "DELETE": [(r"/comments/(\d+)", Handler.delete_comment), (r"/markers/(\d+)", Handler.delete_marker)],
 }
 
 if __name__ == "__main__":

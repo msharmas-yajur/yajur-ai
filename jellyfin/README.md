@@ -68,6 +68,11 @@ Browser ──https──▶ Cloudflare ──tunnel──▶ cloudflared ──
   the moment being watched; clicking `at 1:02:10` jumps there. Members choose the name
   others see (*Account → Your name on comments*) and can delete their own comments; the
   admin can delete any. Stored in `~/services/yajur-videos/community-data/community.db`.
+- **Chapters & events.** Beside each video (below it on phones), members add *chapters*
+  (where a section starts) and *events* (one tagged moment) at the current time or a typed
+  time. They're listed by time with who added them, filterable, shown as ticks on the seek
+  bar, and the current chapter is highlighted; clicking one jumps there. People edit or
+  delete their own; the admin can delete any. Stored with the comments (`markers` table).
 - **Passwords.** Members change theirs under *Account*. The admin can still create or reset
   accounts from a shell:
 
