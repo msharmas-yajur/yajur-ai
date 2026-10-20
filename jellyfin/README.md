@@ -126,7 +126,12 @@ journalctl --user -u kodai1994-processing -f        # "converted 9/18, ready to 
   offers playback speed, keyboard shortcuts, and full screen that keeps the watermark.
 - `kodai1994/prepare-photos.sh`: the folder's JPEGs → `~/media/kodai1994-hls/photos/`
   (duplicates skipped, EXIF/GPS stripped, display size + thumbnail, `photos.json`). Run it
-  by hand after adding photos.
+  by hand after adding photos. It also writes 320 px square crops to
+  `~/media/kodai1994-brand/spiral/` for the photo spiral on the sign-in page. Those are
+  **public** (the sign-in page shows them before anyone signs in); the full-size photos stay
+  members-only. `PUBLIC= prepare-photos.sh` skips them. The spiral paints them as CSS
+  backgrounds (no `<img>` to save) and blocks right-click, drag and long-press saving;
+  a screenshot can still capture what's on screen.
 
 ## Capacity (measured 2026-10-20)
 
