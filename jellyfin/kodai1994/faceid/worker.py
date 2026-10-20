@@ -296,7 +296,9 @@ def add_upload(db, u):
     # imwrite writes no metadata: EXIF, GPS and phone details are dropped here.
     write_atomic(os.path.join(PHOTOS, pid + ".jpg"), lambda t: cv2.imwrite(t, full, [cv2.IMWRITE_JPEG_QUALITY, 90]) or None)
     write_atomic(os.path.join(PHOTOS, pid + "-thumb.jpg"), lambda t: cv2.imwrite(t, fit(img, 640), [cv2.IMWRITE_JPEG_QUALITY, 85]) or None)
-    lst.append({"id": pid, "src": pid + ".jpg", "thumb": pid + "-thumb.jpg", "w": full.shape[1], "h": full.shape[0]})
+    # ow/oh: the original's size (the page tags photos of 4 MP and up as "High res")
+    lst.append({"id": pid, "src": pid + ".jpg", "thumb": pid + "-thumb.jpg", "w": full.shape[1], "h": full.shape[0],
+                "ow": img.shape[1], "oh": img.shape[0]})
     save_photos_json(lst)
     with db:
         db.execute("UPDATE photo_uploads SET status = 'ready', photo_id = ?, processed_at = ? WHERE id = ?", (pid, now(), u["id"]))
