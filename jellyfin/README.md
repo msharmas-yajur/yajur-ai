@@ -85,6 +85,13 @@ Browser ──https──▶ Cloudflare ──tunnel──▶ cloudflared ──
   that isn't listed can be added to People from the same menu. Chapters keep a typed title.
   Events typed before tagging keep their text until edited; editing pre-selects any listed
   names found in it.
+- **Tagging people in photos.** The photo viewer has *People in this photo* above the comments,
+  with the same + / type-ahead / chip picker; each tag saves immediately (`photo_people`).
+  Whoever added a tag, or the admin, can remove it.
+- **Profile pages.** Each name on the People tab opens that person's page (`#person/<id>`,
+  shareable): the photos they're tagged in (the viewer steps through just those) and, per
+  video, only the events they're tagged in; clicking a moment plays from that time. People
+  cards show "N photos, N moments".
 - **Passwords.** Members change theirs under *Account*. The admin can still create or reset
   accounts from a shell:
 

@@ -29,6 +29,11 @@ Routes (JSON):
   POST   /people                   {name}  add a name; 409 with the existing entry if already listed
   PUT    /people/<id>              {name}  rename (admin)
   DELETE /people/<id>              remove (admin, or the member who added it)
+  GET    /people/<id>              profile: the person, the photos they're tagged in, and per
+                                   video only the events they're tagged in
+  GET    /photo-tags               {photoId: [{tagId, personId, name, canRemove}]}
+  POST   /photo-tags               {photo, person}  tag someone in a photo
+  DELETE /photo-tags/<tagId>       untag (whoever tagged, or the admin)
   POST   /markers                  chapter: {target, kind: "chapter", title, position}
                                    event:   {target, kind: "event", people: [person ids], position}
                                    (an event's name is its people's names, comma-separated)
@@ -70,6 +75,7 @@ ADMIN_EMAIL = os.environ.get("ADMIN_EMAIL", "")
 
 TARGET = re.compile(r"^(video:[a-z0-9-]{1,120}|photo:[0-9]{2,3})$")
 VIDEO_TARGET = re.compile(r"^video:[a-z0-9-]{1,120}$")
+PHOTO_ID = re.compile(r"^[0-9]{2,3}$")
 EMAIL = re.compile(r"^[^@\s]{1,64}@[^@\s]{1,190}\.[^@\s]{2,}$")
 CONTROL = re.compile(r"[\x00-\x08\x0b-\x1f\x7f]")
 LOGIN_ATTEMPTS = 5          # same policy as add-viewer.py
@@ -173,6 +179,15 @@ CREATE TABLE IF NOT EXISTS marker_people (   -- who is tagged in an event, in th
     PRIMARY KEY (marker_id, person_id)
 );
 CREATE INDEX IF NOT EXISTS marker_people_by_person ON marker_people (person_id);
+CREATE TABLE IF NOT EXISTS photo_people (     -- who is tagged in which photo (photo ids from photos.json)
+    id          INTEGER PRIMARY KEY,
+    photo_id    TEXT NOT NULL,
+    person_id   INTEGER NOT NULL,
+    added_by    TEXT NOT NULL,
+    created_at  TEXT NOT NULL
+);
+CREATE UNIQUE INDEX IF NOT EXISTS photo_people_unique ON photo_people (photo_id, person_id);
+CREATE INDEX IF NOT EXISTS photo_people_by_person ON photo_people (person_id);
 CREATE TABLE IF NOT EXISTS access_requests (
     id          INTEGER PRIMARY KEY,
     name        TEXT NOT NULL,
@@ -535,10 +550,14 @@ class Handler(BaseHTTPRequestHandler):
 
     def person_row(self, who, r):
         return {"id": r["id"], "name": r["name"], "addedBy": r["adder"], "createdAt": r["created_at"],
+                "photos": r.get("photos", 0), "moments": r.get("moments", 0),
                 "mine": r["added_by"] == who["id"], "canEdit": who["isAdmin"],
                 "canDelete": who["isAdmin"] or r["added_by"] == who["id"]}
 
-    PEOPLE_SQL = ("SELECT pe.id, pe.name, pe.added_by, pe.created_at, COALESCE(p.display_name, p.username, 'Member') AS adder "
+    PEOPLE_SQL = ("SELECT pe.id, pe.name, pe.added_by, pe.created_at, COALESCE(p.display_name, p.username, 'Member') AS adder, "
+                  "(SELECT COUNT(*) FROM photo_people pp WHERE pp.person_id = pe.id) AS photos, "
+                  "(SELECT COUNT(*) FROM marker_people mp JOIN markers m ON m.id = mp.marker_id AND m.deleted_at IS NULL "
+                  " WHERE mp.person_id = pe.id) AS moments "
                   "FROM people pe LEFT JOIN profiles p ON p.user_id = pe.added_by WHERE pe.deleted_at IS NULL")
 
     def get_people(self, params):
@@ -577,6 +596,64 @@ class Handler(BaseHTTPRequestHandler):
             raise ApiError(403, "Only the administrator or the person who added a name can remove it.")
         execute("UPDATE people SET deleted_at = ? WHERE id = ?", (now(), int(pid)))
         return 200, {"deleted": int(pid)}
+
+    def get_person(self, params, pid):
+        who = self.member()
+        rows = query(self.PEOPLE_SQL + " AND pe.id = ?", (int(pid),))
+        if not rows:
+            raise ApiError(404, "That person isn't on the list any more.")
+        photos = [r["photo_id"] for r in query("SELECT photo_id FROM photo_people WHERE person_id = ? ORDER BY photo_id", (int(pid),))]
+        events = query("SELECT m.id, m.target, m.position_s FROM marker_people mp "
+                       "JOIN markers m ON m.id = mp.marker_id AND m.deleted_at IS NULL "
+                       "WHERE mp.person_id = ? ORDER BY m.target, m.position_s", (int(pid),))
+        names = {}
+        if events:
+            ids = [e["id"] for e in events]
+            for t in query("SELECT mp.marker_id, pe.name FROM marker_people mp JOIN people pe ON pe.id = mp.person_id "
+                           "AND pe.deleted_at IS NULL WHERE mp.marker_id IN (%s) ORDER BY mp.marker_id, mp.ord" % ",".join("?" * len(ids)), ids):
+                names.setdefault(t["marker_id"], []).append(t["name"])
+        videos = {}
+        for e in events:
+            videos.setdefault(e["target"], []).append({"id": e["id"], "position": e["position_s"], "title": ", ".join(names.get(e["id"], []))})
+        return 200, {"person": self.person_row(who, rows[0]), "photos": photos,
+                     "videos": [{"target": t, "events": ev} for t, ev in videos.items()]}
+
+    # ── people tagged in photos
+    def get_photo_tags(self, params):
+        who = self.member()
+        out = {}
+        for r in query("SELECT pp.id, pp.photo_id, pp.person_id, pp.added_by, pe.name FROM photo_people pp "
+                       "JOIN people pe ON pe.id = pp.person_id AND pe.deleted_at IS NULL ORDER BY pp.photo_id, pp.id"):
+            out.setdefault(r["photo_id"], []).append({"tagId": r["id"], "personId": r["person_id"], "name": r["name"],
+                                                      "canRemove": who["isAdmin"] or r["added_by"] == who["id"]})
+        return 200, out
+
+    def post_photo_tag(self, params):
+        who = self.member()
+        data = self.read_json()
+        photo, person = str(data.get("photo", "")), data.get("person")
+        if not PHOTO_ID.match(photo):
+            raise ApiError(400, "Unknown photo.")
+        if not isinstance(person, int) or not query("SELECT 1 FROM people WHERE id = ? AND deleted_at IS NULL", (person,)):
+            raise ApiError(400, "That person isn't on the People list. Reload the page and try again.")
+        if not allow(("phototag", who["id"]), 40, 60):
+            raise ApiError(429, "You're tagging quickly. Wait a minute and try again.")
+        hit = query("SELECT id FROM photo_people WHERE photo_id = ? AND person_id = ?", (photo, person))
+        if hit:
+            return 200, {"tagId": hit[0]["id"]}
+        tid = execute("INSERT INTO photo_people (photo_id, person_id, added_by, created_at) VALUES (?, ?, ?, ?)",
+                      (photo, person, who["id"], now()))
+        return 201, {"tagId": tid}
+
+    def delete_photo_tag(self, params, tid):
+        who = self.member()
+        row = query("SELECT added_by FROM photo_people WHERE id = ?", (int(tid),))
+        if not row:
+            raise ApiError(404, "That tag was already removed.")
+        if row[0]["added_by"] != who["id"] and not who["isAdmin"]:
+            raise ApiError(403, "Only the person who added this tag, or the administrator, can remove it.")
+        execute("DELETE FROM photo_people WHERE id = ?", (int(tid),))
+        return 200, {"deleted": int(tid)}
 
     def post_access_request(self, params):
         ip = self.headers.get("X-Client-IP", "") or self.client_address[0]
@@ -658,15 +735,16 @@ class Handler(BaseHTTPRequestHandler):
 ROUTES = {
     "GET": [(r"/me", Handler.get_me), (r"/comments", Handler.get_comments), (r"/counts", Handler.get_counts),
             (r"/markers", Handler.get_markers), (r"/marker-counts", Handler.get_marker_counts),
-            (r"/people", Handler.get_people),
+            (r"/people", Handler.get_people), (r"/people/(\d+)", Handler.get_person), (r"/photo-tags", Handler.get_photo_tags),
             (r"/admin/requests", Handler.get_requests)],
     "PUT": [(r"/me", Handler.put_me), (r"/markers/(\d+)", Handler.put_marker), (r"/people/(\d+)", Handler.put_person)],
     "POST": [(r"/comments", Handler.post_comment), (r"/markers", Handler.post_marker), (r"/people", Handler.post_person),
+             (r"/photo-tags", Handler.post_photo_tag),
              (r"/access-requests", Handler.post_access_request),
              (r"/admin/requests/(\d+)/approve", Handler.approve_request),
              (r"/admin/requests/(\d+)/reject", Handler.reject_request)],
     "DELETE": [(r"/comments/(\d+)", Handler.delete_comment), (r"/markers/(\d+)", Handler.delete_marker),
-               (r"/people/(\d+)", Handler.delete_person)],
+               (r"/people/(\d+)", Handler.delete_person), (r"/photo-tags/(\d+)", Handler.delete_photo_tag)],
 }
 
 if __name__ == "__main__":
