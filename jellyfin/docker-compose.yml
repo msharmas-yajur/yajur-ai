@@ -33,6 +33,8 @@ services:
       - "${MEDIA_DIR}/kodai1994-hls:/srv/kodai1994-hls:ro"
       # logo + favicon (public; kept out of the repository)
       - "${MEDIA_DIR}/kodai1994-brand:/srv/kodai1994-brand:ro"
+      # face crops from the faceid worker (members only)
+      - "${MEDIA_DIR}/kodai1994-identify:/srv/kodai1994-faces:ro"
     environment:
       # Jellyfin ItemId of the "Kodai 1994" library; HLS access is checked against it
       - KODAI_LIBRARY_ID=${KODAI_LIBRARY_ID}
@@ -62,6 +64,33 @@ services:
       - MAIL_FROM=${MAIL_FROM:-}
     depends_on:
       - jellyfin
+    restart: unless-stopped
+
+  # Face identification worker (kodai1994/faceid/worker.py): runs the queue that members
+  # fill from the Identify page, one run at a time, and writes suggestions for review.
+  # CPU only, capped so videos keep playing smoothly while it works. Not on any network
+  # anyone can reach: it only reads files and the community database.
+  faceid:
+    build: ./kodai1994/faceid
+    image: yajur-kodai-faceid
+    container_name: yajur-kodai-faceid
+    # Started by deploy.sh only once FACEID_MODELS is set in .env.
+    profiles: ["faceid"]
+    user: "${PUID}:${PGID}"
+    cpus: 4
+    network_mode: none
+    volumes:
+      - ./community-data:/data
+      # InsightFace buffalo_l: det_10g.onnx + w600k_r50.onnx (non-commercial licence; not in git)
+      - "${FACEID_MODELS}:/models:ro"
+      - "${MEDIA_DIR}/kodai1994-hls:/media/hls:ro"
+      - "${MEDIA_DIR}/kodai1994:/media/videos:ro"
+      - "${MEDIA_DIR}/kodai1994-identify:/out"
+    environment:
+      - DATA_DIR=/data
+      - THREADS=4
+    depends_on:
+      - community
     restart: unless-stopped
 
   cloudflared:

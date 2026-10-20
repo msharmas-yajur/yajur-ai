@@ -44,6 +44,13 @@ Routes (JSON):
                                    (an event's name is its people's names, comma-separated)
   PUT    /markers/<id>             {title?, people?, position?, kind?}  own marker, or any for the admin
   DELETE /markers/<id>             own marker, or any for the admin
+  GET    /identify/runs            latest identification run per video/photo, with review counts
+  POST   /identify/runs            {target}  queue face identification (faceid/worker.py runs it)
+  DELETE /identify/runs/<id>       cancel a queued or running run (whoever started it, or the admin)
+  GET    /identify/suggestions?target=...   the latest run and its suggested faces, best guess first
+  POST   /identify/suggestions/<id>   {action: "confirm", person?} | {action: "reject"} | {action: "undo"}
+                                   confirm (person = the right one if the guess was wrong) adds the
+                                   person to an event at that moment (video) or marks the face (photo)
   POST   /access-requests          {name, email, message?}    public: the sign-in page's form
   GET    /admin/requests           pending requests (admin)
   POST   /admin/requests/<id>/approve   creates the account, returns its password (admin)
@@ -203,6 +210,50 @@ CREATE TABLE IF NOT EXISTS photo_faces (      -- labelled 1994 faces: a box on a
 );
 CREATE UNIQUE INDEX IF NOT EXISTS photo_faces_one_per_photo ON photo_faces (photo_id, person_id);
 CREATE INDEX IF NOT EXISTS photo_faces_by_person ON photo_faces (person_id);
+-- Face identification (faceid/worker.py fills runs and suggestions; members review them here)
+CREATE TABLE IF NOT EXISTS identify_runs (
+    id           INTEGER PRIMARY KEY,
+    target       TEXT NOT NULL,                     -- video:<slug> or photo:<id>
+    status       TEXT NOT NULL DEFAULT 'queued',    -- queued, running, done, failed, cancelled
+    progress     REAL NOT NULL DEFAULT 0,           -- 0-1
+    message      TEXT,
+    refs         INTEGER,                           -- reference faces used, and for how many people
+    people       INTEGER,
+    requested_by TEXT NOT NULL,
+    created_at   TEXT NOT NULL,
+    started_at   TEXT,
+    finished_at  TEXT
+);
+CREATE INDEX IF NOT EXISTS identify_runs_by_target ON identify_runs (target, id);
+CREATE TABLE IF NOT EXISTS identify_suggestions (
+    id              INTEGER PRIMARY KEY,
+    run_id          INTEGER NOT NULL,
+    target          TEXT NOT NULL,
+    start_s REAL, end_s REAL, frame_s REAL,         -- video: on screen from/to, and the frame shown
+    x REAL NOT NULL, y REAL NOT NULL, w REAL NOT NULL, h REAL NOT NULL,   -- face box, fractions
+    person_id       INTEGER,                        -- best guess; NULL = not recognised
+    score           REAL,
+    alternatives    TEXT,                           -- JSON [{personId, score}], best first
+    cluster         INTEGER,                        -- unrecognised faces that look alike share one
+    crop            TEXT NOT NULL,                  -- face image, under /kodai1994/faces/
+    embedding       BLOB,                           -- confirmed ones become references for later runs
+    face_px         REAL,
+    status          TEXT NOT NULL DEFAULT 'pending',   -- pending, confirmed, rejected
+    final_person_id INTEGER,
+    reviewed_by     TEXT,
+    reviewed_at     TEXT,
+    marker_id       INTEGER,                        -- the event this moment went into
+    marker_added    INTEGER NOT NULL DEFAULT 0,     -- 1 if confirming added the person to it
+    face_id         INTEGER,                        -- photo face mark / tag created by confirming
+    tag_id          INTEGER,
+    created_at      TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS identify_suggestions_by_target ON identify_suggestions (target, status);
+CREATE TABLE IF NOT EXISTS identify_refs (       -- worker cache: embedding of each marked photo face
+    face_id   INTEGER PRIMARY KEY,
+    x REAL, y REAL, w REAL, h REAL,
+    embedding BLOB
+);
 CREATE TABLE IF NOT EXISTS access_requests (
     id          INTEGER PRIMARY KEY,
     name        TEXT NOT NULL,
@@ -752,6 +803,189 @@ class Handler(BaseHTTPRequestHandler):
         execute("UPDATE people SET portrait_face = ? WHERE id = ?", (face, int(pid)))
         return 200, {"portrait": face}
 
+    # ── face identification: queue runs, review what the worker suggests
+    EVENT_MERGE_S = 3    # people confirmed within this many seconds share one event
+    DUPLICATE_S = 10     # already tagged this close to the moment: don't tag again
+
+    @staticmethod
+    def run_row(r, counts=None):
+        return {"id": r["id"], "target": r["target"], "status": r["status"], "progress": r["progress"],
+                "message": r["message"], "refs": r["refs"], "people": r["people"], "createdAt": r["created_at"],
+                "finishedAt": r["finished_at"], "requestedBy": r.get("requester"),
+                "counts": counts or {"pending": 0, "confirmed": 0, "rejected": 0}}
+
+    RUNS_SQL = ("SELECT r.*, COALESCE(p.display_name, p.username, 'Member') AS requester FROM identify_runs r "
+                "LEFT JOIN profiles p ON p.user_id = r.requested_by ")
+
+    @staticmethod
+    def review_counts(target=None):
+        out = {}
+        sql = "SELECT target, status, COUNT(*) AS n FROM identify_suggestions "
+        for r in query(sql + ("WHERE target = ? " if target else "") + "GROUP BY target, status", (target,) if target else ()):
+            out.setdefault(r["target"], {"pending": 0, "confirmed": 0, "rejected": 0})[r["status"]] = r["n"]
+        return out
+
+    @staticmethod
+    def queue_place(row):
+        queue = [r["id"] for r in query("SELECT id FROM identify_runs WHERE status IN ('queued', 'running') ORDER BY id")]
+        if row and row["id"] in queue:
+            row["place"] = queue.index(row["id"])  # 0 = running now
+        return row
+
+    def get_identify_runs(self, params):
+        self.member()
+        counts = self.review_counts()
+        rows = query(self.RUNS_SQL + "WHERE r.id IN (SELECT MAX(id) FROM identify_runs GROUP BY target)")
+        return 200, [self.queue_place(self.run_row(r, counts.get(r["target"]))) for r in rows]
+
+    def post_identify_run(self, params):
+        who = self.member()
+        target = str(self.read_json().get("target", ""))
+        if not TARGET.match(target):
+            raise ApiError(400, "Choose a video or photo.")
+        if query("SELECT 1 FROM identify_runs WHERE target = ? AND status IN ('queued', 'running')", (target,)):
+            raise ApiError(409, "This one is already being identified. Its results will appear here.")
+        if not allow(("identify", who["id"]), 10, 3600):
+            raise ApiError(429, "You've started a lot of runs. Wait a while and try again.")
+        rid = execute("INSERT INTO identify_runs (target, requested_by, created_at) VALUES (?, ?, ?)", (target, who["id"], now()))
+        row = self.run_row(query(self.RUNS_SQL + "WHERE r.id = ?", (rid,))[0], self.review_counts(target).get(target))
+        return 201, self.queue_place(row)
+
+    def cancel_identify_run(self, params, rid):
+        who = self.member()
+        row = query("SELECT requested_by, status FROM identify_runs WHERE id = ?", (int(rid),))
+        if not row or row[0]["status"] not in ("queued", "running"):
+            raise ApiError(404, "That run already finished.")
+        if row[0]["requested_by"] != who["id"] and not who["isAdmin"]:
+            raise ApiError(403, "Only the person who started this run, or the administrator, can cancel it.")
+        execute("UPDATE identify_runs SET status = 'cancelled', finished_at = ? WHERE id = ?", (now(), int(rid)))
+        return 200, {"cancelled": int(rid)}
+
+    @staticmethod
+    def suggestion_row(who, r):
+        return {"id": r["id"], "runId": r["run_id"], "start": r["start_s"], "end": r["end_s"], "frame": r["frame_s"],
+                "box": {"x": r["x"], "y": r["y"], "w": r["w"], "h": r["h"]}, "personId": r["person_id"], "score": r["score"],
+                "alternatives": json.loads(r["alternatives"] or "[]"), "cluster": r["cluster"], "facePx": r["face_px"],
+                "crop": "/kodai1994/faces/" + r["crop"], "status": r["status"], "finalPersonId": r["final_person_id"],
+                "reviewedBy": r["reviewer"], "reviewedAt": r["reviewed_at"], "markerId": r["marker_id"],
+                "canUndo": r["status"] != "pending" and (r["reviewed_by"] == who["id"] or who["isAdmin"])}
+
+    def get_identify_suggestions(self, params):
+        who = self.member()
+        target = urllib.parse.unquote(params.get("target", ""))
+        if not TARGET.match(target):
+            raise ApiError(400, "Choose a video or photo.")
+        run = query(self.RUNS_SQL + "WHERE r.target = ? ORDER BY r.id DESC LIMIT 1", (target,))
+        rows = query("SELECT s.*, COALESCE(p.display_name, p.username) AS reviewer FROM identify_suggestions s "
+                     "LEFT JOIN profiles p ON p.user_id = s.reviewed_by WHERE s.target = ? "
+                     "ORDER BY s.person_id IS NULL, s.score DESC, s.cluster, s.face_px DESC", (target,))
+        out = self.queue_place(self.run_row(run[0], self.review_counts(target).get(target))) if run else None
+        return 200, {"run": out, "suggestions": [self.suggestion_row(who, r) for r in rows]}
+
+    def marker_people_rows(self, mid):
+        return query("SELECT pe.id, pe.name FROM marker_people mp JOIN people pe ON pe.id = mp.person_id "
+                     "WHERE mp.marker_id = ? ORDER BY mp.ord", (mid,))
+
+    def confirm_video(self, who, s, person):
+        """The event this moment goes into, and whether the person was added to it."""
+        start = int(s["start_s"] or 0)
+        near = query("SELECT m.id FROM markers m JOIN marker_people mp ON mp.marker_id = m.id "
+                     "WHERE m.target = ? AND m.kind = 'event' AND m.deleted_at IS NULL AND mp.person_id = ? "
+                     "AND ABS(m.position_s - ?) <= ?", (s["target"], person, start, self.DUPLICATE_S))
+        if near:  # already tagged at this moment
+            return near[0]["id"], 0
+        # Join an event made from identification at (almost) the same moment, so people seen
+        # together end up in one event, as members tag them by hand. Events members added
+        # themselves are left as they are.
+        joinable = query("SELECT m.id FROM markers m WHERE m.target = ? AND m.kind = 'event' AND m.deleted_at IS NULL "
+                         "AND ABS(m.position_s - ?) <= ? AND m.id IN (SELECT marker_id FROM identify_suggestions "
+                         "WHERE marker_added = 1) AND (SELECT COUNT(*) FROM marker_people WHERE marker_id = m.id) < 20 "
+                         "ORDER BY ABS(m.position_s - ?) LIMIT 1", (s["target"], start, self.EVENT_MERGE_S, start))
+        if joinable:
+            mid = joinable[0]["id"]
+        else:
+            mid = execute("INSERT INTO markers (target, user_id, kind, title, position_s, created_at) VALUES (?, ?, 'event', '', ?, ?)",
+                          (s["target"], who["id"], start, now()))
+        rows = self.marker_people_rows(mid) + query("SELECT id, name FROM people WHERE id = ?", (person,))
+        self.link_people(mid, rows)
+        execute("UPDATE markers SET title = ?, updated_at = ? WHERE id = ?", (self.event_title(rows), now(), mid))
+        return mid, 1
+
+    def undo_video(self, s):
+        mid = s["marker_id"]
+        if not mid or not s["marker_added"]:
+            return
+        rows = [r for r in self.marker_people_rows(mid) if r["id"] != s["final_person_id"]]
+        self.link_people(mid, rows)
+        if rows:
+            execute("UPDATE markers SET title = ?, updated_at = ? WHERE id = ?", (self.event_title(rows), now(), mid))
+        else:
+            execute("UPDATE markers SET deleted_at = ? WHERE id = ?", (now(), mid))
+
+    @staticmethod
+    def confirm_photo(who, s, person):
+        """Mark the face and tag the photo, unless that's already done; returns what was created."""
+        photo = s["target"][len("photo:"):]
+        face_id = tag_id = None
+        if not query("SELECT 1 FROM photo_faces WHERE photo_id = ? AND person_id = ?", (photo, person)):
+            face_id = execute("INSERT INTO photo_faces (photo_id, person_id, x, y, w, h, added_by, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                              (photo, person, s["x"], s["y"], s["w"], s["h"], who["id"], now()))
+        if not query("SELECT 1 FROM photo_people WHERE photo_id = ? AND person_id = ?", (photo, person)):
+            tag_id = execute("INSERT INTO photo_people (photo_id, person_id, added_by, created_at) VALUES (?, ?, ?, ?)",
+                             (photo, person, who["id"], now()))
+        return face_id, tag_id
+
+    @staticmethod
+    def undo_photo(s):
+        if s["face_id"]:
+            execute("DELETE FROM photo_faces WHERE id = ?", (s["face_id"],))
+            execute("UPDATE people SET portrait_face = NULL WHERE portrait_face = ?", (s["face_id"],))
+        if s["tag_id"]:
+            execute("DELETE FROM photo_people WHERE id = ?", (s["tag_id"],))
+
+    def review_suggestion(self, params, sid):
+        who = self.member()
+        data = self.read_json()
+        action = str(data.get("action", ""))
+        if action not in ("confirm", "reject", "undo"):
+            raise ApiError(400, "Choose Confirm, Not them, or Undo.")
+        if not allow(("review", who["id"]), 120, 60):
+            raise ApiError(429, "You're reviewing quickly. Wait a minute and try again.")
+        rows = query("SELECT * FROM identify_suggestions WHERE id = ?", (int(sid),))
+        if not rows:
+            raise ApiError(404, "That suggestion was replaced by a newer run. Reload the page.")
+        s = rows[0]
+        is_video = s["target"].startswith("video:")
+        if action == "undo":
+            if s["status"] == "pending":
+                return 200, {"id": s["id"], "status": "pending"}
+            if s["reviewed_by"] != who["id"] and not who["isAdmin"]:
+                raise ApiError(403, "Only the person who reviewed this, or the administrator, can undo it.")
+            if s["status"] == "confirmed":
+                self.undo_video(s) if is_video else self.undo_photo(s)
+            execute("UPDATE identify_suggestions SET status = 'pending', final_person_id = NULL, reviewed_by = NULL, reviewed_at = NULL, "
+                    "marker_id = NULL, marker_added = 0, face_id = NULL, tag_id = NULL WHERE id = ?", (s["id"],))
+            return 200, {"id": s["id"], "status": "pending"}
+        if s["status"] != "pending":
+            raise ApiError(409, "Someone already reviewed this one. Reload the page to see their answer.")
+        if action == "reject":
+            execute("UPDATE identify_suggestions SET status = 'rejected', reviewed_by = ?, reviewed_at = ? WHERE id = ?",
+                    (who["id"], now(), s["id"]))
+            return 200, {"id": s["id"], "status": "rejected"}
+        person = data.get("person", s["person_id"])
+        if not isinstance(person, int) or not query("SELECT 1 FROM people WHERE id = ? AND deleted_at IS NULL", (person,)):
+            raise ApiError(400, "Choose who this is from the People list.")
+        if is_video:
+            self.need_name(who)
+            mid, added = self.confirm_video(who, s, person)
+            execute("UPDATE identify_suggestions SET status = 'confirmed', final_person_id = ?, reviewed_by = ?, reviewed_at = ?, "
+                    "marker_id = ?, marker_added = ? WHERE id = ?", (person, who["id"], now(), mid, added, s["id"]))
+        else:
+            face_id, tag_id = self.confirm_photo(who, s, person)
+            execute("UPDATE identify_suggestions SET status = 'confirmed', final_person_id = ?, reviewed_by = ?, reviewed_at = ?, "
+                    "face_id = ?, tag_id = ? WHERE id = ?", (person, who["id"], now(), face_id, tag_id, s["id"]))
+        return 200, {"id": s["id"], "status": "confirmed"}
+
     def post_access_request(self, params):
         ip = self.headers.get("X-Client-IP", "") or self.client_address[0]
         data = self.read_json()
@@ -834,17 +1068,19 @@ ROUTES = {
             (r"/markers", Handler.get_markers), (r"/marker-counts", Handler.get_marker_counts),
             (r"/people", Handler.get_people), (r"/people/(\d+)", Handler.get_person), (r"/photo-tags", Handler.get_photo_tags),
             (r"/photo-faces", Handler.get_photo_faces),
+            (r"/identify/runs", Handler.get_identify_runs), (r"/identify/suggestions", Handler.get_identify_suggestions),
             (r"/admin/requests", Handler.get_requests)],
     "PUT": [(r"/me", Handler.put_me), (r"/markers/(\d+)", Handler.put_marker), (r"/people/(\d+)", Handler.put_person),
             (r"/people/(\d+)/portrait", Handler.put_portrait)],
     "POST": [(r"/comments", Handler.post_comment), (r"/markers", Handler.post_marker), (r"/people", Handler.post_person),
              (r"/photo-tags", Handler.post_photo_tag), (r"/photo-faces", Handler.post_photo_face),
+             (r"/identify/runs", Handler.post_identify_run), (r"/identify/suggestions/(\d+)", Handler.review_suggestion),
              (r"/access-requests", Handler.post_access_request),
              (r"/admin/requests/(\d+)/approve", Handler.approve_request),
              (r"/admin/requests/(\d+)/reject", Handler.reject_request)],
     "DELETE": [(r"/comments/(\d+)", Handler.delete_comment), (r"/markers/(\d+)", Handler.delete_marker),
                (r"/people/(\d+)", Handler.delete_person), (r"/photo-tags/(\d+)", Handler.delete_photo_tag),
-               (r"/photo-faces/(\d+)", Handler.delete_photo_face)],
+               (r"/photo-faces/(\d+)", Handler.delete_photo_face), (r"/identify/runs/(\d+)", Handler.cancel_identify_run)],
 }
 
 if __name__ == "__main__":

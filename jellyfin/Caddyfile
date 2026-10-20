@@ -1,6 +1,7 @@
 # Gateway for https://videos.yajur.ai (cloudflared → gateway:80)
 #   /kodai1994/       Kodai 1994 collection page (static; signs in against Jellyfin)
 #   /kodai1994/hls/   the collection's HLS streams, thumbnails, and backdrop: members only
+#   /kodai1994/faces/ face crops for the Identify page: members only
 #   /                 redirects to the collection
 #   everything else → Jellyfin API (sign-in, listings, progress), minus playback/download
 #
@@ -45,6 +46,17 @@ Disallow: /
 			}
 			header Cache-Control "private, no-store"
 			root * /srv/kodai1994-hls
+			file_server
+		}
+
+		# Face crops for the Identify page (faceid worker output): members only, as above.
+		handle_path /kodai1994/faces/* {
+			forward_auth jellyfin:8096 {
+				uri /Items/{$KODAI_LIBRARY_ID}
+				header_up Authorization `MediaBrowser Token="{http.request.cookie.kodai_auth}"`
+			}
+			header Cache-Control "private, no-store"
+			root * /srv/kodai1994-faces
 			file_server
 		}
 

@@ -152,6 +152,8 @@
 	.hero__resume-detail { font-size: 0.95rem; }
 
 	.controls { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 16px; padding: 8px var(--gutter) 0; }
+	.controls__link { margin-left: auto; color: var(--khadi); font-weight: 500; text-decoration: none; border: 1px solid var(--line); border-radius: 999px; padding: 8px 16px; font-size: .95rem; }
+	.controls__link:hover { border-color: var(--mist); }
 	.views { display: inline-flex; padding: 4px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel); }
 	.views button { border: 0; background: transparent; padding: 9px 20px; border-radius: 999px; cursor: pointer; font-weight: 500; color: var(--mist); }
 	.views button[aria-pressed=true] { background: var(--khadi); color: var(--pine-deep); }
@@ -547,6 +549,7 @@
 			<button type="button" data-view="photos" aria-pressed="false">Photos</button>
 			<button type="button" data-view="people" aria-pressed="false">People</button>
 		</div>
+		<a class="controls__link" href="identify.html">Identify faces</a>
 		<span class="muted" id="signed-in"></span>
 	</div>
 	<p class="status muted" id="status" aria-live="polite"></p>

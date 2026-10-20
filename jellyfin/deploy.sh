@@ -18,6 +18,8 @@ mkdir -p "$DEST/kodai1994/community" "$DEST/config" "$DEST/cache" "$DEST/communi
 # (new inode) would leave a running container reading the old one.
 cp "$HERE/kodai1994/community/app.py" "$DEST/kodai1994/community/app.py"
 cp "$HERE/docker-compose.yml" "$HERE/Caddyfile" "$DEST/"
+mkdir -p "$DEST/kodai1994/faceid"
+cp "$HERE/kodai1994/faceid/Dockerfile" "$HERE/kodai1994/faceid/worker.py" "$DEST/kodai1994/faceid/"
 # Update in place: replacing the folder would leave the running gateway's bind mount
 # pointing at the deleted directory.
 mkdir -p "$DEST/kodai1994/site"
@@ -42,6 +44,9 @@ fi
 
 cd "$DEST"
 if [ "${1:-up}" = config ]; then exec docker compose config; fi
+# The faceid worker's output folder, created as this user (see above).
+MEDIA_DIR=$(sed -n 's/^MEDIA_DIR=//p' .env)
+mkdir -p "$MEDIA_DIR/kodai1994-identify"
 # Without a tunnel token, run locally only (gateway on 127.0.0.1:8098).
 if grep -qE '^CLOUDFLARE_TUNNEL_TOKEN=.+' .env; then
   docker compose up -d --remove-orphans
@@ -52,4 +57,8 @@ fi
 # Compose can't see changes inside mounted files, and the gateway's admin API (live
 # reload) is off, so recreate the two containers whose config/code lives in this repo.
 docker compose up -d --force-recreate --no-deps gateway community
+# The worker's code is baked into its image: rebuild it (quick when only worker.py changed).
+if grep -qE '^FACEID_MODELS=.+' .env; then
+  docker compose --profile faceid up -d --build --no-deps faceid
+fi
 docker compose ps
