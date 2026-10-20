@@ -24,6 +24,7 @@ Routes (JSON):
   POST   /comments                 {target, body, position?}  position = seconds into a video
   DELETE /comments/<id>            own comment, or any comment for the admin
   GET    /markers?target=video:...  chapters and tagged events on a video, by time
+  GET    /marker-counts            {target: {chapter: n, event: n}} for every video with markers
   POST   /markers                  {target, kind: chapter|event, title, position}
   PUT    /markers/<id>             {title?, position?, kind?}  own marker, or any for the admin
   DELETE /markers/<id>             own marker, or any for the admin
@@ -401,6 +402,13 @@ class Handler(BaseHTTPRequestHandler):
                       "author": r["author"], "createdAt": r["created_at"], "mine": r["user_id"] == who["id"],
                       "canEdit": r["user_id"] == who["id"] or who["isAdmin"]} for r in rows]
 
+    def get_marker_counts(self, params):
+        self.member()
+        out = {}
+        for r in query("SELECT target, kind, COUNT(*) AS n FROM markers WHERE deleted_at IS NULL GROUP BY target, kind"):
+            out.setdefault(r["target"], {"chapter": 0, "event": 0})[r["kind"]] = r["n"]
+        return 200, out
+
     def post_marker(self, params):
         who = self.member()
         data = self.read_json()
@@ -516,7 +524,7 @@ class Handler(BaseHTTPRequestHandler):
 
 ROUTES = {
     "GET": [(r"/me", Handler.get_me), (r"/comments", Handler.get_comments), (r"/counts", Handler.get_counts),
-            (r"/markers", Handler.get_markers),
+            (r"/markers", Handler.get_markers), (r"/marker-counts", Handler.get_marker_counts),
             (r"/admin/requests", Handler.get_requests)],
     "PUT": [(r"/me", Handler.put_me), (r"/markers/(\d+)", Handler.put_marker)],
     "POST": [(r"/comments", Handler.post_comment), (r"/markers", Handler.post_marker),
