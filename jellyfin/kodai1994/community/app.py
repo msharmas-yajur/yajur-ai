@@ -105,7 +105,9 @@ def send_mail(to, subject, body):
             server.send_message(msg)
         return True
     except (OSError, smtplib.SMTPException) as e:
-        print(f"email to {to} failed: {type(e).__name__}", flush=True)
+        # The server's reply explains failures (e.g. "Username and Password not accepted");
+        # it never contains the password.
+        print(f"email to {to} failed: {type(e).__name__}: {e}", flush=True)
         return False
 
 
