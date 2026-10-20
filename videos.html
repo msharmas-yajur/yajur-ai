@@ -234,7 +234,7 @@ copilot: false
 			if (tag) {
 				var img = document.createElement('img');
 				img.loading = 'lazy'; img.alt = '';
-				img.src = SERVER + '/Items/' + item.Id + '/Images/Primary?maxWidth=480&quality=85&tag=' + tag;
+				img.src = SERVER + '/Items/' + item.Id + '/Images/Primary?maxWidth=480&quality=85&tag=' + tag + '&ApiKey=' + session.token;
 				thumb.appendChild(img);
 			}
 			var dur = fmtDuration(item.RunTimeTicks);
