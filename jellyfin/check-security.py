@@ -13,10 +13,12 @@ import http.client, json, os, sys, urllib.parse, urllib.request
 BASE = (sys.argv[1] if len(sys.argv) > 1 else "http://127.0.0.1:8098").rstrip("/")
 STACK = os.environ.get("VIDEOS_STACK_DIR", os.path.expanduser("~/services/yajur-videos"))
 AUTH = 'MediaBrowser Client="yajur-security-check", Device="cli", DeviceId="yajur-security-check", Version="1.0"'
+# Cloudflare's Browser Integrity Check rejects Python's default User-Agent (error 1010).
+UA = "yajur-security-check/1.0"
 
 
 def api(method, path, body=None, token=None):
-    headers = {"Authorization": AUTH + (f', Token="{token}"' if token else "")}
+    headers = {"Authorization": AUTH + (f', Token="{token}"' if token else ""), "User-Agent": UA}
     data = json.dumps(body).encode() if body is not None else None
     if data: headers["Content-Type"] = "application/json"
     with urllib.request.urlopen(urllib.request.Request(BASE + path, data=data, method=method, headers=headers), timeout=30) as r:
@@ -28,6 +30,7 @@ def status(path, headers=None):
     u = urllib.parse.urlsplit(BASE)
     conn = (http.client.HTTPSConnection if u.scheme == "https" else http.client.HTTPConnection)(u.netloc, timeout=30)
     conn.putrequest("GET", path, skip_accept_encoding=True)  # send the path byte-for-byte
+    conn.putheader("User-Agent", UA)
     for k, v in (headers or {}).items(): conn.putheader(k, v)
     conn.putheader("Range", "bytes=0-99")
     conn.endheaders()

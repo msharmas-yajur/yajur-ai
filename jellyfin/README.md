@@ -96,6 +96,7 @@ admin user `yajur-admin`, remote access on, library **Kodai 1994** = Home Videos
 | Login lockout | Each user → **Profile** → "Failed login tries before user is locked out" | `5` (set by `add-viewer.py`) |
 | Hide users on login screen | Each user → **Profile** | on |
 | Downloads | Each viewer → **Profile** → "Allow media downloading" | off |
+| Resume threshold | **Playback → Resume** → "Minimum resume percentage" (`MinResumePct`) | `1` (default `5` drops positions under 9 minutes on the 3-hour discourses) |
 
 ### 3. Publish with a Cloudflare Tunnel (the yajur.ai zone is already on Cloudflare)
 
