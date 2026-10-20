@@ -36,6 +36,14 @@ systemctl --user enable kodai1994-processing.service >/dev/null 2>&1
 # start is a no-op while it's running; restart it by hand to pick up script changes.
 systemctl --user start kodai1994-processing.service
 
+# Nightly backup to Google Drive (kodai1994/backup.sh), once it's configured in .env.
+install -m 755 "$HERE/kodai1994/backup.sh" "$DEST/kodai1994/bin/"
+install -m 644 "$HERE/kodai1994/kodai1994-backup.service" "$HERE/kodai1994/kodai1994-backup.timer" "$HOME/.config/systemd/user/"
+systemctl --user daemon-reload
+if grep -qE '^BACKUP_FOLDER_ID=.+' "$DEST/.env" 2>/dev/null; then
+  systemctl --user enable --now kodai1994-backup.timer >/dev/null 2>&1
+fi
+
 if [ ! -f "$DEST/.env" ]; then
   install -m 600 "$HERE/.env.example" "$DEST/.env"
   echo "Created $DEST/.env from .env.example — fill it in, then re-run." >&2

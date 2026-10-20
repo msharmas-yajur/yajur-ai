@@ -186,6 +186,27 @@ journalctl --user -u kodai1994-processing -f        # "converted 9/18, ready to 
   surface behind the helix and form, with cursor ripples; it pauses when the sign-in screen
   is hidden. Tablets and phones skip it and show the helix behind the form instead.
 
+## Backup (Google Drive)
+
+`kodai1994/backup.sh` runs nightly at about 03:00 (`kodai1994-backup.timer`, a systemd
+user timer installed by `deploy.sh`) and copies to the Drive folder in `BACKUP_FOLDER_ID`
+through the rclone remote `BACKUP_REMOTE`:
+
+| From | To (in the Drive folder) |
+|---|---|
+| `BACKUP_SOURCE`: the original videos and photos | the folder itself, same file names |
+| `~/media/kodai1994-uploads/`: photos members uploaded (originals, kept even after removal from the page) | `Uploaded photos/` |
+| a snapshot of `community-data/community.db` (comments, people, faces, events, identify reviews) | `Site data/community-YYYY-MM-DD.db`, last 30 days |
+
+It only adds: files already on Drive under the same name are left alone and nothing is
+deleted there, except database snapshots older than 30 days. Not backed up because they're
+rebuilt from the originals: HLS streams, web MP4s, thumbnails, face crops. Jellyfin's
+`config/` (password hashes) stays off Drive; back it up separately if needed.
+
+Run it now: `systemctl --user start kodai1994-backup.service`; log:
+`journalctl --user -u kodai1994-backup.service`. To restore the database, stop the
+community container and copy a snapshot over `community-data/community.db`.
+
 ## Capacity (measured 2026-10-20)
 
 The server side is not the limit: 100 simulated viewers streaming at 3× real time through

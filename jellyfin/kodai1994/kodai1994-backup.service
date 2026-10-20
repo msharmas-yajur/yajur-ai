@@ -1,0 +1,11 @@
+[Unit]
+Description=Kodai 1994 backup to Google Drive (originals, uploaded photos, community database)
+After=network-online.target
+
+[Service]
+Type=oneshot
+# rclone is usually installed per user
+Environment=PATH=%h/.local/bin:/usr/local/bin:/usr/bin:/bin
+ExecStart=%h/services/yajur-videos/kodai1994/bin/backup.sh
+Nice=10
+IOSchedulingClass=idle
