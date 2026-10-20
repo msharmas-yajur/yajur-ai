@@ -92,6 +92,15 @@ Browser ──https──▶ Cloudflare ──tunnel──▶ cloudflared ──
   shareable): the photos they're tagged in (the viewer steps through just those) and, per
   video, only the events they're tagged in; clicking a moment plays from that time. People
   cards show "N photos, N moments".
+- **1994 faces.** In the photo viewer, *Mark faces* lets members drag a box around a face and
+  pick who it is (`photo_faces`: photo, person, box as fractions of the photo, who marked it).
+  Marking also tags the person in the photo. The first marked face, or the one chosen with
+  *Use as portrait*, is the person's 1994 portrait on their People card and profile; the
+  profile's *Faces from 1994* lists every marked face. These boxes are the labelled examples
+  for automatic face matching later. Whoever marked a face, or the admin, can remove it.
+- **Zoom.** Photo viewer and video player: − / + / Fit, mouse wheel (Ctrl + wheel on video),
+  pinch on phones, drag to move when zoomed. While marking faces, a Draw / Move switch
+  chooses what dragging does; boxes drawn while zoomed land in the right place.
 - **Passwords.** Members change theirs under *Account*. The admin can still create or reset
   accounts from a shell:
 
