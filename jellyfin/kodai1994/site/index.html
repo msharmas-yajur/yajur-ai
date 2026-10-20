@@ -133,7 +133,7 @@
 
 	.viewer { position: fixed; inset: 0; z-index: 60; background: rgba(6, 13, 9, .96); display: grid; grid-template-rows: auto 1fr; padding: 16px; }
 	.viewer__head { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 0 4px 12px; }
-	.viewer__frame { position: relative; display: grid; place-items: center; min-height: 0; }
+	.viewer__frame { position: relative; display: grid; place-items: center; min-height: 0; overflow: hidden; }
 	.viewer__frame img { max-width: 100%; max-height: calc(100vh - 110px); object-fit: contain; border-radius: 6px; user-select: none; -webkit-user-drag: none; -webkit-touch-callout: none; }
 	.viewer__nav { position: absolute; top: 50%; transform: translateY(-50%); width: 52px; height: 52px; border-radius: 50%; border: 1px solid var(--line); background: rgba(12,25,18,.7); cursor: pointer; display: grid; place-items: center; }
 	.viewer__nav svg { width: 22px; height: 22px; fill: var(--khadi); }
@@ -142,7 +142,7 @@
 
 	/* ── Player */
 	.player { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; padding: 16px; background: var(--pine-deep) center / cover no-repeat; }
-	.player::before { content: ""; position: absolute; inset: 0; background: rgba(12,25,18,.88); }
+	.player::before { content: ""; position: fixed; inset: 0; background: rgba(12,25,18,.88); }
 	.player__inner { position: relative; width: 100%; max-width: 1180px; }
 	.player__head { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; margin-bottom: 14px; }
 	.player__head h2 { font: 400 clamp(1.3rem, 3vw, 2rem)/1.15 var(--display); margin: 0; }
@@ -154,6 +154,63 @@
 	.stage:fullscreen video { max-height: 100vh; height: 100vh; }
 	.watermark { position: absolute; z-index: 2; pointer-events: none; user-select: none; color: rgba(255,255,255,.32); font-size: clamp(0.75rem, 1.6vw, 1rem); font-weight: 600; letter-spacing: .02em; text-shadow: 0 1px 2px rgba(0,0,0,.6); transition: top 1.2s ease, left 1.2s ease; white-space: nowrap; }
 	.player .error { color: #ffb38a; }
+	/* The player scrolls so comments can sit under the video. */
+	.player { overflow-y: auto; place-items: start center; padding: 24px 16px 64px; background-attachment: fixed; }
+
+	/* Comments (videos and photos) */
+	.comments { margin-top: 28px; max-width: 760px; }
+	.comments__title { font: 400 1.5rem/1.2 var(--display); margin: 0 0 14px; }
+	.comments__list { list-style: none; margin: 0; padding: 0; display: grid; gap: 18px; }
+	.comment { border-left: 2px solid var(--line); padding: 2px 0 2px 14px; }
+	.comment__meta { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; font-size: 0.9rem; }
+	.comment__meta strong { font-weight: 600; font-size: 1rem; }
+	.comment__body { margin: 4px 0 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+	.chip { border: 1px solid var(--line); background: rgba(234,122,42,.12); color: var(--khadi); border-radius: 999px; padding: 1px 10px; font-size: 0.85rem; cursor: pointer; font-variant-numeric: tabular-nums; }
+	.chip:hover { border-color: var(--saffron); }
+	.linkish { border: 0; background: none; padding: 0; color: var(--mist); text-decoration: underline; cursor: pointer; font-size: 0.85rem; }
+	.comments__form { display: grid; gap: 10px; margin-top: 22px; padding: 18px; border: 1px solid var(--line); border-radius: 16px; background: var(--panel); }
+	.comments__form label { font-size: 0.9rem; font-weight: 600; }
+	.field { width: 100%; font: inherit; color: var(--khadi); background: rgba(0,0,0,.25); border: 1px solid var(--line); border-radius: 12px; padding: 11px 13px; }
+	textarea.field { min-height: 92px; resize: vertical; }
+	.hint { font-size: 0.85rem; color: var(--mist); margin: -4px 0 0; }
+	.check { display: flex; gap: 10px; align-items: center; font-weight: 400 !important; }
+	.form-actions { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+	.form-actions .btn { padding: 11px 22px; }
+	.ok { color: #b9e3c6; font-size: 0.95rem; margin: 0; }
+	.comments .error, .sheet .error, .login .error { margin: 0; }
+
+	/* Photo viewer with its comments alongside */
+	.viewer { grid-template-columns: minmax(0, 1fr) 380px; grid-template-rows: auto minmax(0, 1fr); gap: 0 24px; }
+	.viewer__head { grid-column: 1 / -1; }
+	.viewer__side { overflow-y: auto; padding-right: 4px; }
+	.viewer__side .comments { margin-top: 0; }
+	.photo__count { position: absolute; left: 8px; bottom: 8px; background: rgba(0,0,0,.72); color: #fff; font-size: 0.78rem; padding: 2px 9px; border-radius: 999px; }
+	.photo { position: relative; }
+	@media (max-width: 900px) {
+		.viewer { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto auto; overflow-y: auto; overflow-x: hidden; }
+		.viewer__frame img { max-height: 62vh; }
+		.viewer__side { overflow: visible; padding: 20px 0 40px; }
+	}
+
+	/* Account sheet */
+	.sheet { position: fixed; inset: 0; z-index: 70; background: rgba(6,13,9,.8); display: grid; justify-items: end; }
+	.sheet__panel { width: min(520px, 100%); height: 100%; overflow-y: auto; background: var(--pine-deep); border-left: 1px solid var(--line); padding: 24px 28px 48px; }
+	.sheet__head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+	.sheet h2 { font: 400 1.8rem/1.2 var(--display); margin: 0; }
+	.sheet h3 { font-size: 1.1rem; margin: 0 0 4px; }
+	.sheet form, .sheet section { display: grid; gap: 10px; margin-top: 28px; }
+	.sheet label { font-size: 0.9rem; font-weight: 600; }
+	.request { border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; display: grid; gap: 6px; }
+	.request p { margin: 0; }
+	.credentials { white-space: pre-wrap; font: 500 0.95rem/1.6 var(--text); background: rgba(0,0,0,.3); border-radius: 10px; padding: 12px 14px; margin: 4px 0 0; }
+	.bar__actions { display: flex; gap: 10px; }
+	.badge { background: var(--saffron); color: var(--pine-deep); border-radius: 999px; padding: 0 8px; font-size: 0.8rem; margin-left: 6px; }
+
+	/* Request access (sign-in page) */
+	.login__alt { margin: 22px 0 0; text-align: center; }
+	.login__alt .linkish { font-size: 1rem; color: var(--khadi); }
+	.visually-hidden { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+	#request-form, #request-done { margin-top: 18px; }
 
 	@media (max-width: 640px) {
 		body { font-size: 17px; }
@@ -191,6 +248,21 @@
 			<button class="btn" type="submit" id="login-btn">Sign in</button>
 			<p class="error" id="login-error" role="alert"></p>
 		</form>
+		<p class="login__alt" id="request-open-row">Don’t have an account? <button type="button" class="linkish" id="request-open">Request access</button></p>
+		<form id="request-form" hidden autocomplete="on">
+			<h2 style="font: 400 1.5rem/1.2 var(--display); margin: 0 0 4px;">Request access</h2>
+			<p class="hint" style="margin: 0 0 6px;">Your request goes to the person who shared this link. Once they approve it, they’ll send you your sign-in details.</p>
+			<label for="req-name">Your name</label>
+			<input class="field" type="text" id="req-name" name="name" autocomplete="name" maxlength="80" required>
+			<label for="req-email">Email</label>
+			<input class="field" type="email" id="req-email" name="email" autocomplete="email" maxlength="254" required>
+			<label for="req-message">How you’re connected to the 1994 visit <span class="muted" style="font-weight: 400">(optional)</span></label>
+			<textarea class="field" id="req-message" name="message" maxlength="500"></textarea>
+			<label class="visually-hidden" aria-hidden="true">Leave this empty <input type="text" id="req-website" name="website" tabindex="-1" autocomplete="off"></label>
+			<div class="form-actions"><button class="btn" type="submit" id="req-btn">Send request</button></div>
+			<p class="error" id="req-error" role="alert"></p>
+		</form>
+		<p class="ok" id="request-done" hidden role="status">Request sent. You’ll get your sign-in details from the person who shared this link once they approve it.</p>
 	</div>
 </section>
 
@@ -199,7 +271,10 @@
 	<div class="backdrop" id="backdrop"></div>
 	<div class="bar">
 		<img class="logo" src="/kodai1994/brand/logo.png" alt="Sri Sathya Sai Centenary Celebrations" width="72" height="72">
-		<button class="btn btn--quiet" id="logout" type="button">Sign out</button>
+		<div class="bar__actions">
+			<button class="btn btn--quiet" id="account-open" type="button">Account<span class="badge" id="account-badge" hidden></span></button>
+			<button class="btn btn--quiet" id="logout" type="button">Sign out</button>
+		</div>
 	</div>
 	<header class="hero">
 		<div class="hero__photo" id="hero-photo" role="img" aria-label="Group photo at Kodaikanal, 1994"></div>
@@ -247,6 +322,7 @@
 			<div class="watermark" id="watermark" aria-hidden="true"></div>
 		</div>
 		<p class="error" id="player-error" role="alert"></p>
+		<div id="player-comments"></div>
 	</div>
 </div>
 
@@ -261,6 +337,42 @@
 		<button class="viewer__nav viewer__nav--prev" id="viewer-prev" type="button" aria-label="Previous photo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.5 4 7.5 12l8 8 1.4-1.4L10.3 12l6.6-6.6z"/></svg></button>
 		<button class="viewer__nav viewer__nav--next" id="viewer-next" type="button" aria-label="Next photo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8.5 4-1.4 1.4 6.6 6.6-6.6 6.6L8.5 20l8-8z"/></svg></button>
 		<div class="watermark" id="viewer-mark" aria-hidden="true"></div>
+	</div>
+	<aside class="viewer__side" id="viewer-comments"></aside>
+</div>
+
+<!-- Account -->
+<div class="sheet" id="account" hidden role="dialog" aria-modal="true" aria-labelledby="account-title">
+	<div class="sheet__panel">
+		<div class="sheet__head">
+			<h2 id="account-title">Your account</h2>
+			<button class="btn btn--quiet" id="account-close" type="button">Close</button>
+		</div>
+		<p class="muted" id="account-user"></p>
+		<form id="name-form">
+			<h3>Your name on comments</h3>
+			<label for="name-input" class="visually-hidden">Your name</label>
+			<input class="field" id="name-input" maxlength="60" placeholder="For example, Priya Sharma (Delhi)" required>
+			<div class="form-actions"><button class="btn" type="submit">Save name</button><p class="ok" id="name-ok" role="status"></p></div>
+			<p class="error" id="name-error" role="alert"></p>
+		</form>
+		<form id="password-form">
+			<h3>Change password</h3>
+			<label for="pw-current">Current password</label>
+			<input class="field" type="password" id="pw-current" autocomplete="current-password" required>
+			<label for="pw-new">New password</label>
+			<input class="field" type="password" id="pw-new" autocomplete="new-password" minlength="8" required>
+			<p class="hint">At least 8 characters.</p>
+			<label for="pw-confirm">New password again</label>
+			<input class="field" type="password" id="pw-confirm" autocomplete="new-password" minlength="8" required>
+			<div class="form-actions"><button class="btn" type="submit">Change password</button><p class="ok" id="pw-ok" role="status"></p></div>
+			<p class="error" id="pw-error" role="alert"></p>
+		</form>
+		<section id="requests" hidden>
+			<h3>Access requests</h3>
+			<p class="hint" style="margin: 0">Approving creates the person’s account (their email is the username) and emails them their sign-in details. The password is also shown here, once.</p>
+			<div id="requests-list" style="display: grid; gap: 12px;"></div>
+		</section>
 	</div>
 </div>
 
@@ -289,15 +401,19 @@
 	var session = null; // { token, userId, name, remember }
 	try { session = JSON.parse(storeGet('sessionStorage', STORE_KEY) || storeGet('localStorage', STORE_KEY) || 'null'); } catch (e) {}
 
-	// The gateway serves /kodai1994/hls/ (streams, thumbnails, photo) only with this cookie,
-	// which holds the Jellyfin token. Path-scoped so it never travels to the API.
+	// The gateway serves /kodai1994/hls/ (streams, thumbnails, photos) and /kodai1994/api/
+	// (comments) only with this cookie, which holds the Jellyfin token. Scoped to /kodai1994/
+	// so it never travels to Jellyfin's own API paths.
+	var COOKIE_PATH = '/kodai1994/';
 	function setMediaCookie() {
-		var c = 'kodai_auth=' + encodeURIComponent(session.token) + '; Path=' + HLS + '; SameSite=Strict';
+		var c = 'kodai_auth=' + encodeURIComponent(session.token) + '; Path=' + COOKIE_PATH + '; SameSite=Strict';
 		if (location.protocol === 'https:') c += '; Secure';
 		if (session.remember) c += '; Max-Age=2592000';
 		document.cookie = c;
 	}
-	function clearMediaCookie() { document.cookie = 'kodai_auth=; Path=' + HLS + '; Max-Age=0; SameSite=Strict'; }
+	function clearMediaCookie() {
+		[COOKIE_PATH, HLS].forEach(function (path) { document.cookie = 'kodai_auth=; Path=' + path + '; Max-Age=0; SameSite=Strict'; });
+	}
 
 	// ── Jellyfin API (same origin)
 	function authHeader() {
@@ -316,6 +432,32 @@
 				return res.status === 204 ? null : res.json();
 			});
 	}
+
+	// ── Community service (comments, display names, access requests) at /kodai1994/api.
+	// Identity comes from the kodai_auth cookie; X-Kodai marks requests as coming from this page.
+	var me = null, counts = {};
+	function capi(path, opts) {
+		opts = opts || {};
+		var headers = { 'X-Kodai': '1' };
+		if (opts.body) headers['Content-Type'] = 'application/json';
+		return fetch('/kodai1994/api' + path, { method: opts.method || 'GET', headers: headers, credentials: 'same-origin', cache: 'no-store',
+			body: opts.body ? JSON.stringify(opts.body) : undefined })
+			.then(function (res) {
+				return res.json().catch(function () { return {}; }).then(function (data) {
+					if (!res.ok) { var err = new Error(data.error || 'The server answered ' + res.status + '. Try again in a moment.'); err.status = res.status; throw err; }
+					return data;
+				});
+			});
+	}
+	var relTime = window.Intl && Intl.RelativeTimeFormat ? new Intl.RelativeTimeFormat('en', { numeric: 'auto' }) : null;
+	function fmtWhen(iso) {
+		var then = new Date(iso), secs = (then - Date.now()) / 1000, abs = Math.abs(secs);
+		if (!relTime || abs > 30 * 86400) return then.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+		var units = [['day', 86400], ['hour', 3600], ['minute', 60]];
+		for (var i = 0; i < units.length; i++) if (abs >= units[i][1]) return relTime.format(Math.round(secs / units[i][1]), units[i][0]);
+		return 'just now';
+	}
+	function plural(n, word) { return n + ' ' + word + (n === 1 ? '' : 's'); }
 
 	// ── Names: "1994-04-14 - April 14th - Discourse (Tamil New Year)"
 	// Must match slug() in package-hls.sh.
@@ -351,6 +493,8 @@
 	function signOut(expired) {
 		closePlayer();
 		if (!$('viewer').hidden) closePhoto();
+		$('account').hidden = true;
+		me = null; counts = {};
 		if (session && !expired) api('/Sessions/Logout', { method: 'POST' }).catch(function () {});
 		session = null;
 		storeDel('sessionStorage', STORE_KEY); storeDel('localStorage', STORE_KEY);
@@ -399,8 +543,14 @@
 					'&SortBy=SortName&SortOrder=Ascending&EnableUserData=true&EnableImageTypes=Primary&Limit=500');
 			}),
 			fetch(HLS + 'ready.json', { credentials: 'same-origin', cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : []; }).catch(function () { return []; }),
-			fetch(HLS + 'photos/photos.json', { credentials: 'same-origin', cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : []; }).catch(function () { return []; })
+			fetch(HLS + 'photos/photos.json', { credentials: 'same-origin', cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : []; }).catch(function () { return []; }),
+			capi('/me').catch(function () { return null; }),
+			capi('/counts').catch(function () { return {}; })
 		]).then(function (res) {
+			me = res[3]; counts = res[4] || {};
+			refreshRequestBadge();
+			// Link in the request email: ...#requests opens the review panel for the admin.
+			if (location.hash === '#requests' && me && me.isAdmin && $('account').hidden) openAccount();
 			ready = {}; res[1].forEach(function (s) { ready[s] = true; });
 			photos = res[2];
 			entries = (res[0].Items || []).map(parse).sort(function (a, b) {
@@ -470,11 +620,12 @@
 	}
 
 	function note(e) {
-		var ud = e.item.UserData || {};
+		var ud = e.item.UserData || {}, parts = [], n = counts['video:' + e.slug] || 0;
 		if (!ready[e.slug]) return 'Available soon';
-		if (ud.PlaybackPositionTicks) return 'Continue from ' + fmtDuration(ud.PlaybackPositionTicks);
-		if (ud.Played) return 'Watched';
-		return '';
+		if (ud.PlaybackPositionTicks) parts.push('Continue from ' + fmtDuration(ud.PlaybackPositionTicks));
+		else if (ud.Played) parts.push('Watched');
+		if (n) parts.push(plural(n, 'comment'));
+		return parts.join('. ');
 	}
 
 	function clickable(el, e) {
@@ -548,6 +699,8 @@
 			img.loading = 'lazy'; img.alt = ''; img.src = HLS + 'photos/' + ph.thumb;
 			img.width = ph.w; img.height = ph.h; // reserves the space before it loads
 			b.appendChild(img);
+			var n = counts['photo:' + ph.id] || 0;
+			if (n) { var pill = document.createElement('span'); pill.className = 'photo__count'; pill.textContent = plural(n, 'comment'); b.appendChild(pill); }
 			b.addEventListener('click', function () { openPhoto(i); });
 			grid.appendChild(b);
 		});
@@ -560,12 +713,199 @@
 		({ timeline: renderTimeline, gallery: renderGallery, photos: renderPhotos })[view](root);
 	}
 
+	// ── Comments on a video ("video:<slug>") or photo ("photo:<id>")
+	// opts.timeOf() → seconds into the video now; opts.seek(seconds) jumps there.
+	function el(tag, cls, text) { var x = document.createElement(tag); if (cls) x.className = cls; if (text != null) x.textContent = text; return x; }
+
+	function commentsPanel(target, opts) {
+		opts = opts || {};
+		var isVideo = target.indexOf('video:') === 0;
+		var root = el('section', 'comments');
+		root.appendChild(el('h3', 'comments__title', 'Comments'));
+		var list = el('ol', 'comments__list'); root.appendChild(list);
+		var empty = el('p', 'muted', 'No comments yet. Share a memory or a note about this ' + (isVideo ? 'recording.' : 'photo.'));
+		empty.hidden = true; root.appendChild(empty);
+		var status = el('p', 'muted', 'Loading comments…'); root.appendChild(status);
+
+		var form = el('form', 'comments__form');
+		var nameLabel, nameInput, nameHint;
+		if (!me || !me.displayName) {
+			nameLabel = el('label', '', 'Your name, as others will see it'); nameLabel.htmlFor = 'cn-' + target;
+			nameInput = el('input', 'field'); nameInput.id = 'cn-' + target; nameInput.maxLength = 60; nameInput.required = true; nameInput.autocomplete = 'name';
+			nameHint = el('p', 'hint', 'For example, Priya Sharma (Delhi). You can change it later under Account.');
+			form.appendChild(nameLabel); form.appendChild(nameInput); form.appendChild(nameHint);
+		}
+		var label = el('label', '', 'Add a comment'); label.htmlFor = 'cb-' + target;
+		var text = el('textarea', 'field'); text.id = 'cb-' + target; text.maxLength = 2000; text.required = true;
+		form.appendChild(label); form.appendChild(text);
+		var stamp, stampText;
+		if (isVideo && opts.timeOf) {
+			stamp = el('input'); stamp.type = 'checkbox'; stamp.checked = true;
+			var stampLabel = el('label', 'check'); stampText = el('span');
+			stampLabel.appendChild(stamp); stampLabel.appendChild(stampText); form.appendChild(stampLabel);
+			var tick = function () { stampText.textContent = 'Link my comment to this moment (' + fmtDuration((opts.timeOf() || 0) * 1e7) + ')'; };
+			tick(); root._tick = setInterval(tick, 1000);
+		}
+		var actions = el('div', 'form-actions'), post = el('button', 'btn', 'Post comment'); post.type = 'submit';
+		actions.appendChild(post); form.appendChild(actions);
+		var err = el('p', 'error'); err.setAttribute('role', 'alert'); form.appendChild(err);
+		root.appendChild(form);
+
+		function load() {
+			return capi('/comments?target=' + encodeURIComponent(target)).then(function (items) {
+				status.hidden = true; list.textContent = '';
+				empty.hidden = items.length > 0;
+				counts[target] = items.length;
+				items.forEach(function (c) {
+					var li = el('li', 'comment'), meta = el('div', 'comment__meta muted');
+					meta.appendChild(el('strong', '', c.author));
+					meta.appendChild(el('span', '', fmtWhen(c.createdAt)));
+					if (c.position != null && opts.seek) {
+						var chip = el('button', 'chip', 'at ' + fmtDuration(c.position * 1e7)); chip.type = 'button';
+						chip.setAttribute('aria-label', 'Play from ' + fmtDuration(c.position * 1e7));
+						chip.addEventListener('click', function () { opts.seek(c.position); });
+						meta.appendChild(chip);
+					}
+					if (c.canDelete) {
+						var del = el('button', 'linkish', 'Delete'); del.type = 'button';
+						del.addEventListener('click', function () {
+							if (del.dataset.armed !== '1') { del.dataset.armed = '1'; del.textContent = 'Delete this comment?'; setTimeout(function () { del.dataset.armed = ''; del.textContent = 'Delete'; }, 4000); return; }
+							capi('/comments/' + c.id, { method: 'DELETE' }).then(load).catch(function (ex) { err.textContent = ex.message; });
+						});
+						meta.appendChild(del);
+					}
+					li.appendChild(meta);
+					li.appendChild(el('p', 'comment__body', c.body));
+					list.appendChild(li);
+				});
+			}).catch(function (ex) { status.hidden = false; status.textContent = ex.message; });
+		}
+
+		form.addEventListener('submit', function (ev) {
+			ev.preventDefault();
+			err.textContent = ''; post.disabled = true;
+			var setName = nameInput ? capi('/me', { method: 'PUT', body: { displayName: nameInput.value } }).then(function (r) { if (me) me.displayName = r.displayName; }) : Promise.resolve();
+			setName.then(function () {
+				var body = { target: target, body: text.value };
+				if (stamp && stamp.checked) body.position = Math.floor(opts.timeOf() || 0);
+				return capi('/comments', { method: 'POST', body: body });
+			}).then(function () {
+				text.value = '';
+				if (nameInput) { nameLabel.remove(); nameInput.remove(); nameHint.remove(); nameInput = null; }
+				return load();
+			}).catch(function (ex) { err.textContent = ex.message; })
+			  .then(function () { post.disabled = false; });
+		});
+
+		load();
+		return root;
+	}
+	function mountComments(slot, panel) {
+		var old = slot.firstChild;
+		if (old && old._tick) clearInterval(old._tick);
+		slot.textContent = '';
+		if (panel) slot.appendChild(panel);
+	}
+
+	// ── Account: display name, password, and (for the admin) access requests
+	function refreshRequestBadge() {
+		var badge = $('account-badge');
+		if (!me || !me.isAdmin) { badge.hidden = true; return; }
+		capi('/admin/requests').then(function (reqs) {
+			badge.hidden = !reqs.length; badge.textContent = reqs.length;
+			$('account-open').setAttribute('aria-label', reqs.length ? 'Account, ' + plural(reqs.length, 'access request') + ' waiting' : 'Account');
+		}).catch(function () { badge.hidden = true; });
+	}
+	function renderRequests() {
+		var box = $('requests-list');
+		box.textContent = 'Loading…';
+		capi('/admin/requests').then(function (reqs) {
+			box.textContent = '';
+			if (!reqs.length) { box.appendChild(el('p', 'muted', 'No requests waiting.')); }
+			reqs.forEach(function (r) {
+				var card = el('div', 'request');
+				card.appendChild(el('strong', '', r.name));
+				card.appendChild(el('p', 'muted', r.email + ', ' + fmtWhen(r.createdAt)));
+				if (r.message) card.appendChild(el('p', '', r.message));
+				var actions = el('div', 'form-actions');
+				var yes = el('button', 'btn', 'Approve'), no = el('button', 'btn btn--quiet', 'Reject');
+				yes.type = no.type = 'button';
+				var msg = el('p', 'error'); msg.setAttribute('role', 'alert');
+				yes.addEventListener('click', function () {
+					yes.disabled = no.disabled = true;
+					capi('/admin/requests/' + r.id + '/approve', { method: 'POST' }).then(function (made) {
+						actions.remove();
+						var text = 'Hello ' + made.name + ',\n\nYou can now watch the Kodai 1994 recordings.\n\nLink: ' + made.link + '\nUsername: ' + made.username + '\nPassword: ' + made.password;
+						card.appendChild(el('p', 'ok', made.emailed
+							? 'Approved. Their sign-in details were emailed to ' + made.username + '. A copy is below in case it doesn’t arrive; the password is shown only now.'
+							: 'Approved. Email isn’t set up on the server, so send this to ' + made.name + ' yourself. The password is shown only now.'));
+						var pre = el('pre', 'credentials', text); card.appendChild(pre);
+						var copy = el('button', 'btn btn--quiet', 'Copy message'); copy.type = 'button';
+						copy.addEventListener('click', function () {
+							(navigator.clipboard ? navigator.clipboard.writeText(text) : Promise.reject()).then(function () { copy.textContent = 'Copied'; }, function () { copy.textContent = 'Select the text above and copy it'; });
+						});
+						card.appendChild(copy);
+						refreshRequestBadge();
+					}).catch(function (ex) { msg.textContent = ex.message; yes.disabled = no.disabled = false; });
+				});
+				no.addEventListener('click', function () {
+					if (no.dataset.armed !== '1') { no.dataset.armed = '1'; no.textContent = 'Reject this request?'; setTimeout(function () { no.dataset.armed = ''; no.textContent = 'Reject'; }, 4000); return; }
+					capi('/admin/requests/' + r.id + '/reject', { method: 'POST' }).then(function () { card.remove(); refreshRequestBadge(); })
+						.catch(function (ex) { msg.textContent = ex.message; });
+				});
+				actions.appendChild(yes); actions.appendChild(no); card.appendChild(actions); card.appendChild(msg);
+				box.appendChild(card);
+			});
+		}).catch(function (ex) { box.textContent = ex.message; });
+	}
+	function openAccount() {
+		$('account-user').textContent = 'Signed in as ' + session.name;
+		$('name-input').value = (me && me.displayName) || '';
+		['name-ok', 'name-error', 'pw-ok', 'pw-error'].forEach(function (id) { $(id).textContent = ''; });
+		$('requests').hidden = !(me && me.isAdmin);
+		if (me && me.isAdmin) renderRequests();
+		$('account').hidden = false;
+		$('account-close').focus();
+	}
+	function closeAccount() { $('account').hidden = true; $('account-open').focus(); }
+	$('account-open').addEventListener('click', openAccount);
+	$('account-close').addEventListener('click', closeAccount);
+	$('account').addEventListener('click', function (ev) { if (ev.target === $('account')) closeAccount(); });
+	$('name-form').addEventListener('submit', function (ev) {
+		ev.preventDefault(); $('name-ok').textContent = ''; $('name-error').textContent = '';
+		capi('/me', { method: 'PUT', body: { displayName: $('name-input').value } }).then(function (r) {
+			if (me) me.displayName = r.displayName;
+			$('name-ok').textContent = 'Saved. Your comments now show “' + r.displayName + '”.';
+		}).catch(function (ex) { $('name-error').textContent = ex.message; });
+	});
+	$('password-form').addEventListener('submit', function (ev) {
+		ev.preventDefault(); $('pw-ok').textContent = ''; $('pw-error').textContent = '';
+		if ($('pw-new').value !== $('pw-confirm').value) { $('pw-error').textContent = 'The two new passwords don’t match.'; return; }
+		api('/Users/' + session.userId + '/Password', { method: 'POST', body: { CurrentPw: $('pw-current').value, NewPw: $('pw-new').value } })
+			.then(function () { $('pw-ok').textContent = 'Password changed.'; $('password-form').reset(); })
+			.catch(function (ex) { $('pw-error').textContent = /40[13]/.test(ex.message) ? 'The current password isn’t right.' : ex.message; });
+	});
+
+	// ── Request access (sign-in page)
+	$('request-open').addEventListener('click', function () {
+		$('request-form').hidden = false; $('request-open-row').hidden = true; $('req-name').focus();
+	});
+	$('request-form').addEventListener('submit', function (ev) {
+		ev.preventDefault();
+		var btn = $('req-btn'); btn.disabled = true; $('req-error').textContent = '';
+		capi('/access-requests', { method: 'POST', body: { name: $('req-name').value, email: $('req-email').value, message: $('req-message').value, website: $('req-website').value } })
+			.then(function () { $('request-form').hidden = true; $('request-done').hidden = false; })
+			.catch(function (ex) { $('req-error').textContent = ex.message; })
+			.then(function () { btn.disabled = false; });
+	});
+
 	// ── Photo viewer
 	var photoIndex = 0, lastFocus = null;
 	function showPhoto(i) {
 		photoIndex = (i + photos.length) % photos.length;
 		$('viewer-img').src = HLS + 'photos/' + photos[photoIndex].src;
 		$('viewer-count').textContent = 'Photo ' + (photoIndex + 1) + ' of ' + photos.length;
+		mountComments($('viewer-comments'), commentsPanel('photo:' + photos[photoIndex].id));
 		var mark = $('viewer-mark');
 		mark.style.top = (8 + Math.random() * 76) + '%'; mark.style.left = (6 + Math.random() * 58) + '%';
 		[photoIndex + 1, photoIndex - 1].forEach(function (k) { new Image().src = HLS + 'photos/' + photos[(k + photos.length) % photos.length].src; });
@@ -580,6 +920,8 @@
 	}
 	function closePhoto() {
 		$('viewer').hidden = true; $('viewer-img').removeAttribute('src');
+		mountComments($('viewer-comments'), null);
+		if (view === 'photos') render(); // refresh comment counts on the tiles
 		document.body.style.overflow = '';
 		if (lastFocus) lastFocus.focus();
 	}
@@ -625,8 +967,13 @@
 		$('watermark').textContent = session.name + ' · ' + new Date().toLocaleDateString('en-GB');
 		moveWatermark(); markTimer = setInterval(moveWatermark, 20000);
 		$('player').hidden = false;
+		$('player').scrollTop = 0;
 		document.body.style.overflow = 'hidden';
 		$('close').focus();
+		mountComments($('player-comments'), commentsPanel('video:' + e.slug, {
+			timeOf: function () { return video.currentTime; },
+			seek: function (t) { video.currentTime = t; video.play().catch(function () {}); $('player').scrollTo({ top: 0, behavior: 'smooth' }); }
+		}));
 
 		var resumeAt = (item.UserData && item.UserData.PlaybackPositionTicks || 0) / 1e7;
 		var url = HLS + e.slug + '/master.m3u8';
@@ -671,6 +1018,7 @@
 		if (hls) { hls.destroy(); hls = null; }
 		video.pause(); video.removeAttribute('src'); video.load();
 		playing = null;
+		mountComments($('player-comments'), null);
 		$('player').hidden = true;
 		document.body.style.overflow = '';
 	}
@@ -691,6 +1039,9 @@
 
 	$('close').addEventListener('click', closePlayer);
 	document.addEventListener('keydown', function (ev) {
+		var typing = /^(INPUT|TEXTAREA|SELECT)$/.test((document.activeElement || {}).tagName || '');
+		if (!$('account').hidden) { if (ev.key === 'Escape') closeAccount(); return; }
+		if (typing && ev.key !== 'Escape') return;
 		if (!$('viewer').hidden) {
 			if (ev.key === 'Escape') closePhoto();
 			else if (ev.key === 'ArrowRight') showPhoto(photoIndex + 1);

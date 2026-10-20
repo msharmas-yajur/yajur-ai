@@ -13,8 +13,11 @@ DEST=${VIDEOS_STACK_DIR:-"$HOME/services/yajur-videos"}
 
 # Create the data folders as this user; if Docker creates them they are root-owned
 # and Jellyfin (running as PUID) cannot write to them.
-mkdir -p "$DEST/kodai1994" "$DEST/config" "$DEST/cache"
-install -m 644 "$HERE/docker-compose.yml" "$HERE/Caddyfile" "$DEST/"
+mkdir -p "$DEST/kodai1994/community" "$DEST/config" "$DEST/cache" "$DEST/community-data"
+# cp, not install: these are bind-mounted as single files, and replacing the file
+# (new inode) would leave a running container reading the old one.
+cp "$HERE/kodai1994/community/app.py" "$DEST/kodai1994/community/app.py"
+cp "$HERE/docker-compose.yml" "$HERE/Caddyfile" "$DEST/"
 # Update in place: replacing the folder would leave the running gateway's bind mount
 # pointing at the deleted directory.
 mkdir -p "$DEST/kodai1994/site"
@@ -46,4 +49,7 @@ else
   echo "No CLOUDFLARE_TUNNEL_TOKEN yet: starting jellyfin + gateway only (not public)." >&2
   docker compose up -d --remove-orphans jellyfin gateway
 fi
+# Compose can't see changes inside mounted files, and the gateway's admin API (live
+# reload) is off, so recreate the two containers whose config/code lives in this repo.
+docker compose up -d --force-recreate --no-deps gateway community
 docker compose ps

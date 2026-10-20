@@ -40,6 +40,30 @@ services:
       - jellyfin
     restart: unless-stopped
 
+  # Comments, display names, and access requests for the Kodai page (kodai1994/community/app.py).
+  # Not published on the host; only the gateway reaches it.
+  community:
+    image: python:3.13.5-alpine
+    container_name: yajur-kodai-community
+    user: "${PUID}:${PGID}"
+    command: python3 -I /app/app.py
+    volumes:
+      - ./kodai1994/community/app.py:/app/app.py:ro
+      - ./community-data:/data
+    environment:
+      - KODAI_LIBRARY_ID=${KODAI_LIBRARY_ID}
+      - DATA_DIR=/data
+      # Optional email (see .env.example): request notices to ADMIN_EMAIL, credentials to approved people
+      - ADMIN_EMAIL=${ADMIN_EMAIL:-}
+      - SMTP_HOST=${SMTP_HOST:-}
+      - SMTP_PORT=${SMTP_PORT:-587}
+      - SMTP_USER=${SMTP_USER:-}
+      - SMTP_PASSWORD=${SMTP_PASSWORD:-}
+      - MAIL_FROM=${MAIL_FROM:-}
+    depends_on:
+      - jellyfin
+    restart: unless-stopped
+
   cloudflared:
     image: cloudflare/cloudflared:2026.10.1
     container_name: yajur-cloudflared

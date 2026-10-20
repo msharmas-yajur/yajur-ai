@@ -48,6 +48,24 @@ Disallow: /
 			file_server
 		}
 
+		# Community API (kodai1994/community/app.py): comments, display names, access requests.
+		# The member's token goes to the service as X-Kodai-Token, taken from the cookie and
+		# overwriting anything the browser sent; the service checks it with Jellyfin itself.
+		# Only the access-request form is open to visitors who aren't signed in.
+		handle /kodai1994/api/access-requests {
+			uri strip_prefix /kodai1994/api
+			reverse_proxy community:8000 {
+				header_up -X-Kodai-Token
+				header_up X-Client-IP {http.request.header.Cf-Connecting-IP}
+			}
+		}
+		handle_path /kodai1994/api/* {
+			reverse_proxy community:8000 {
+				header_up X-Kodai-Token {http.request.cookie.kodai_auth}
+				header_up X-Client-IP {http.request.header.Cf-Connecting-IP}
+			}
+		}
+
 		# Logo and favicon: public, because the sign-in page shows them. Kept out of the
 		# repository (third-party emblem), in MEDIA_DIR/kodai1994-brand.
 		handle_path /kodai1994/brand/* {
