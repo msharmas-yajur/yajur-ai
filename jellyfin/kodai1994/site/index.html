@@ -309,6 +309,25 @@
 	.seg input { position: absolute; opacity: 0; pointer-events: none; }
 	.seg label:has(input:checked) { background: var(--khadi); color: var(--pine-deep); }
 	.seg label:has(input:focus-visible) { outline: 3px solid var(--saffron); }
+	/* People picker for events: chips with ×, a + button, type-ahead list */
+	.tagger { display: grid; gap: 8px; }
+	.tagger__row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+	.tagger__chips { display: contents; list-style: none; }
+	.chip-person { display: inline-flex; align-items: center; gap: 4px; padding: 3px 4px 3px 11px; border-radius: 999px; background: rgba(234,122,42,.16); border: 1px solid rgba(234,122,42,.5); font-size: 0.88rem; line-height: 1.3; }
+	.chip-person button { border: 0; background: none; color: var(--khadi); width: 22px; height: 22px; border-radius: 50%; cursor: pointer; font-size: 1rem; line-height: 1; display: grid; place-items: center; }
+	.chip-person button:hover { background: rgba(0,0,0,.35); }
+	.tagger__plus { width: 32px; height: 32px; border-radius: 50%; border: 1px dashed var(--mist); background: none; color: var(--khadi); font-size: 1.25rem; line-height: 1; cursor: pointer; display: grid; place-items: center; }
+	.tagger__plus:hover { border-style: solid; border-color: var(--saffron); color: var(--saffron); }
+	.tagger__search { position: relative; }
+	.tagger__menu { position: absolute; left: 0; right: 0; top: calc(100% + 4px); z-index: 20; list-style: none; margin: 0; padding: 4px; max-height: 240px; overflow-y: auto; background: #0f1f17; border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 14px 34px rgba(0,0,0,.5); }
+	.tagger__menu li { padding: 7px 10px; border-radius: 8px; cursor: pointer; font-size: 0.95rem; }
+	.tagger__menu li[aria-selected=true] { background: var(--khadi); color: var(--pine-deep); }
+	.tagger__menu li.is-new { color: #f3b083; }
+	.tagger__menu li.is-new[aria-selected=true] { color: var(--pine-deep); }
+	.tagger__menu li.is-empty { color: var(--mist); cursor: default; }
+	.tagger__preview { font-size: 0.85rem; color: var(--mist); margin: 0; overflow-wrap: anywhere; }
+	.tagger__preview b { color: var(--khadi); font-weight: 600; }
+
 	/* Marker ticks on the seek bar */
 	.mk-tick { position: absolute; top: 50%; width: 3px; height: 160%; transform: translate(-50%, -50%); background: var(--khadi); border-radius: 2px; pointer-events: none; opacity: .85; }
 	.mk-tick--event { width: 7px; height: 7px; border-radius: 50%; background: var(--saffron); box-shadow: 0 0 0 1.5px rgba(0,0,0,.6); }
@@ -1084,7 +1103,7 @@
 			if (flashId) { var f = grid.querySelector('.is-flash'); if (f) f.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }
 		}
 		function load(flashId) {
-			return capi('/people').then(function (list) { people = list; draw(flashId); })
+			return capi('/people').then(function (list) { people = list; peopleLoad = Promise.resolve(list); draw(flashId); })
 				.catch(function (ex) { count.textContent = ex.message; });
 		}
 		function addName(name) {
@@ -1346,6 +1365,126 @@
 	}
 	var markerState = null; // { slug, items, filter, root }
 
+	// People list shared by the People tab and the event picker.
+	var peopleLoad = null;
+	function ensurePeople(force) {
+		if (force || !peopleLoad) peopleLoad = capi('/people').then(function (list) { people = list; return list; });
+		return peopleLoad;
+	}
+	function nameKey(n) { return String(n || '').toLowerCase().split(/\s+/).filter(Boolean).join(' '); }
+
+	// Pick people from the People list: chips with ×, a + button, and a type-ahead menu.
+	// Returns { el, ids(), focus() }. onChange(peopleArray) fires on every change.
+	var pickerSeq = 0;
+	function peoplePicker(initial, onChange) {
+		var chosen = (initial || []).slice();
+		var uid = 'pp' + (++pickerSeq);
+		var root = el('div', 'tagger');
+		var row = el('div', 'tagger__row');
+		var chips = el('ul', 'tagger__chips');
+		var plus = el('button', 'tagger__plus', '+'); plus.type = 'button'; plus.setAttribute('aria-label', 'Tag a person');
+		row.appendChild(chips); row.appendChild(plus); root.appendChild(row);
+		var box = el('div', 'tagger__search'); box.hidden = true;
+		var input = el('input', 'field'); input.placeholder = 'Type a name'; input.autocomplete = 'off';
+		input.setAttribute('role', 'combobox'); input.setAttribute('aria-autocomplete', 'list'); input.setAttribute('aria-expanded', 'false');
+		input.setAttribute('aria-controls', uid + '-menu'); input.setAttribute('aria-label', 'Search the People list');
+		var menu = el('ul', 'tagger__menu'); menu.id = uid + '-menu'; menu.setAttribute('role', 'listbox'); menu.hidden = true;
+		box.appendChild(input); box.appendChild(menu); root.appendChild(box);
+		var preview = el('p', 'tagger__preview'); root.appendChild(preview);
+		var options = [], active = 0;
+
+		function changed() {
+			chips.textContent = '';
+			chosen.forEach(function (pp) {
+				var chip = el('li', 'chip-person'); chip.appendChild(document.createTextNode(pp.name));
+				var x = el('button', '', '×'); x.type = 'button'; x.setAttribute('aria-label', 'Remove ' + pp.name);
+				x.addEventListener('click', function () {
+					chosen = chosen.filter(function (c) { return c.id !== pp.id; }); changed(); plus.focus();
+				});
+				chip.appendChild(x); chips.appendChild(chip);
+			});
+			preview.textContent = '';
+			if (chosen.length) {
+				preview.appendChild(document.createTextNode('Event name: '));
+				preview.appendChild(el('b', '', chosen.map(function (c) { return c.name; }).join(', ')));
+			} else {
+				preview.textContent = 'Press + to tag the people who appear at this moment.';
+			}
+			if (onChange) onChange(chosen);
+			if (!box.hidden) refresh();
+		}
+		function refresh() {
+			var q = nameKey(input.value), taken = {};
+			chosen.forEach(function (c) { taken[c.id] = true; });
+			var matches = people.filter(function (pp) { return !taken[pp.id] && (!q || nameKey(pp.name).indexOf(q) >= 0); });
+			// names starting with what was typed come first
+			matches.sort(function (a, b) { return (nameKey(a.name).indexOf(q) === 0 ? 0 : 1) - (nameKey(b.name).indexOf(q) === 0 ? 0 : 1) || nameKey(a.name).localeCompare(nameKey(b.name)); });
+			options = matches.slice(0, 50).map(function (pp) { return { person: pp }; });
+			// Offer to add a new name only when nothing on the list matches, so partial
+			// names ("Raj") don't become duplicates of people already listed.
+			var anyMatch = people.some(function (pp) { return nameKey(pp.name).indexOf(q) >= 0; });
+			if (q.length >= 2 && !anyMatch) options.push({ create: input.value.trim() });
+			menu.textContent = '';
+			if (!options.length) {
+				var none = el('li', 'is-empty', people.length ? 'Everyone matching is already tagged.' : 'Loading the People list…');
+				menu.appendChild(none);
+			}
+			active = Math.min(active, Math.max(options.length - 1, 0));
+			options.forEach(function (o, i) {
+				var li = el('li', o.create ? 'is-new' : '', o.create ? 'Add “' + o.create + '” to People' : o.person.name);
+				li.id = uid + '-opt' + i; li.setAttribute('role', 'option'); li.setAttribute('aria-selected', String(i === active));
+				li.addEventListener('mousedown', function (ev) { ev.preventDefault(); pick(i); });
+				li.addEventListener('mousemove', function () { if (active !== i) { active = i; paint(); } });
+				menu.appendChild(li);
+			});
+			menu.hidden = false; input.setAttribute('aria-expanded', 'true');
+			paint();
+		}
+		function paint() {
+			menu.querySelectorAll('[role=option]').forEach(function (li, i) { li.setAttribute('aria-selected', String(i === active)); });
+			var cur = menu.querySelector('[aria-selected=true]');
+			if (cur) { input.setAttribute('aria-activedescendant', cur.id); cur.scrollIntoView({ block: 'nearest' }); }
+			else input.removeAttribute('aria-activedescendant');
+		}
+		function pick(i) {
+			var o = options[i]; if (!o) return;
+			if (o.person) { chosen.push(o.person); input.value = ''; active = 0; changed(); input.focus(); return; }
+			// Not on the list yet: add them to People, then tag them.
+			capi('/people', { method: 'POST', body: { name: o.create } }).then(function (pp) {
+				people.push(pp); people.sort(function (a, b) { return nameKey(a.name).localeCompare(nameKey(b.name)); });
+				chosen.push(pp); input.value = ''; active = 0; changed(); input.focus();
+			}).catch(function (ex) {
+				if (ex.status === 409) {
+					return ensurePeople(true).then(function () {
+						var hit = people.filter(function (pp) { return nameKey(pp.name) === nameKey(o.create); })[0];
+						if (hit && !chosen.some(function (c) { return c.id === hit.id; })) chosen.push(hit);
+						input.value = ''; changed(); input.focus();
+					});
+				}
+				preview.textContent = ex.message;
+			});
+		}
+		function openSearch() {
+			box.hidden = false; input.value = ''; active = 0;
+			ensurePeople().then(refresh, function (ex) { preview.textContent = ex.message; });
+			refresh(); input.focus();
+		}
+		function closeSearch() { box.hidden = true; menu.hidden = true; input.setAttribute('aria-expanded', 'false'); }
+		plus.addEventListener('click', function () { if (box.hidden) openSearch(); else { closeSearch(); } });
+		input.addEventListener('input', function () { active = 0; refresh(); });
+		input.addEventListener('keydown', function (ev) {
+			if (ev.key === 'ArrowDown') { ev.preventDefault(); active = Math.min(active + 1, options.length - 1); paint(); }
+			else if (ev.key === 'ArrowUp') { ev.preventDefault(); active = Math.max(active - 1, 0); paint(); }
+			else if (ev.key === 'Enter') { ev.preventDefault(); if (options.length) pick(active); }
+			else if (ev.key === 'Escape') { ev.preventDefault(); ev.stopPropagation(); closeSearch(); plus.focus(); }
+			else if (ev.key === 'Backspace' && !input.value && chosen.length) { chosen.pop(); changed(); }
+		});
+		input.addEventListener('blur', function () { setTimeout(function () { if (document.activeElement !== input) closeSearch(); }, 120); });
+		changed();
+		return { el: root, ids: function () { return chosen.map(function (c) { return c.id; }); }, focus: openSearch,
+			count: function () { return chosen.length; } };
+	}
+
 	function markersPanel(slug) {
 		var st = markerState = { slug: slug, items: [], filter: 'all' };
 		var root = st.root = el('section', 'markers');
@@ -1374,9 +1513,17 @@
 			var l = el('label'), r = el('input'); r.type = 'radio'; r.name = 'kind-' + slug; r.value = k; r.checked = i === 0;
 			l.appendChild(r); l.appendChild(document.createTextNode(k === 'chapter' ? 'Chapter' : 'Event')); seg.appendChild(l);
 		});
-		var hint = el('p', 'hint', 'A chapter starts a section of the tape; an event tags one moment.');
+		var hint = el('p', 'hint', 'A chapter starts a section of the tape. An event tags the people who appear at one moment.');
 		var titleLabel = el('label', '', 'Title'); titleLabel.htmlFor = 'mk-title-' + slug;
 		var title = el('input', 'field'); title.id = 'mk-title-' + slug; title.maxLength = 100; title.required = true; title.placeholder = 'For example, Morning darshan';
+		var peopleLabel = el('label', '', 'People at this moment');
+		var picker = peoplePicker([]);
+		function kindNow() { return form.querySelector('input[type=radio]:checked').value; }
+		function showKind() {
+			var ev = kindNow() === 'event';
+			titleLabel.hidden = title.hidden = ev; title.required = !ev;
+			peopleLabel.hidden = picker.el.hidden = !ev;
+		}
 		var timeLabel = el('label', '', 'Time'); timeLabel.htmlFor = 'mk-time-' + slug;
 		var row = el('div', 'markers__row');
 		var time = el('input', 'field'); time.id = 'mk-time-' + slug; time.inputMode = 'numeric'; time.placeholder = '1:02:10'; time.required = true;
@@ -1392,25 +1539,31 @@
 		var cancel = el('button', 'linkish', 'Cancel'); cancel.type = 'button';
 		actions.appendChild(add); actions.appendChild(cancel);
 		var err = el('p', 'error'); err.setAttribute('role', 'alert');
-		[seg, hint, titleLabel, title, timeLabel, row].forEach(function (x) { form.appendChild(x); });
+		[seg, hint, titleLabel, title, peopleLabel, picker.el, timeLabel, row].forEach(function (x) { form.appendChild(x); });
+		seg.addEventListener('change', function () { err.textContent = ''; showKind(); if (kindNow() === 'event' && !picker.count()) picker.focus(); else if (kindNow() === 'chapter') title.focus(); });
 		if (nameInput) { form.appendChild(nameLabel); form.appendChild(nameInput); }
 		form.appendChild(actions); form.appendChild(err);
 		addWrap.appendChild(open); addWrap.appendChild(form); root.appendChild(addWrap);
 
 		function useNow() { time.value = fmtDuration(Math.floor(player.currentTime() || 0) * 1e7); }
 		now.addEventListener('click', useNow);
-		open.addEventListener('click', function () { form.hidden = false; open.hidden = true; useNow(); title.focus(); });
+		open.addEventListener('click', function () { form.hidden = false; open.hidden = true; useNow(); showKind(); if (kindNow() === 'event') picker.focus(); else title.focus(); });
 		cancel.addEventListener('click', function () { form.hidden = true; open.hidden = false; err.textContent = ''; });
 		form.addEventListener('submit', function (ev) {
 			ev.preventDefault(); err.textContent = '';
 			var pos = parseTime(time.value);
 			if (pos === null) { err.textContent = 'Enter the time as hours:minutes:seconds, like 1:02:10.'; return; }
+			var kind = kindNow();
+			if (kind === 'event' && !picker.count()) { err.textContent = 'Tag at least one person: press + and choose a name.'; return; }
 			add.disabled = true;
 			var setName = nameInput ? capi('/me', { method: 'PUT', body: { displayName: nameInput.value } }).then(function (r) { if (me) me.displayName = r.displayName; }) : Promise.resolve();
 			setName.then(function () {
-				return capi('/markers', { method: 'POST', body: { target: 'video:' + slug, kind: form.querySelector('input[type=radio]:checked').value, title: title.value, position: pos } });
+				var body = { target: 'video:' + slug, kind: kind, position: pos };
+				if (kind === 'event') body.people = picker.ids(); else body.title = title.value;
+				return capi('/markers', { method: 'POST', body: body });
 			}).then(function () {
 				title.value = ''; form.hidden = true; open.hidden = false;
+				var fresh = peoplePicker([]); picker.el.replaceWith(fresh.el); picker = fresh; showKind();
 				if (nameInput) { nameLabel.remove(); nameInput.remove(); nameInput = null; }
 				return load();
 			}).catch(function (ex) { err.textContent = ex.message; })
@@ -1451,7 +1604,18 @@
 		function editRow(li, m) {
 			li.textContent = '';
 			var f = el('form'); f.style.display = 'grid'; f.style.gap = '6px'; f.style.gridColumn = '1 / -1';
-			var ti = el('input', 'field'); ti.value = m.title; ti.maxLength = 100; ti.setAttribute('aria-label', 'Title');
+			var ti = el('input', 'field'); ti.value = m.kind === 'chapter' ? m.title : ''; ti.maxLength = 100; ti.setAttribute('aria-label', 'Title');
+			var startPeople = (m.people || []).slice();
+			var legacy = null;
+			if (m.kind === 'event' && !startPeople.length) {
+				// Typed before tagging existed: pre-select any names in the title that are on the People list.
+				legacy = el('p', 'hint', 'Was typed as: ' + m.title);
+				m.title.split(',').forEach(function (part) {
+					var hit = people.filter(function (pp) { return nameKey(pp.name) === nameKey(part); })[0];
+					if (hit && startPeople.indexOf(hit) < 0) startPeople.push(hit);
+				});
+			}
+			var pk = peoplePicker(startPeople);
 			var r = el('div', 'markers__row');
 			var tm = el('input', 'field'); tm.value = fmtDuration(m.position * 1e7); tm.setAttribute('aria-label', 'Time');
 			var kind = el('select', 'field'); kind.setAttribute('aria-label', 'Type'); kind.style.width = 'auto';
@@ -1460,14 +1624,24 @@
 			var a = el('div', 'form-actions'), save = el('button', 'btn', 'Save'), back = el('button', 'linkish', 'Cancel');
 			save.type = 'submit'; back.type = 'button'; a.appendChild(save); a.appendChild(back);
 			var e2 = el('p', 'error'); e2.setAttribute('role', 'alert');
-			[ti, r, a, e2].forEach(function (x) { f.appendChild(x); });
-			li.appendChild(f); ti.focus();
+			function showKind() { var ev = kind.value === 'event'; ti.hidden = ev; pk.el.hidden = !ev; if (legacy) legacy.hidden = !ev; }
+			[ti, pk.el].concat(legacy ? [legacy] : []).concat([r, a, e2]).forEach(function (x) { f.appendChild(x); });
+			kind.addEventListener('change', showKind); showKind();
+			li.appendChild(f);
+			if (kind.value === 'event') { if (!startPeople.length) pk.focus(); } else ti.focus();
 			back.addEventListener('click', renderList);
 			f.addEventListener('submit', function (ev) {
 				ev.preventDefault();
 				var pos = parseTime(tm.value);
 				if (pos === null) { e2.textContent = 'Enter the time as hours:minutes:seconds, like 1:02:10.'; return; }
-				capi('/markers/' + m.id, { method: 'PUT', body: { title: ti.value, position: pos, kind: kind.value } }).then(load)
+				var body = { position: pos, kind: kind.value };
+				if (kind.value === 'event') {
+					if (!pk.count()) { e2.textContent = 'Tag at least one person: press + and choose a name.'; return; }
+					body.people = pk.ids();
+				} else {
+					body.title = ti.value;
+				}
+				capi('/markers/' + m.id, { method: 'PUT', body: body }).then(load)
 					.catch(function (ex) { e2.textContent = ex.message; });
 			});
 		}
@@ -1479,6 +1653,7 @@
 		}
 		st.load = load;
 		load();
+		ensurePeople().catch(function () {});
 		return root;
 	}
 	function highlightCurrent() {

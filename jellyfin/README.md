@@ -77,7 +77,14 @@ Browser ──https──▶ Cloudflare ──tunnel──▶ cloudflared ──
   (`people` table; the names live only in the database, never in this public repo). Members
   add themselves (*Add me as …*) or anyone they recognise; a name can't be listed twice
   (case and spacing ignored). The admin renames or removes names; members can remove names
-  they added. Linking people to the moments they appear is the next step.
+  they added.
+- **Tagging people in events.** An *Event* has no typed title: members press **+**, type a
+  name, and pick from the People list (arrow keys + Enter, or click); each pick becomes a chip
+  with × to remove. Several people per event; the event's name is their names, comma-separated,
+  and follows renames on the People list (`marker_people` links events to people). A name
+  that isn't listed can be added to People from the same menu. Chapters keep a typed title.
+  Events typed before tagging keep their text until edited; editing pre-selects any listed
+  names found in it.
 - **Passwords.** Members change theirs under *Account*. The admin can still create or reset
   accounts from a shell:
 
