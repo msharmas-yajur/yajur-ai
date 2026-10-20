@@ -187,6 +187,31 @@
 	.thumb__pending { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; padding: 12px; font-size: 0.9rem; font-weight: 500; color: var(--khadi); text-shadow: 0 1px 6px rgba(0,0,0,.8); }
 	.thumb__card { filter: blur(5px) brightness(.42) saturate(.6); transform: scale(1.08); }
 	.is-pending { cursor: default; opacity: .75; }
+	/* People: everyone who appears in the recordings */
+	@media (max-width: 640px) {
+		.views { max-width: 100%; overflow-x: auto; scrollbar-width: none; }
+		.views button { padding: 8px 12px; white-space: nowrap; }
+	}
+	.people { margin-top: 28px; max-width: 1100px; }
+	.people__head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 16px; }
+	.people__head h2 { font: 400 clamp(1.8rem, 4vw, 2.6rem)/1.1 var(--display); margin: 0; }
+	.people__head p { margin: 6px 0 0; max-width: 60ch; }
+	.people__tools { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-start; margin: 22px 0 8px; }
+	.people__tools .field { width: auto; flex: 1 1 220px; max-width: 320px; padding: 10px 14px; border-radius: 999px; }
+	.people__add { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; flex: 1 1 280px; min-width: 0; }
+	.people__add .field { border-radius: 12px; flex: 1 1 160px; min-width: 0; max-width: none; }
+	.people__tools > .field { min-width: 0; }
+	.people__add .btn { padding: 10px 20px; }
+	.people__msg { min-height: 1.4em; margin: 4px 0 18px; font-size: 0.95rem; }
+	.people__grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; }
+	.person { display: grid; grid-template-columns: auto 1fr; gap: 2px 12px; align-items: center; padding: 12px 14px; border: 1px solid var(--line); border-radius: 14px; background: var(--panel); }
+	.person.is-flash { border-color: var(--saffron); box-shadow: 0 0 0 2px rgba(234,122,42,.35); }
+	.person__avatar { grid-row: span 2; width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; background: rgba(243,241,234,.1); font: 400 1.05rem var(--display); color: var(--khadi); letter-spacing: .02em; }
+	.person__name { font-weight: 600; font-size: 1.02rem; line-height: 1.3; overflow-wrap: anywhere; }
+	.person__meta { font-size: 0.8rem; color: var(--mist); display: flex; flex-wrap: wrap; gap: 2px 10px; }
+	.person form { grid-column: 1 / -1; display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+	.person form .field { flex: 1 1 140px; padding: 7px 10px; }
+
 	.mk-counts { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
 	.mk-count { border: 1px solid var(--line); border-radius: 999px; padding: 1px 10px; font-size: 0.8rem; color: var(--mist); font-variant-numeric: tabular-nums; }
 	.mk-count b { color: var(--khadi); font-weight: 600; margin-left: 4px; }
@@ -437,6 +462,7 @@
 			<button type="button" data-view="timeline" aria-pressed="true">Timeline</button>
 			<button type="button" data-view="gallery" aria-pressed="false">Gallery</button>
 			<button type="button" data-view="photos" aria-pressed="false">Photos</button>
+			<button type="button" data-view="people" aria-pressed="false">People</button>
 		</div>
 		<span class="muted" id="signed-in"></span>
 	</div>
@@ -786,7 +812,7 @@
 	// ── Library
 	var entries = [], ready = {}, photos = [], markerCounts = {};
 	var view = storeGet('localStorage', VIEW_KEY);
-	if (['timeline', 'gallery', 'photos'].indexOf(view) < 0) view = 'timeline';
+	if (['timeline', 'gallery', 'photos', 'people'].indexOf(view) < 0) view = 'timeline';
 
 	function openLibrary() {
 		setMediaCookie();
@@ -983,10 +1009,104 @@
 		root.appendChild(grid);
 	}
 
+	// ── People who appear in the recordings. Members add themselves (or anyone they
+	// recognise); a name can only be on the list once. Times and photos per person
+	// come later, as a filtered list.
+	var people = [], peopleQuery = '';
+	function initials(name) {
+		var parts = name.replace(/\b(sir|ji)\b/ig, '').trim().split(/\s+/).filter(Boolean);
+		return ((parts[0] || name)[0] + (parts.length > 1 ? parts[parts.length - 1][0] : '')).toUpperCase();
+	}
+	function renderPeople(root) {
+		var wrap = el('section', 'people');
+		var head = el('div', 'people__head'), intro = el('div');
+		intro.appendChild(el('h2', '', 'People'));
+		var count = el('p', 'muted', 'Loading…'); intro.appendChild(count);
+		head.appendChild(intro); wrap.appendChild(head);
+
+		var tools = el('div', 'people__tools');
+		var search = el('input', 'field'); search.type = 'search'; search.placeholder = 'Find a name'; search.setAttribute('aria-label', 'Find a name');
+		search.value = peopleQuery;
+		var add = el('form', 'people__add');
+		var input = el('input', 'field'); input.placeholder = 'Add a name'; input.maxLength = 80; input.setAttribute('aria-label', 'Name to add'); input.autocomplete = 'off';
+		var addBtn = el('button', 'btn', 'Add'); addBtn.type = 'submit';
+		var meBtn = el('button', 'btn btn--quiet'); meBtn.type = 'button'; meBtn.hidden = true;
+		add.appendChild(input); add.appendChild(addBtn); add.appendChild(meBtn);
+		tools.appendChild(search); tools.appendChild(add); wrap.appendChild(tools);
+		var msg = el('p', 'people__msg muted'); msg.setAttribute('role', 'status'); wrap.appendChild(msg);
+		var grid = el('ol', 'people__grid'); wrap.appendChild(grid);
+		root.appendChild(wrap);
+
+		function keyOf(n) { return n.toLowerCase().split(/\s+/).filter(Boolean).join(' '); }
+		function draw(flashId) {
+			grid.textContent = '';
+			var q = keyOf(search.value);
+			var shown = people.filter(function (pp) { return !q || keyOf(pp.name).indexOf(q) >= 0; });
+			count.textContent = plural(people.length, 'person').replace('persons', 'people') + ' who appear in these recordings and photos. Add yourself if you were there, or anyone you recognise.';
+			shown.forEach(function (pp) {
+				var li = el('li', 'person' + (pp.id === flashId ? ' is-flash' : '')); li.dataset.id = pp.id;
+				li.appendChild(el('span', 'person__avatar', initials(pp.name)));
+				li.appendChild(el('span', 'person__name', pp.name));
+				var meta = el('span', 'person__meta');
+				if (pp.addedBy && pp.addedBy !== 'Member' && pp.addedBy !== 'Admin') meta.appendChild(el('span', '', 'added by ' + pp.addedBy));
+				if (pp.canEdit) {
+					var ren = el('button', 'linkish', 'Rename'); ren.type = 'button';
+					ren.addEventListener('click', function () {
+						var f = el('form'), fi = el('input', 'field'), ok = el('button', 'btn btn--quiet', 'Save'), no = el('button', 'linkish', 'Cancel');
+						fi.value = pp.name; fi.maxLength = 80; fi.setAttribute('aria-label', 'New name'); ok.type = 'submit'; no.type = 'button';
+						f.appendChild(fi); f.appendChild(ok); f.appendChild(no); li.appendChild(f); fi.focus();
+						no.addEventListener('click', function () { f.remove(); });
+						f.addEventListener('submit', function (ev) {
+							ev.preventDefault();
+							capi('/people/' + pp.id, { method: 'PUT', body: { name: fi.value } }).then(function () { load(pp.id); })
+								.catch(function (ex) { msg.textContent = ex.message; });
+						});
+					});
+					meta.appendChild(ren);
+				}
+				if (pp.canDelete) {
+					var del = el('button', 'linkish', 'Remove'); del.type = 'button';
+					del.addEventListener('click', function () {
+						if (del.dataset.armed !== '1') { del.dataset.armed = '1'; del.textContent = 'Remove ' + pp.name + '?'; setTimeout(function () { del.dataset.armed = ''; del.textContent = 'Remove'; }, 4000); return; }
+						capi('/people/' + pp.id, { method: 'DELETE' }).then(function () { msg.textContent = pp.name + ' was removed.'; load(); })
+							.catch(function (ex) { msg.textContent = ex.message; });
+					});
+					meta.appendChild(del);
+				}
+				li.appendChild(meta);
+				grid.appendChild(li);
+			});
+			if (!shown.length) grid.appendChild(el('li', 'muted', people.length ? 'No names match “' + search.value + '”. Add it below if they’re missing.' : 'No names yet.'));
+			// "Add me as …" when the member's own name isn't listed yet
+			var mine = me && me.displayName;
+			meBtn.hidden = !mine || people.some(function (pp) { return keyOf(pp.name) === keyOf(mine); });
+			if (!meBtn.hidden) meBtn.textContent = 'Add me as ' + mine;
+			if (flashId) { var f = grid.querySelector('.is-flash'); if (f) f.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }
+		}
+		function load(flashId) {
+			return capi('/people').then(function (list) { people = list; draw(flashId); })
+				.catch(function (ex) { count.textContent = ex.message; });
+		}
+		function addName(name) {
+			msg.textContent = ''; addBtn.disabled = meBtn.disabled = true;
+			capi('/people', { method: 'POST', body: { name: name } }).then(function (pp) {
+				input.value = ''; msg.textContent = pp.name + ' was added.'; return load(pp.id);
+			}).catch(function (ex) {
+				msg.textContent = ex.message;
+				var hit = people.filter(function (pp) { return keyOf(pp.name) === keyOf(name); })[0];
+				if (ex.status === 409 && hit) { search.value = ''; peopleQuery = ''; draw(hit.id); }
+			}).then(function () { addBtn.disabled = meBtn.disabled = false; });
+		}
+		search.addEventListener('input', function () { peopleQuery = search.value; draw(); });
+		add.addEventListener('submit', function (ev) { ev.preventDefault(); if (input.value.trim()) addName(input.value); });
+		meBtn.addEventListener('click', function () { addName(me.displayName); });
+		load();
+	}
+
 	function render() {
 		var root = $('content'); root.textContent = '';
 		document.querySelectorAll('.views button').forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.view === view)); });
-		({ timeline: renderTimeline, gallery: renderGallery, photos: renderPhotos })[view](root);
+		({ timeline: renderTimeline, gallery: renderGallery, photos: renderPhotos, people: renderPeople })[view](root);
 	}
 
 	// ── Comments on a video ("video:<slug>") or photo ("photo:<id>")

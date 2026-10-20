@@ -25,6 +25,10 @@ Routes (JSON):
   DELETE /comments/<id>            own comment, or any comment for the admin
   GET    /markers?target=video:...  chapters and tagged events on a video, by time
   GET    /marker-counts            {target: {chapter: n, event: n}} for every video with markers
+  GET    /people                   everyone on the people list (who appears in the recordings)
+  POST   /people                   {name}  add a name; 409 with the existing entry if already listed
+  PUT    /people/<id>              {name}  rename (admin)
+  DELETE /people/<id>              remove (admin, or the member who added it)
   POST   /markers                  {target, kind: chapter|event, title, position}
   PUT    /markers/<id>             {title?, position?, kind?}  own marker, or any for the admin
   DELETE /markers/<id>             own marker, or any for the admin
@@ -150,6 +154,16 @@ CREATE TABLE IF NOT EXISTS markers (
     deleted_at  TEXT
 );
 CREATE INDEX IF NOT EXISTS markers_by_target ON markers (target, position_s);
+CREATE TABLE IF NOT EXISTS people (
+    id          INTEGER PRIMARY KEY,
+    name        TEXT NOT NULL,
+    name_key    TEXT NOT NULL,          -- lower-case, single-spaced: catches duplicates
+    added_by    TEXT NOT NULL,          -- Jellyfin user id
+    created_at  TEXT NOT NULL,
+    updated_at  TEXT,
+    deleted_at  TEXT
+);
+CREATE UNIQUE INDEX IF NOT EXISTS people_by_key ON people (name_key) WHERE deleted_at IS NULL;
 CREATE TABLE IF NOT EXISTS access_requests (
     id          INTEGER PRIMARY KEY,
     name        TEXT NOT NULL,
@@ -445,6 +459,59 @@ class Handler(BaseHTTPRequestHandler):
         execute("UPDATE markers SET deleted_at = ? WHERE id = ?", (now(), int(mid)))
         return 200, {"deleted": int(mid)}
 
+    # ── people who appear in the recordings
+    @staticmethod
+    def person_name(data):
+        name = clean(data.get("name"), 80)
+        if len(name) < 2:
+            raise ApiError(400, "Enter a name, at least 2 characters.")
+        return name, " ".join(name.lower().split())
+
+    def person_row(self, who, r):
+        return {"id": r["id"], "name": r["name"], "addedBy": r["adder"], "createdAt": r["created_at"],
+                "mine": r["added_by"] == who["id"], "canEdit": who["isAdmin"],
+                "canDelete": who["isAdmin"] or r["added_by"] == who["id"]}
+
+    PEOPLE_SQL = ("SELECT pe.id, pe.name, pe.added_by, pe.created_at, COALESCE(p.display_name, p.username, 'Member') AS adder "
+                  "FROM people pe LEFT JOIN profiles p ON p.user_id = pe.added_by WHERE pe.deleted_at IS NULL")
+
+    def get_people(self, params):
+        who = self.member()
+        rows = query(self.PEOPLE_SQL + " ORDER BY pe.name_key")
+        return 200, [self.person_row(who, r) for r in rows]
+
+    def post_person(self, params):
+        who = self.member()
+        name, key = self.person_name(self.read_json())
+        existing = query(self.PEOPLE_SQL + " AND pe.name_key = ?", (key,))
+        if existing:
+            return 409, {"error": f"{existing[0]['name']} is already on the list.", "person": self.person_row(who, existing[0])}
+        if not allow(("person", who["id"]), 15, 60):
+            raise ApiError(429, "You're adding quickly. Wait a minute and try again.")
+        pid = execute("INSERT INTO people (name, name_key, added_by, created_at) VALUES (?, ?, ?, ?)", (name, key, who["id"], now()))
+        return 201, self.person_row(who, query(self.PEOPLE_SQL + " AND pe.id = ?", (pid,))[0])
+
+    def put_person(self, params, pid):
+        who = self.admin()
+        name, key = self.person_name(self.read_json())
+        if not query("SELECT 1 FROM people WHERE id = ? AND deleted_at IS NULL", (int(pid),)):
+            raise ApiError(404, "That name was already removed.")
+        clash = query("SELECT name FROM people WHERE name_key = ? AND id != ? AND deleted_at IS NULL", (key, int(pid)))
+        if clash:
+            raise ApiError(409, f"{clash[0]['name']} is already on the list.")
+        execute("UPDATE people SET name = ?, name_key = ?, updated_at = ? WHERE id = ?", (name, key, now(), int(pid)))
+        return 200, {"id": int(pid), "name": name}
+
+    def delete_person(self, params, pid):
+        who = self.member()
+        row = query("SELECT added_by FROM people WHERE id = ? AND deleted_at IS NULL", (int(pid),))
+        if not row:
+            raise ApiError(404, "That name was already removed.")
+        if row[0]["added_by"] != who["id"] and not who["isAdmin"]:
+            raise ApiError(403, "Only the administrator or the person who added a name can remove it.")
+        execute("UPDATE people SET deleted_at = ? WHERE id = ?", (now(), int(pid)))
+        return 200, {"deleted": int(pid)}
+
     def post_access_request(self, params):
         ip = self.headers.get("X-Client-IP", "") or self.client_address[0]
         data = self.read_json()
@@ -525,13 +592,15 @@ class Handler(BaseHTTPRequestHandler):
 ROUTES = {
     "GET": [(r"/me", Handler.get_me), (r"/comments", Handler.get_comments), (r"/counts", Handler.get_counts),
             (r"/markers", Handler.get_markers), (r"/marker-counts", Handler.get_marker_counts),
+            (r"/people", Handler.get_people),
             (r"/admin/requests", Handler.get_requests)],
-    "PUT": [(r"/me", Handler.put_me), (r"/markers/(\d+)", Handler.put_marker)],
-    "POST": [(r"/comments", Handler.post_comment), (r"/markers", Handler.post_marker),
+    "PUT": [(r"/me", Handler.put_me), (r"/markers/(\d+)", Handler.put_marker), (r"/people/(\d+)", Handler.put_person)],
+    "POST": [(r"/comments", Handler.post_comment), (r"/markers", Handler.post_marker), (r"/people", Handler.post_person),
              (r"/access-requests", Handler.post_access_request),
              (r"/admin/requests/(\d+)/approve", Handler.approve_request),
              (r"/admin/requests/(\d+)/reject", Handler.reject_request)],
-    "DELETE": [(r"/comments/(\d+)", Handler.delete_comment), (r"/markers/(\d+)", Handler.delete_marker)],
+    "DELETE": [(r"/comments/(\d+)", Handler.delete_comment), (r"/markers/(\d+)", Handler.delete_marker),
+               (r"/people/(\d+)", Handler.delete_person)],
 }
 
 if __name__ == "__main__":
