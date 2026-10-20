@@ -34,6 +34,11 @@ Routes (JSON):
   GET    /photo-tags               {photoId: [{tagId, personId, name, canRemove}]}
   POST   /photo-tags               {photo, person}  tag someone in a photo
   DELETE /photo-tags/<tagId>       untag (whoever tagged, or the admin)
+  GET    /photo-faces?photo=ID     marked 1994 faces in a photo: [{id, personId, name, box, canRemove}]
+  POST   /photo-faces              {photo, person, box: {x, y, w, h}}  (fractions of the photo, 0-1)
+                                   marks that person's face; also tags them in the photo
+  DELETE /photo-faces/<id>         unmark (whoever marked it, or the admin)
+  PUT    /people/<id>/portrait     {face: id}  choose which marked face is their 1994 portrait
   POST   /markers                  chapter: {target, kind: "chapter", title, position}
                                    event:   {target, kind: "event", people: [person ids], position}
                                    (an event's name is its people's names, comma-separated)
@@ -188,6 +193,16 @@ CREATE TABLE IF NOT EXISTS photo_people (     -- who is tagged in which photo (p
 );
 CREATE UNIQUE INDEX IF NOT EXISTS photo_people_unique ON photo_people (photo_id, person_id);
 CREATE INDEX IF NOT EXISTS photo_people_by_person ON photo_people (person_id);
+CREATE TABLE IF NOT EXISTS photo_faces (      -- labelled 1994 faces: a box on a photo + who it is
+    id          INTEGER PRIMARY KEY,
+    photo_id    TEXT NOT NULL,
+    person_id   INTEGER NOT NULL,
+    x REAL NOT NULL, y REAL NOT NULL, w REAL NOT NULL, h REAL NOT NULL,   -- fractions of width/height
+    added_by    TEXT NOT NULL,
+    created_at  TEXT NOT NULL
+);
+CREATE UNIQUE INDEX IF NOT EXISTS photo_faces_one_per_photo ON photo_faces (photo_id, person_id);
+CREATE INDEX IF NOT EXISTS photo_faces_by_person ON photo_faces (person_id);
 CREATE TABLE IF NOT EXISTS access_requests (
     id          INTEGER PRIMARY KEY,
     name        TEXT NOT NULL,
@@ -201,6 +216,11 @@ CREATE TABLE IF NOT EXISTS access_requests (
     username    TEXT
 );
 """)
+
+
+if "portrait_face" not in [r[1] for r in db.execute("PRAGMA table_info(people)").fetchall()]:
+    db.execute("ALTER TABLE people ADD COLUMN portrait_face INTEGER")  # chosen 1994 face; NULL = first marked
+    db.commit()
 
 
 def query(sql, args=()):
@@ -551,14 +571,21 @@ class Handler(BaseHTTPRequestHandler):
     def person_row(self, who, r):
         return {"id": r["id"], "name": r["name"], "addedBy": r["adder"], "createdAt": r["created_at"],
                 "photos": r.get("photos", 0), "moments": r.get("moments", 0),
+                "portrait": ({"faceId": r["pf_id"], "photo": r["pf_photo"], "box": {"x": r["pf_x"], "y": r["pf_y"], "w": r["pf_w"], "h": r["pf_h"]}}
+                             if r.get("pf_id") else None),
                 "mine": r["added_by"] == who["id"], "canEdit": who["isAdmin"],
                 "canDelete": who["isAdmin"] or r["added_by"] == who["id"]}
 
     PEOPLE_SQL = ("SELECT pe.id, pe.name, pe.added_by, pe.created_at, COALESCE(p.display_name, p.username, 'Member') AS adder, "
                   "(SELECT COUNT(*) FROM photo_people pp WHERE pp.person_id = pe.id) AS photos, "
                   "(SELECT COUNT(*) FROM marker_people mp JOIN markers m ON m.id = mp.marker_id AND m.deleted_at IS NULL "
-                  " WHERE mp.person_id = pe.id) AS moments "
-                  "FROM people pe LEFT JOIN profiles p ON p.user_id = pe.added_by WHERE pe.deleted_at IS NULL")
+                  " WHERE mp.person_id = pe.id) AS moments, "
+                  "pf.id AS pf_id, pf.photo_id AS pf_photo, pf.x AS pf_x, pf.y AS pf_y, pf.w AS pf_w, pf.h AS pf_h "
+                  "FROM people pe LEFT JOIN profiles p ON p.user_id = pe.added_by "
+                  # portrait: the chosen face, else the first one marked
+                  "LEFT JOIN photo_faces pf ON pf.id = COALESCE(pe.portrait_face, "
+                  " (SELECT MIN(f.id) FROM photo_faces f WHERE f.person_id = pe.id)) AND pf.person_id = pe.id "
+                  "WHERE pe.deleted_at IS NULL")
 
     def get_people(self, params):
         who = self.member()
@@ -615,7 +642,11 @@ class Handler(BaseHTTPRequestHandler):
         videos = {}
         for e in events:
             videos.setdefault(e["target"], []).append({"id": e["id"], "position": e["position_s"], "title": ", ".join(names.get(e["id"], []))})
-        return 200, {"person": self.person_row(who, rows[0]), "photos": photos,
+        faces = [{"id": f["id"], "photo": f["photo_id"], "box": {"x": f["x"], "y": f["y"], "w": f["w"], "h": f["h"]},
+                  "markedBy": f["marker"], "canRemove": who["isAdmin"] or f["added_by"] == who["id"]}
+                 for f in query("SELECT f.*, COALESCE(p.display_name, p.username, 'Member') AS marker FROM photo_faces f "
+                                "LEFT JOIN profiles p ON p.user_id = f.added_by WHERE f.person_id = ? ORDER BY f.id", (int(pid),))]
+        return 200, {"person": self.person_row(who, rows[0]), "photos": photos, "faces": faces,
                      "videos": [{"target": t, "events": ev} for t, ev in videos.items()]}
 
     # ── people tagged in photos
@@ -654,6 +685,72 @@ class Handler(BaseHTTPRequestHandler):
             raise ApiError(403, "Only the person who added this tag, or the administrator, can remove it.")
         execute("DELETE FROM photo_people WHERE id = ?", (int(tid),))
         return 200, {"deleted": int(tid)}
+
+    # ── 1994 faces marked on photos (labelled examples for later automatic tagging)
+    def get_photo_faces(self, params):
+        who = self.member()
+        photo = params.get("photo", "")
+        if not PHOTO_ID.match(photo):
+            raise ApiError(400, "Unknown photo.")
+        rows = query("SELECT f.*, pe.name FROM photo_faces f JOIN people pe ON pe.id = f.person_id AND pe.deleted_at IS NULL "
+                     "WHERE f.photo_id = ? ORDER BY f.id", (photo,))
+        return 200, [{"id": r["id"], "personId": r["person_id"], "name": r["name"],
+                      "box": {"x": r["x"], "y": r["y"], "w": r["w"], "h": r["h"]},
+                      "canRemove": who["isAdmin"] or r["added_by"] == who["id"]} for r in rows]
+
+    def post_photo_face(self, params):
+        who = self.member()
+        data = self.read_json()
+        photo, person, box = str(data.get("photo", "")), data.get("person"), data.get("box") or {}
+        if not PHOTO_ID.match(photo):
+            raise ApiError(400, "Unknown photo.")
+        if not isinstance(person, int) or not query("SELECT 1 FROM people WHERE id = ? AND deleted_at IS NULL", (person,)):
+            raise ApiError(400, "That person isn't on the People list. Reload the page and try again.")
+        try:
+            x, y, w, h = (float(box[k]) for k in ("x", "y", "w", "h"))
+        except (KeyError, TypeError, ValueError):
+            raise ApiError(400, "Draw a box around the face first.")
+        if not (0 <= x < 1 and 0 <= y < 1 and 0.005 <= w <= 1 and 0.005 <= h <= 1 and x + w <= 1.0001 and y + h <= 1.0001):
+            raise ApiError(400, "That box isn't inside the photo. Draw it again.")
+        if not allow(("face", who["id"]), 40, 60):
+            raise ApiError(429, "You're marking quickly. Wait a minute and try again.")
+        existing = query("SELECT id, added_by FROM photo_faces WHERE photo_id = ? AND person_id = ?", (photo, person))
+        if existing:
+            if existing[0]["added_by"] != who["id"] and not who["isAdmin"]:
+                raise ApiError(409, "This person's face is already marked in this photo by someone else.")
+            execute("UPDATE photo_faces SET x = ?, y = ?, w = ?, h = ?, created_at = ? WHERE id = ?",
+                    (x, y, w, h, now(), existing[0]["id"]))
+            fid = existing[0]["id"]
+        else:
+            fid = execute("INSERT INTO photo_faces (photo_id, person_id, x, y, w, h, added_by, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                          (photo, person, x, y, w, h, who["id"], now()))
+        # A marked face means they're in the photo.
+        if not query("SELECT 1 FROM photo_people WHERE photo_id = ? AND person_id = ?", (photo, person)):
+            execute("INSERT INTO photo_people (photo_id, person_id, added_by, created_at) VALUES (?, ?, ?, ?)",
+                    (photo, person, who["id"], now()))
+        return 201, {"id": fid}
+
+    def delete_photo_face(self, params, fid):
+        who = self.member()
+        row = query("SELECT added_by FROM photo_faces WHERE id = ?", (int(fid),))
+        if not row:
+            raise ApiError(404, "That face was already unmarked.")
+        if row[0]["added_by"] != who["id"] and not who["isAdmin"]:
+            raise ApiError(403, "Only the person who marked this face, or the administrator, can remove it.")
+        execute("DELETE FROM photo_faces WHERE id = ?", (int(fid),))
+        execute("UPDATE people SET portrait_face = NULL WHERE portrait_face = ?", (int(fid),))
+        return 200, {"deleted": int(fid)}
+
+    def put_portrait(self, params, pid):
+        who = self.member()
+        face = self.read_json().get("face")
+        row = query("SELECT added_by, person_id FROM photo_faces WHERE id = ?", (face,)) if isinstance(face, int) else []
+        if not row or row[0]["person_id"] != int(pid):
+            raise ApiError(400, "Choose one of this person's marked faces.")
+        if row[0]["added_by"] != who["id"] and not who["isAdmin"]:
+            raise ApiError(403, "Only the person who marked this face, or the administrator, can make it the portrait.")
+        execute("UPDATE people SET portrait_face = ? WHERE id = ?", (face, int(pid)))
+        return 200, {"portrait": face}
 
     def post_access_request(self, params):
         ip = self.headers.get("X-Client-IP", "") or self.client_address[0]
@@ -736,15 +833,18 @@ ROUTES = {
     "GET": [(r"/me", Handler.get_me), (r"/comments", Handler.get_comments), (r"/counts", Handler.get_counts),
             (r"/markers", Handler.get_markers), (r"/marker-counts", Handler.get_marker_counts),
             (r"/people", Handler.get_people), (r"/people/(\d+)", Handler.get_person), (r"/photo-tags", Handler.get_photo_tags),
+            (r"/photo-faces", Handler.get_photo_faces),
             (r"/admin/requests", Handler.get_requests)],
-    "PUT": [(r"/me", Handler.put_me), (r"/markers/(\d+)", Handler.put_marker), (r"/people/(\d+)", Handler.put_person)],
+    "PUT": [(r"/me", Handler.put_me), (r"/markers/(\d+)", Handler.put_marker), (r"/people/(\d+)", Handler.put_person),
+            (r"/people/(\d+)/portrait", Handler.put_portrait)],
     "POST": [(r"/comments", Handler.post_comment), (r"/markers", Handler.post_marker), (r"/people", Handler.post_person),
-             (r"/photo-tags", Handler.post_photo_tag),
+             (r"/photo-tags", Handler.post_photo_tag), (r"/photo-faces", Handler.post_photo_face),
              (r"/access-requests", Handler.post_access_request),
              (r"/admin/requests/(\d+)/approve", Handler.approve_request),
              (r"/admin/requests/(\d+)/reject", Handler.reject_request)],
     "DELETE": [(r"/comments/(\d+)", Handler.delete_comment), (r"/markers/(\d+)", Handler.delete_marker),
-               (r"/people/(\d+)", Handler.delete_person), (r"/photo-tags/(\d+)", Handler.delete_photo_tag)],
+               (r"/people/(\d+)", Handler.delete_person), (r"/photo-tags/(\d+)", Handler.delete_photo_tag),
+               (r"/photo-faces/(\d+)", Handler.delete_photo_face)],
 }
 
 if __name__ == "__main__":
