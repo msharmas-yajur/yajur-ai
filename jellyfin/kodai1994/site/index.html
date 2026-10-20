@@ -1065,23 +1065,36 @@
 		}).catch(function () { throw new Error('This browser can’t read that file. Save it as a JPEG and try again.'); });
 	}
 	// XMLHttpRequest rather than fetch: it reports upload progress (onProgress: 0-1).
-	function uploadOne(file, onProgress) {
+	// A dropped connection or a 502/503/504 (the server restarting, a network blip) is
+	// retried twice. If an earlier try did get through, the retry is told "already
+	// added", which counts as done.
+	var UPLOAD_RETRY_MS = [3000, 8000];
+	function uploadOne(file, onProgress, onRetry) {
 		return prepareUpload(file).then(function (blob) {
-			return new Promise(function (ok, fail) {
-				var x = new XMLHttpRequest();
-				x.open('POST', '/kodai1994/api/photo-uploads');
-				x.withCredentials = true;
-				x.setRequestHeader('X-Kodai', '1');
-				x.setRequestHeader('Content-Type', blob.type || 'image/jpeg');
-				x.upload.onprogress = function (ev) { if (ev.lengthComputable) onProgress(ev.loaded / ev.total); };
-				x.onload = function () {
-					var d = {}; try { d = JSON.parse(x.responseText); } catch (e) {}
-					if (x.status >= 200 && x.status < 300) return ok(d);
-					var err = new Error(d.error || 'The server answered ' + x.status + '.'); err.status = x.status; fail(err);
-				};
-				x.onerror = function () { fail(new Error('The connection dropped. Try this photo again.')); };
-				x.send(blob);
-			});
+			function attempt(n) {
+				return new Promise(function (ok, fail) {
+					var x = new XMLHttpRequest();
+					x.open('POST', '/kodai1994/api/photo-uploads');
+					x.withCredentials = true;
+					x.setRequestHeader('X-Kodai', '1');
+					x.setRequestHeader('Content-Type', blob.type || 'image/jpeg');
+					x.upload.onprogress = function (ev) { if (ev.lengthComputable) onProgress(ev.loaded / ev.total); };
+					x.onload = function () {
+						var d = {}; try { d = JSON.parse(x.responseText); } catch (e) {}
+						if (x.status >= 200 && x.status < 300) return ok(d);
+						if (n > 0 && x.status === 409) return ok({ status: 'pending' });
+						var err = new Error(d.error || 'The server answered ' + x.status + '. Try this photo again in a minute.');
+						err.status = x.status; err.retry = x.status === 502 || x.status === 503 || x.status === 504; fail(err);
+					};
+					x.onerror = function () { var err = new Error('The connection dropped. Try this photo again.'); err.retry = true; fail(err); };
+					x.send(blob);
+				}).catch(function (err) {
+					if (!err.retry || n >= UPLOAD_RETRY_MS.length) throw err;
+					if (onRetry) onRetry(n + 1);
+					return new Promise(function (r) { setTimeout(r, UPLOAD_RETRY_MS[n]); }).then(function () { return attempt(n + 1); });
+				});
+			}
+			return attempt(0);
 		});
 	}
 	// One tile per chosen photo: preview, a ring that fills as it uploads, then ✓ or the problem.
@@ -1102,6 +1115,11 @@
 				var n = Math.round(f * 100);
 				bar.setAttribute('stroke-dashoffset', String(RING * (1 - f)));
 				pct.textContent = n + '%'; note.textContent = n < 100 ? 'Uploading ' + n + '%' : 'Saving…';
+			},
+			retrying: function (n) {
+				t.className = 'up-tile is-waiting';
+				bar.setAttribute('stroke-dashoffset', String(RING)); pct.textContent = '…';
+				note.textContent = 'The connection hiccupped; trying again (' + n + ' of ' + UPLOAD_RETRY_MS.length + ')…';
 			},
 			done: function () {
 				t.className = 'up-tile is-done'; bar.setAttribute('stroke-dashoffset', '0');
@@ -1158,7 +1176,7 @@
 				}
 				var f = files[i], t = tiles[i]; i++;
 				summary(); t.progress(0);
-				return uploadOne(f, t.progress).then(function () { added++; t.done(); })
+				return uploadOne(f, t.progress, t.retrying).then(function () { added++; t.done(); })
 					.catch(function (e) { failed++; t.fail(e.message); })
 					.then(next);
 			}
