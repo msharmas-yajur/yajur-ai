@@ -132,6 +132,10 @@ journalctl --user -u kodai1994-processing -f        # "converted 9/18, ready to 
   members-only. `PUBLIC= prepare-photos.sh` skips them. The spiral paints them as CSS
   backgrounds (no `<img>` to save) and blocks right-click, drag and long-press saving;
   a screenshot can still capture what's on screen.
+- **Sign-in page backgrounds**: on desktop, `site/pattern-waves.js` (a vanilla port of React
+  Bits' PatternWaves; WebGL2 via `ogl` 1.0.11 from jsDelivr) draws a mist-green "silk" dot
+  surface behind the helix and form, with cursor ripples; it pauses when the sign-in screen
+  is hidden. Tablets and phones skip it and show the helix behind the form instead.
 
 ## Capacity (measured 2026-10-20)
 
