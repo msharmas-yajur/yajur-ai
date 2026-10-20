@@ -1,0 +1,11 @@
+[Unit]
+Description=Kodai 1994: stabilize the next shaky recordings (one at a time, overnight)
+
+[Service]
+Type=oneshot
+ExecStart=%h/services/yajur-videos/kodai1994/bin/stabilize-queue.sh
+Nice=15
+IOSchedulingClass=idle
+# Leave half the CPU for streaming and the site
+CPUQuota=800%
+TimeoutStartSec=infinity

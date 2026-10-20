@@ -196,6 +196,20 @@ journalctl --user -u kodai1994-processing -f        # "converted 9/18, ready to 
   surface behind the helix and form, with cursor ripples; it pauses when the sign-in screen
   is hidden. Tablets and phones skip it and show the helix behind the form instead.
 
+## Video stabilization
+
+`kodai1994/stabilize.sh "<web mp4>"` steadies a shaky recording for the members' stream
+(ffmpeg vidstab, two passes; ~30 min per hour of video), repackages its HLS and swaps it
+in. Frame times don't change, so chapters, events and faces stay aligned. The original HLS
+folder is kept in `~/media/kodai1994-replaced/hls/<slug>` (undo: move it back); Jellyfin's
+MP4 is untouched.
+
+`kodai1994-stabilize.timer` runs `stabilize-queue.sh` nightly at 00:30: one recording at a
+time, skipping finished ones, starting nothing new after 05:59, until all are done.
+Per-video logs: `~/media/kodai1994-stabilized/log-<slug>.txt`; a failure leaves
+`failed-<slug>` there (delete it to retry). Progress:
+`journalctl --user -u kodai1994-stabilize.service`.
+
 ## Backup (Google Drive)
 
 `kodai1994/backup.sh` runs nightly at about 03:00 (`kodai1994-backup.timer`, a systemd
