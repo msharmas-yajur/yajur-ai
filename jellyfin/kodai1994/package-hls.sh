@@ -32,6 +32,21 @@ thumb() {
     -frames:v 1 -q:v 3 "$out/.thumb.jpg" && mv "$out/.thumb.jpg" "$out/thumb.jpg"
 }
 
+# Seek previews: one 160x120 frame every 10 s, tiled 10x10 per sheet, plus an index for
+# the page's scrub bar. Decodes keyframes only, so it takes about a minute per tape.
+storyboard() {
+  local mp4="$1" out="$2" dur sheets
+  [ -f "$out/storyboard/storyboard.json" ] && return 0
+  rm -rf "$out/.storyboard"; mkdir -p "$out/.storyboard"
+  nice -n 19 ffmpeg -v error -nostdin -y -skip_frame nokey -i "$mp4" -an \
+    -vf "fps=1/10,scale=160:120,tile=10x10" -q:v 5 "$out/.storyboard/sb-%03d.jpg"
+  sheets=$(find "$out/.storyboard" -name 'sb-*.jpg' | wc -l)
+  dur=$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$mp4")
+  printf '{"interval":10,"cols":10,"rows":10,"width":160,"height":120,"sheets":%d,"duration":%s}\n' "$sheets" "$dur" > "$out/.storyboard/storyboard.json"
+  chmod 755 "$out/.storyboard"; chmod 644 "$out/.storyboard"/*
+  rm -rf "$out/storyboard"; mv "$out/.storyboard" "$out/storyboard"
+}
+
 package() {
   local mp4="$1" name slug out tmp kf
   name=$(basename "$mp4" .mp4)
@@ -39,6 +54,7 @@ package() {
   out="$DEST/$slug"
   if [ -f "$out/master.m3u8" ]; then
     thumb "$mp4" "$out"
+    storyboard "$mp4" "$out"
     return 0
   fi
   echo "hls   $name"
@@ -67,6 +83,7 @@ lo/index.m3u8
 hi/index.m3u8
 EOF
   thumb "$mp4" "$tmp"
+  storyboard "$mp4" "$tmp"
   mv "$tmp" "$out"
   write_ready
   echo "ready $name"
@@ -84,6 +101,6 @@ write_ready() {
 }
 
 export DEST
-export -f slug thumb package write_ready
+export -f slug thumb storyboard package write_ready
 find "$SRC" -maxdepth 1 -name '*.mp4' -print0 | sort -z | xargs -0 -r -n 1 -P "${JOBS:-1}" bash -c 'package "$1"' _
 write_ready

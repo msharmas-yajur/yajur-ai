@@ -151,7 +151,21 @@
 	.stage { position: relative; background: #000; border-radius: 14px; overflow: hidden; }
 	.stage video { display: block; width: 100%; max-height: 78vh; aspect-ratio: 4 / 3; background: #000; }
 	.stage:fullscreen { border-radius: 0; display: grid; place-items: center; }
-	.stage:fullscreen video { max-height: 100vh; height: 100vh; }
+	.stage:fullscreen { display: flex; flex-direction: column; justify-content: center; }
+	.stage:fullscreen video { max-height: none; height: calc(100vh - 44px); }
+
+	/* Scrub bar with frame previews (storyboard sprites from package-hls.sh) */
+	.scrub { position: relative; height: 44px; display: flex; align-items: center; padding: 0 14px; background: #000; cursor: pointer; touch-action: none; user-select: none; }
+	.scrub:focus-visible { outline-offset: -3px; }
+	.scrub__track { position: relative; flex: 1; height: 6px; border-radius: 3px; background: rgba(255,255,255,.2); transition: height .12s; }
+	.scrub:hover .scrub__track, .scrub.is-active .scrub__track { height: 10px; }
+	.scrub__buffer, .scrub__fill { position: absolute; top: 0; bottom: 0; left: 0; border-radius: 3px; }
+	.scrub__buffer { background: rgba(255,255,255,.28); }
+	.scrub__fill { background: var(--saffron); }
+	.scrub__preview { position: absolute; bottom: 50px; transform: translateX(-50%); pointer-events: none; text-align: center; z-index: 3; }
+	.scrub__frame { width: 160px; height: 120px; border-radius: 8px; border: 2px solid var(--khadi); background: #111 no-repeat; box-shadow: 0 8px 24px rgba(0,0,0,.6); }
+	.scrub__time { display: inline-block; margin-top: 6px; background: rgba(0,0,0,.85); color: #fff; padding: 2px 10px; border-radius: 999px; font-size: 0.9rem; font-variant-numeric: tabular-nums; }
+	@media (prefers-reduced-motion: reduce) { .scrub__track { transition: none; } }
 	.watermark { position: absolute; z-index: 2; pointer-events: none; user-select: none; color: rgba(255,255,255,.32); font-size: clamp(0.75rem, 1.6vw, 1rem); font-weight: 600; letter-spacing: .02em; text-shadow: 0 1px 2px rgba(0,0,0,.6); transition: top 1.2s ease, left 1.2s ease; white-space: nowrap; }
 	.player .error { color: #ffb38a; }
 	/* The player scrolls so comments can sit under the video. */
@@ -320,6 +334,10 @@
 			<video id="video" controls playsinline preload="none"
 				controlslist="nodownload nofullscreen noremoteplayback" disablepictureinpicture disableremoteplayback></video>
 			<div class="watermark" id="watermark" aria-hidden="true"></div>
+			<div class="scrub" id="scrub" role="slider" tabindex="0" aria-label="Seek, with previews" aria-valuemin="0" aria-valuemax="0" aria-valuenow="0" aria-valuetext="0:00">
+				<div class="scrub__track"><div class="scrub__buffer" id="scrub-buffer"></div><div class="scrub__fill" id="scrub-fill"></div></div>
+				<div class="scrub__preview" id="scrub-preview" hidden><div class="scrub__frame" id="scrub-frame"></div><span class="scrub__time" id="scrub-time"></span></div>
+			</div>
 		</div>
 		<p class="error" id="player-error" role="alert"></p>
 		<div id="player-comments"></div>
@@ -970,6 +988,7 @@
 		$('player').scrollTop = 0;
 		document.body.style.overflow = 'hidden';
 		$('close').focus();
+		loadStoryboard(e.slug, (item.RunTimeTicks || 0) / 1e7);
 		mountComments($('player-comments'), commentsPanel('video:' + e.slug, {
 			timeOf: function () { return video.currentTime; },
 			seek: function (t) { video.currentTime = t; video.play().catch(function () {}); $('player').scrollTo({ top: 0, behavior: 'smooth' }); }
@@ -1018,10 +1037,82 @@
 		if (hls) { hls.destroy(); hls = null; }
 		video.pause(); video.removeAttribute('src'); video.load();
 		playing = null;
+		sb = null; hidePreview(); updateScrub();
 		mountComments($('player-comments'), null);
 		$('player').hidden = true;
 		document.body.style.overflow = '';
 	}
+
+	// ── Scrub bar: hover or drag to see the frame at that point, release to jump there.
+	// Storyboard = sprite sheets of one frame every `interval` seconds (package-hls.sh).
+	var sb = null, sbFor = null, scrubDur = 0, dragging = false;
+	var scrub = $('scrub'), preview = $('scrub-preview');
+	function loadStoryboard(slug, runtime) {
+		sb = null; sbFor = slug; scrubDur = runtime || 0;
+		fetch(HLS + slug + '/storyboard/storyboard.json', { credentials: 'same-origin', cache: 'no-store' })
+			.then(function (r) { return r.ok ? r.json() : null; })
+			.then(function (j) {
+				if (!j || sbFor !== slug) return;
+				j.base = HLS + slug + '/storyboard/';
+				sb = j; new Image().src = j.base + 'sb-001.jpg';
+			}).catch(function () {});
+	}
+	function duration() { return isFinite(video.duration) && video.duration > 0 ? video.duration : scrubDur; }
+	function timeAtX(clientX) {
+		var r = scrub.querySelector('.scrub__track').getBoundingClientRect();
+		return Math.max(0, Math.min(1, (clientX - r.left) / r.width)) * duration();
+	}
+	function showPreview(t, clientX) {
+		var box = scrub.getBoundingClientRect(), half = 82;
+		preview.style.left = Math.max(half, Math.min(box.width - half, clientX - box.left)) + 'px';
+		$('scrub-time').textContent = fmtDuration(t * 1e7);
+		var frame = $('scrub-frame');
+		if (sb) {
+			var per = sb.cols * sb.rows, i = Math.min(Math.floor(t / sb.interval), sb.sheets * per - 1);
+			var sheet = Math.floor(i / per), k = i % per;
+			frame.hidden = false;
+			frame.style.backgroundImage = 'url(' + sb.base + 'sb-' + String(sheet + 1).padStart(3, '0') + '.jpg)';
+			frame.style.backgroundPosition = -(k % sb.cols) * sb.width + 'px ' + -Math.floor(k / sb.cols) * sb.height + 'px';
+		} else {
+			frame.hidden = true; // no storyboard yet: show the time only
+		}
+		preview.hidden = false;
+	}
+	function hidePreview() { preview.hidden = true; scrub.classList.remove('is-active'); }
+	function updateScrub() {
+		var d = duration(), t = video.currentTime || 0;
+		$('scrub-fill').style.width = (d ? Math.min(100, t / d * 100) : 0) + '%';
+		var b = 0;
+		for (var i = 0; i < video.buffered.length; i++) if (video.buffered.start(i) <= t + 1) b = Math.max(b, video.buffered.end(i));
+		$('scrub-buffer').style.width = (d ? Math.min(100, b / d * 100) : 0) + '%';
+		scrub.setAttribute('aria-valuemax', String(Math.floor(d)));
+		scrub.setAttribute('aria-valuenow', String(Math.floor(t)));
+		scrub.setAttribute('aria-valuetext', fmtDuration(t * 1e7) + ' of ' + fmtDuration(d * 1e7));
+	}
+	function seekTo(t) { video.currentTime = Math.max(0, Math.min(duration() - 1, t)); updateScrub(); }
+	['timeupdate', 'progress', 'durationchange', 'seeked'].forEach(function (ev) { video.addEventListener(ev, updateScrub); });
+	scrub.addEventListener('pointerdown', function (ev) {
+		dragging = true; scrub.setPointerCapture(ev.pointerId); scrub.classList.add('is-active');
+		showPreview(timeAtX(ev.clientX), ev.clientX);
+	});
+	scrub.addEventListener('pointermove', function (ev) {
+		if (dragging || ev.pointerType === 'mouse') showPreview(timeAtX(ev.clientX), ev.clientX);
+	});
+	scrub.addEventListener('pointerup', function (ev) {
+		if (!dragging) return;
+		dragging = false; seekTo(timeAtX(ev.clientX));
+		if (ev.pointerType !== 'mouse') hidePreview(); else scrub.classList.remove('is-active');
+	});
+	scrub.addEventListener('pointercancel', function () { dragging = false; hidePreview(); });
+	scrub.addEventListener('pointerleave', function () { if (!dragging) hidePreview(); });
+	scrub.addEventListener('keydown', function (ev) {
+		var step = { ArrowRight: 10, ArrowLeft: -10, PageUp: 60, PageDown: -60 }[ev.key];
+		if (step) seekTo((video.currentTime || 0) + step);
+		else if (ev.key === 'Home') seekTo(0);
+		else if (ev.key === 'End') seekTo(duration());
+		else return;
+		ev.preventDefault(); ev.stopPropagation();
+	});
 
 	// Full screen goes on the stage, not the <video>, so the watermark stays on top.
 	// iPhone only allows native video full screen, where the watermark can't follow.

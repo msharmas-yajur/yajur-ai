@@ -1,12 +1,16 @@
 #!/usr/bin/env python3
-"""Probe the video gateway: media must be unreachable without a valid Jellyfin token.
+"""Probe the video gateway: nothing private may be reachable without a member's sign-in.
 
     python3 -I jellyfin/check-security.py                          # local gateway
     python3 -I jellyfin/check-security.py https://videos.yajur.ai  # through the tunnel
 
 Uses the admin credentials in the stack folder to find a real item ID and get a valid
-token, then requests that item's stream and image in many disguises (case, slashes,
-encoding, bogus keys) without one. Exits non-zero if anything leaks.
+token, then checks that:
+  - Jellyfin's own stream/download/web endpoints are blocked (404) in every disguise,
+    even with a valid token (members watch the HLS copies instead);
+  - members-only files under /kodai1994/hls/ need the kodai_auth cookie (401 without);
+  - item images and listings need a token; the community API needs a member.
+Exits non-zero if anything leaks.
 """
 import http.client, json, os, sys, urllib.parse, urllib.request
 
@@ -44,27 +48,40 @@ items = api("GET", "/Items?Recursive=true&IncludeItemTypes=Video,Movie&Limit=1",
 if not items:
     sys.exit("No videos in any library yet; nothing to probe.")
 i = items[0]["Id"]
+H = {"Authorization": AUTH + f', Token="{tok}"'}
+COOKIE = {"Cookie": f"kodai_auth={tok}"}
 
-deny = [
-    f"/Videos/{i}/stream?static=true", f"/videos/{i}/stream?static=true", f"/VIDEOS/{i}/STREAM?static=true",
-    f"//Videos/{i}/stream?static=true", f"/Videos/{i}/stream.mp4?static=true", f"/%56ideos/{i}/stream?static=true",
-    f"/web/../Videos/{i}/stream?static=true", f"/./Videos/{i}/stream?static=true",
-    f"/Videos/{i}/stream?static=true&ApiKey=deadbeefdeadbeefdeadbeefdeadbeef", f"/Videos/{i}/stream?static=true&ApiKey=",
-    f"/Audio/{i}/stream?static=true", f"/Items/{i}/Images/Primary", f"/items/{i}/images/primary",
-    f"/Videos/{i}/{i}/Subtitles/0/Stream.vtt", f"/Videos/{i}/{i}/Attachments/0",
-    f"/Items/{i}", f"/Items?Recursive=true",
+checks = [  # (label, path, headers, allowed statuses)
+    *[("blocked", p, h, {404}) for p in [
+        f"/Videos/{i}/stream?static=true", f"/videos/{i}/stream?static=true", f"/VIDEOS/{i}/STREAM?static=true",
+        f"//Videos/{i}/stream?static=true", f"/Videos/{i}/stream.mp4?static=true", f"/%56ideos/{i}/stream?static=true",
+        f"/Videos/{i}/master.m3u8", f"/Audio/{i}/stream?static=true", f"/Items/{i}/Download", f"/Items/{i}/File",
+        f"/Videos/{i}/{i}/Subtitles/0/Stream.vtt", "/web/", "/web", "/WEB/index.html",
+    ] for h in (None, H)],
+    ("needs cookie", "/kodai1994/hls/ready.json", None, {401}),
+    ("needs cookie", "/kodai1994/hls/backdrop.jpg", None, {401}),
+    ("needs cookie", "/kodai1994/hls/photos/photos.json", None, {401}),
+    ("needs cookie", "/kodai1994/hls/backdrop.jpg", {"Cookie": "kodai_auth=deadbeefdeadbeefdeadbeefdeadbeef"}, {401}),
+    ("needs cookie", "/KODAI1994/HLS/backdrop.jpg", None, {401, 404}),
+    ("needs cookie", "/kodai1994/hls/../hls/backdrop.jpg", None, {401}),
+    ("needs token", f"/Items/{i}/Images/Primary", None, {401}),
+    ("needs token", f"/Items/{i}", None, {401}),
+    ("needs token", "/Items?Recursive=true", None, {401}),
+    ("needs member", "/kodai1994/api/me", None, {401}),
+    ("needs member", "/kodai1994/api/comments?target=photo:01", {"X-Kodai-Token": tok}, {401}),
+    ("member ok", "/kodai1994/hls/backdrop.jpg", COOKIE, {200, 206}),
+    ("member ok", "/kodai1994/hls/ready.json", COOKIE, {200, 206}),
+    ("member ok", "/kodai1994/api/me", COOKIE, {200}),
+    ("member ok", f"/Items/{i}/Images/Primary?ApiKey={tok}", None, {200}),
 ]
-allow = [(f"/Videos/{i}/stream?static=true&ApiKey={tok}", None),
-         (f"/Items/{i}/Images/Primary?ApiKey={tok}", None),
-         (f"/Videos/{i}/stream?static=true", {"Authorization": AUTH + f', Token="{tok}"'})]
 
 problems = 0
 print(f"Probing {BASE} with item {i}\n")
-for p in deny:
-    s = status(p); ok = s in (400, 401, 403, 404); problems += not ok
-    print(f"{'ok  ' if ok else 'LEAK'} {s}  {p}")
-for p, h in allow:
-    s = status(p, h); ok = s in (200, 206); problems += not ok
-    print(f"{'ok  ' if ok else 'FAIL'} {s}  {p.replace(tok, '<token>')}{'  (Authorization header)' if h else ''}")
-print("\nAll media requires a valid token." if not problems else f"\n{problems} problem(s) — see LEAK/FAIL lines.")
+for label, path, headers, want in checks:
+    s = status(path, headers)
+    ok = s in want; problems += not ok
+    shown = path.replace(tok, "<token>")
+    extra = " (with token)" if headers is H else (" (member cookie)" if headers is COOKIE else "")
+    print(f"{'ok  ' if ok else 'LEAK'} {s}  {label:12s} {shown}{extra}")
+print("\nNothing private is reachable without a member's sign-in." if not problems else f"\n{problems} problem(s): see LEAK lines.")
 sys.exit(1 if problems else 0)
