@@ -157,6 +157,10 @@
 	.views { display: inline-flex; padding: 4px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel); }
 	.views button { border: 0; background: transparent; padding: 9px 20px; border-radius: 999px; cursor: pointer; font-weight: 500; color: var(--mist); }
 	.views button[aria-pressed=true] { background: var(--khadi); color: var(--pine-deep); }
+	/* "Identify faces" is its own page, but sits with the views */
+	.views a { padding: 9px 20px; border-radius: 999px; font-weight: 500; color: var(--mist); text-decoration: none; white-space: nowrap; }
+	.views button:hover, .views a:hover { color: var(--khadi); }
+	#signed-in { margin-left: auto; }
 	.status { padding: 0 var(--gutter); }
 	main { padding: 24px var(--gutter) 120px; max-width: 1280px; }
 
@@ -191,8 +195,9 @@
 	.is-pending { cursor: default; opacity: .75; }
 	/* People: everyone who appears in the recordings */
 	@media (max-width: 640px) {
-		.views { max-width: 100%; overflow-x: auto; scrollbar-width: none; }
-		.views button { padding: 8px 12px; white-space: nowrap; }
+		/* six tabs: wrap onto two rows rather than hide some off the edge */
+		.views { max-width: 100%; flex-wrap: wrap; justify-content: center; border-radius: 22px; row-gap: 2px; }
+		.views button, .views a { padding: 8px 12px; white-space: nowrap; }
 	}
 	.people { margin-top: 28px; max-width: 1100px; }
 	.people__head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 16px; }
@@ -651,8 +656,8 @@
 			<button type="button" data-view="photos" aria-pressed="false">Photos</button>
 			<button type="button" data-view="people" aria-pressed="false">People</button>
 			<button type="button" data-view="memories" aria-pressed="false">Memories</button>
+			<a href="identify.html" title="Help name the people the computer found in the recordings and photos">Identify faces</a>
 		</div>
-		<a class="controls__link" href="identify.html">Identify faces</a>
 		<span class="muted" id="signed-in"></span>
 	</div>
 	<p class="status muted" id="status" aria-live="polite"></p>
