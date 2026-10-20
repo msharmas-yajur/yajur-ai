@@ -44,6 +44,13 @@ Routes (JSON):
                                    (an event's name is its people's names, comma-separated)
   PUT    /markers/<id>             {title?, people?, position?, kind?}  own marker, or any for the admin
   DELETE /markers/<id>             own marker, or any for the admin
+  GET    /memories?target=...      memories (articles and PDF notes), newest first; with target
+                                   (video:<slug> or photo:<id>) only those tagged to it
+  GET    /memories/<id>            one memory in full, with what it's tagged to
+  POST   /memory-files             body: a PDF (up to 25 MB) → {file}, to attach to a notes memory
+  POST   /memories                 {kind: "article"|"notes", title, body, file?, links: [{target, position?}]}
+  PUT    /memories/<id>            {title?, body?, links?}  (its author, or the admin)
+  DELETE /memories/<id>            (its author, or the admin)
   POST   /photo-uploads            body: the image (image/jpeg, png or webp, up to 15 MB); the
                                    worker (faceid/worker.py) adds it to the Photos page
   GET    /photo-uploads            uploaded photos: who added them, and any still being processed
@@ -83,6 +90,9 @@ LIBRARY_NAME = os.environ.get("KODAI_LIBRARY_NAME", "Kodai 1994")
 DB_PATH = os.path.join(os.environ.get("DATA_DIR", "/data"), "community.db")
 UPLOAD_DIR = os.environ.get("UPLOAD_DIR", "/uploads")   # originals of uploaded photos (never served)
 MAX_UPLOAD = 15 * 1024 * 1024
+MEMORY_DIR = os.environ.get("MEMORY_DIR", "/memories")   # PDFs attached to memories (served members-only)
+MAX_PDF = 25 * 1024 * 1024
+MAX_ARTICLE = 60000                                      # characters
 IMAGE_TYPES = {"image/jpeg": ("jpg", (b"\xff\xd8\xff",)), "image/png": ("png", (b"\x89PNG\r\n\x1a\n",)),
                "image/webp": ("webp", (b"RIFF",))}
 SITE_URL = os.environ.get("SITE_URL", "https://videos.yajur.ai/kodai1994/")
@@ -94,7 +104,8 @@ SMTP_PASSWORD = os.environ.get("SMTP_PASSWORD", "")
 MAIL_FROM = os.environ.get("MAIL_FROM") or SMTP_USER
 ADMIN_EMAIL = os.environ.get("ADMIN_EMAIL", "")
 
-TARGET = re.compile(r"^(video:[a-z0-9-]{1,120}|photo:[0-9]{2,3})$")
+TARGET = re.compile(r"^(video:[a-z0-9-]{1,120}|photo:[0-9]{2,3}|memory:[0-9]{1,9})$")  # what comments attach to
+LINK_TARGET = re.compile(r"^(video:[a-z0-9-]{1,120}|photo:[0-9]{2,3})$")              # what memories are tagged to
 VIDEO_TARGET = re.compile(r"^video:[a-z0-9-]{1,120}$")
 PHOTO_ID = re.compile(r"^[0-9]{2,3}$")
 EMAIL = re.compile(r"^[^@\s]{1,64}@[^@\s]{1,190}\.[^@\s]{2,}$")
@@ -278,6 +289,32 @@ CREATE TABLE IF NOT EXISTS photo_uploads (
     removed_by  TEXT
 );
 CREATE INDEX IF NOT EXISTS photo_uploads_by_status ON photo_uploads (status);
+-- Memories: long-form articles and PDF notes, tagged to recordings and photos
+CREATE TABLE IF NOT EXISTS memories (
+    id          INTEGER PRIMARY KEY,
+    kind        TEXT NOT NULL CHECK (kind IN ('article', 'notes')),
+    title       TEXT NOT NULL,
+    body        TEXT NOT NULL DEFAULT '',       -- the article, or the comment on the notes
+    file        TEXT,                           -- notes: the PDF, under MEMORY_DIR
+    user_id     TEXT NOT NULL,
+    created_at  TEXT NOT NULL,
+    updated_at  TEXT,
+    deleted_at  TEXT
+);
+CREATE TABLE IF NOT EXISTS memory_links (
+    memory_id   INTEGER NOT NULL,
+    target      TEXT NOT NULL,                  -- video:<slug> or photo:<id>
+    position_s  INTEGER,                        -- a moment in the video, if given
+    ord         INTEGER NOT NULL,
+    PRIMARY KEY (memory_id, target)
+);
+CREATE INDEX IF NOT EXISTS memory_links_by_target ON memory_links (target);
+CREATE TABLE IF NOT EXISTS memory_files (       -- uploaded PDFs, so only the uploader can attach one
+    file        TEXT PRIMARY KEY,
+    user_id     TEXT NOT NULL,
+    size        INTEGER NOT NULL,
+    created_at  TEXT NOT NULL
+);
 CREATE TABLE IF NOT EXISTS access_requests (
     id          INTEGER PRIMARY KEY,
     name        TEXT NOT NULL,
@@ -389,9 +426,9 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
-    def read_json(self):
+    def read_json(self, limit=16384):
         length = int(self.headers.get("Content-Length") or 0)
-        if length > 16384:
+        if length > limit:
             raise ApiError(413, "That's too long.")
         try:
             data = json.loads(self.rfile.read(length) or b"{}")
@@ -827,6 +864,161 @@ class Handler(BaseHTTPRequestHandler):
         execute("UPDATE people SET portrait_face = ? WHERE id = ?", (face, int(pid)))
         return 200, {"portrait": face}
 
+    # ── memories: articles and PDF notes
+    @staticmethod
+    def memory_links(data):
+        links = data.get("links", [])
+        if not isinstance(links, list) or len(links) > 60:
+            raise ApiError(400, "Tag at most 60 recordings and photos.")
+        out, seen = [], set()
+        for l in links:
+            target = str((l or {}).get("target", "")) if isinstance(l, dict) else ""
+            if not LINK_TARGET.match(target):
+                raise ApiError(400, "One of the tagged recordings or photos isn't valid. Reload the page and try again.")
+            if target in seen:
+                continue
+            seen.add(target)
+            pos = l.get("position")
+            pos = int(pos) if isinstance(pos, (int, float)) and target.startswith("video:") and 0 <= pos < 86400 else None
+            out.append((target, pos))
+        return out
+
+    @staticmethod
+    def memory_text(data, kind):
+        title = clean(data.get("title"), 140)
+        if len(title) < 2:
+            raise ApiError(400, "Give it a title, at least 2 characters.")
+        body = clean(data.get("body"), MAX_ARTICLE, multiline=True)
+        if kind == "article" and len(body) < 20:
+            raise ApiError(400, "Write a little more: at least a sentence or two.")
+        return title, body
+
+    def memory_row(self, who, r, links, full):
+        body = r["body"]
+        return {"id": r["id"], "kind": r["kind"], "title": r["title"],
+                "body": body if full else None,
+                "excerpt": (body[:280].rsplit(" ", 1)[0] + "…") if len(body) > 280 else body,
+                "words": len(body.split()), "pdf": f"/kodai1994/memories/{r['file']}" if r["file"] else None,
+                "author": r["author"], "createdAt": r["created_at"], "updatedAt": r["updated_at"],
+                "links": links.get(r["id"], []), "mine": r["user_id"] == who["id"],
+                "canEdit": r["user_id"] == who["id"] or who["isAdmin"]}
+
+    MEMORY_SQL = ("SELECT m.*, COALESCE(p.display_name, p.username, 'Member') AS author FROM memories m "
+                  "LEFT JOIN profiles p ON p.user_id = m.user_id WHERE m.deleted_at IS NULL ")
+
+    @staticmethod
+    def links_for(ids):
+        out = {}
+        if ids:
+            for l in query("SELECT memory_id, target, position_s FROM memory_links WHERE memory_id IN (%s) ORDER BY memory_id, ord"
+                           % ",".join("?" * len(ids)), ids):
+                out.setdefault(l["memory_id"], []).append({"target": l["target"], "position": l["position_s"]})
+        return out
+
+    def get_memories(self, params):
+        who = self.member()
+        target = urllib.parse.unquote(params.get("target", ""))
+        if target:
+            if not LINK_TARGET.match(target):
+                raise ApiError(400, "Unknown video or photo.")
+            rows = query(self.MEMORY_SQL + "AND m.id IN (SELECT memory_id FROM memory_links WHERE target = ?) ORDER BY m.created_at DESC", (target,))
+        else:
+            rows = query(self.MEMORY_SQL + "ORDER BY m.created_at DESC")
+        links = self.links_for([r["id"] for r in rows])
+        counts = {r["target"]: r["n"] for r in query("SELECT target, COUNT(*) AS n FROM comments WHERE deleted_at IS NULL AND target LIKE 'memory:%' GROUP BY target")}
+        out = []
+        for r in rows:
+            row = self.memory_row(who, r, links, False)
+            row["comments"] = counts.get(f"memory:{r['id']}", 0)
+            out.append(row)
+        return 200, out
+
+    def get_memory(self, params, mid):
+        who = self.member()
+        rows = query(self.MEMORY_SQL + "AND m.id = ?", (int(mid),))
+        if not rows:
+            raise ApiError(404, "That memory was removed.")
+        return 200, self.memory_row(who, rows[0], self.links_for([int(mid)]), True)
+
+    def post_memory_file(self, params):
+        who = self.member()
+        if (self.headers.get("Content-Type") or "").split(";")[0].strip().lower() != "application/pdf":
+            raise ApiError(415, "Choose a PDF file.")
+        length = int(self.headers.get("Content-Length") or 0)
+        if not length:
+            raise ApiError(400, "That file is empty.")
+        if length > MAX_PDF:
+            raise ApiError(413, "That PDF is too large (25 MB at most).")
+        self.need_name(who)
+        if not allow(("pdf", who["id"]), 20, 3600):
+            raise ApiError(429, "You've added a lot of files. Wait a while and try again.")
+        data = self.rfile.read(length)
+        if not data.startswith(b"%PDF-"):
+            raise ApiError(415, "That file isn't a PDF.")
+        name = f"{secrets.token_hex(16)}.pdf"
+        os.makedirs(MEMORY_DIR, exist_ok=True)
+        with open(os.path.join(MEMORY_DIR, name), "wb") as f:
+            f.write(data)
+        execute("INSERT INTO memory_files (file, user_id, size, created_at) VALUES (?, ?, ?, ?)", (name, who["id"], length, now()))
+        return 201, {"file": name}
+
+    def post_memory(self, params):
+        who = self.member()
+        data = self.read_json(limit=256 * 1024)
+        kind = str(data.get("kind", ""))
+        if kind not in ("article", "notes"):
+            raise ApiError(400, "Choose Article or Notes.")
+        title, body = self.memory_text(data, kind)
+        links = self.memory_links(data)
+        file = None
+        if kind == "notes":
+            file = str(data.get("file", ""))
+            if not query("SELECT 1 FROM memory_files WHERE file = ? AND user_id = ?", (file, who["id"])):
+                raise ApiError(400, "Add the PDF first.")
+            if query("SELECT 1 FROM memories WHERE file = ?", (file,)):
+                raise ApiError(409, "That PDF is already shared.")
+        self.need_name(who)
+        if not allow(("memory", who["id"]), 20, 3600):
+            raise ApiError(429, "You've shared a lot today. Wait a while and try again.")
+        mid = execute("INSERT INTO memories (kind, title, body, file, user_id, created_at) VALUES (?, ?, ?, ?, ?, ?)",
+                      (kind, title, body, file, who["id"], now()))
+        self.set_memory_links(mid, links)
+        return 201, {"id": mid}
+
+    @staticmethod
+    def set_memory_links(mid, links):
+        execute("DELETE FROM memory_links WHERE memory_id = ?", (mid,))
+        for i, (target, pos) in enumerate(links):
+            execute("INSERT INTO memory_links (memory_id, target, position_s, ord) VALUES (?, ?, ?, ?)", (mid, target, pos, i))
+
+    def own_memory(self, who, mid):
+        row = query("SELECT user_id, kind FROM memories WHERE id = ? AND deleted_at IS NULL", (int(mid),))
+        if not row:
+            raise ApiError(404, "That memory was removed.")
+        if row[0]["user_id"] != who["id"] and not who["isAdmin"]:
+            raise ApiError(403, "Only the person who shared this, or the administrator, can change it.")
+        return row[0]
+
+    def put_memory(self, params, mid):
+        who = self.member()
+        data = self.read_json(limit=256 * 1024)
+        row = self.own_memory(who, mid)
+        if "title" in data or "body" in data:
+            current = query("SELECT title, body FROM memories WHERE id = ?", (int(mid),))[0]
+            title, body = self.memory_text({"title": data.get("title", current["title"]), "body": data.get("body", current["body"])}, row["kind"])
+            execute("UPDATE memories SET title = ?, body = ?, updated_at = ? WHERE id = ?", (title, body, now(), int(mid)))
+        if "links" in data:
+            self.set_memory_links(int(mid), self.memory_links(data))
+            execute("UPDATE memories SET updated_at = ? WHERE id = ?", (now(), int(mid)))
+        return 200, {"id": int(mid)}
+
+    def delete_memory(self, params, mid):
+        who = self.member()
+        self.own_memory(who, mid)
+        # Soft delete: the PDF stays on disk (and in the backup), off the page.
+        execute("UPDATE memories SET deleted_at = ? WHERE id = ?", (now(), int(mid)))
+        return 200, {"deleted": int(mid)}
+
     # ── photos uploaded by members
     def post_photo_upload(self, params):
         who = self.member()
@@ -1153,20 +1345,22 @@ ROUTES = {
             (r"/photo-faces", Handler.get_photo_faces),
             (r"/identify/runs", Handler.get_identify_runs), (r"/identify/suggestions", Handler.get_identify_suggestions),
             (r"/photo-uploads", Handler.get_photo_uploads),
+            (r"/memories", Handler.get_memories), (r"/memories/(\d+)", Handler.get_memory),
             (r"/admin/requests", Handler.get_requests)],
-    "PUT": [(r"/me", Handler.put_me), (r"/markers/(\d+)", Handler.put_marker), (r"/people/(\d+)", Handler.put_person),
+    "PUT": [(r"/me", Handler.put_me), (r"/memories/(\d+)", Handler.put_memory), (r"/markers/(\d+)", Handler.put_marker), (r"/people/(\d+)", Handler.put_person),
             (r"/people/(\d+)/portrait", Handler.put_portrait)],
     "POST": [(r"/comments", Handler.post_comment), (r"/markers", Handler.post_marker), (r"/people", Handler.post_person),
              (r"/photo-tags", Handler.post_photo_tag), (r"/photo-faces", Handler.post_photo_face),
              (r"/identify/runs", Handler.post_identify_run), (r"/identify/suggestions/(\d+)", Handler.review_suggestion),
              (r"/photo-uploads", Handler.post_photo_upload),
+             (r"/memories", Handler.post_memory), (r"/memory-files", Handler.post_memory_file),
              (r"/access-requests", Handler.post_access_request),
              (r"/admin/requests/(\d+)/approve", Handler.approve_request),
              (r"/admin/requests/(\d+)/reject", Handler.reject_request)],
     "DELETE": [(r"/comments/(\d+)", Handler.delete_comment), (r"/markers/(\d+)", Handler.delete_marker),
                (r"/people/(\d+)", Handler.delete_person), (r"/photo-tags/(\d+)", Handler.delete_photo_tag),
                (r"/photo-faces/(\d+)", Handler.delete_photo_face), (r"/identify/runs/(\d+)", Handler.cancel_identify_run),
-               (r"/photo-uploads/(\d+)", Handler.delete_photo_upload)],
+               (r"/photo-uploads/(\d+)", Handler.delete_photo_upload), (r"/memories/(\d+)", Handler.delete_memory)],
 }
 
 if __name__ == "__main__":
