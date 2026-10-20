@@ -19,6 +19,7 @@ set -euo pipefail
 SRC=${1:-"$HOME/Downloads/Kodai - 1994"}
 DEST=${2:-"$HOME/media/kodai1994-hls/photos-enhanced"}
 ESRGAN=${ESRGAN:-"$HOME/tools/realesrgan"}
+OVERRIDES=${OVERRIDES:-"$HOME/media/kodai1994-overrides"}
 GPU=${GPU:-0}
 work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT
@@ -31,6 +32,11 @@ while IFS= read -r -d '' f; do
   [ -n "${seen[$sum]:-}" ] && continue
   seen[$sum]=1
   n=$((n + 1)); id=$(printf '%02d' "$n")
+  # A real high-res scan replaces this photo (prepare-photos.sh OVERRIDES): better than an
+  # upscale, so no enhanced copy; the viewer falls back to the photo itself.
+  if [ -n "$(find "$OVERRIDES" -maxdepth 1 -type f -name "$id.*" 2>/dev/null | head -1)" ]; then
+    rm -f "$DEST/$id.jpg"; echo "skip  $id (replaced by a scan)"; continue
+  fi
   [ -s "$DEST/$id.jpg" ] && { echo "skip  $id"; continue; }
   wh=$(ffprobe -v error -select_streams v:0 -show_entries stream=width,height -of csv=p=0 "$f")
   w=${wh%,*}; h=${wh#*,}
