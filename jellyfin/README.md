@@ -73,6 +73,11 @@ Browser ──https──▶ Cloudflare ──tunnel──▶ cloudflared ──
   time. They're listed by time with who added them, filterable, shown as ticks on the seek
   bar, and the current chapter is highlighted; clicking one jumps there. People edit or
   delete their own; the admin can delete any. Stored with the comments (`markers` table).
+- **People.** A *People* tab lists everyone who appears in the recordings and photos
+  (`people` table; the names live only in the database, never in this public repo). Members
+  add themselves (*Add me as …*) or anyone they recognise; a name can't be listed twice
+  (case and spacing ignored). The admin renames or removes names; members can remove names
+  they added. Linking people to the moments they appear is the next step.
 - **Passwords.** Members change theirs under *Account*. The admin can still create or reset
   accounts from a shell:
 
