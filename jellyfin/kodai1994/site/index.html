@@ -195,9 +195,12 @@
 	.is-pending { cursor: default; opacity: .75; }
 	/* People: everyone who appears in the recordings */
 	@media (max-width: 640px) {
-		/* six tabs: wrap onto two rows rather than hide some off the edge */
-		.views { max-width: 100%; flex-wrap: wrap; justify-content: center; border-radius: 22px; row-gap: 2px; }
-		.views button, .views a { padding: 8px 12px; white-space: nowrap; }
+		/* six tabs: two per row, equal width, the whole width of the screen */
+		.controls { display: grid; grid-template-columns: minmax(0, 1fr); justify-content: stretch; gap: 10px; }
+		.views { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; width: 100%; padding: 6px; border-radius: 18px; }
+		.views button, .views a { display: block; padding: 12px 8px; border-radius: 12px; text-align: center; white-space: nowrap; font-size: 1rem; background: rgba(243,241,234,.05); color: var(--khadi); }
+		.views button[aria-pressed=true] { background: var(--khadi); color: var(--pine-deep); }
+		#signed-in { margin-left: 0; text-align: center; font-size: .9rem; }
 	}
 	.people { margin-top: 28px; max-width: 1100px; }
 	.people__head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 16px; }
