@@ -101,6 +101,11 @@ Browser ──https──▶ Cloudflare ──tunnel──▶ cloudflared ──
 - **Zoom.** Photo viewer and video player: − / + / Fit, mouse wheel (Ctrl + wheel on video),
   pinch on phones, drag to move when zoomed. While marking faces, a Draw / Move switch
   chooses what dragging does; boxes drawn while zoomed land in the right place.
+- **Enhanced photos.** `kodai1994/enhance-photos.sh` makes 2× copies with Real-ESRGAN
+  (`~/tools/realesrgan`, general upscaling only, no face restoration) in
+  `~/media/kodai1994-hls/photos-enhanced/`. The photo viewer has an *Enhanced / Original*
+  switch (Enhanced by default, remembered per device; falls back to the original when a
+  photo has no enhanced copy). Before/after page: `/kodai1994/enhance-compare.html`.
 - **Passwords.** Members change theirs under *Account*. The admin can still create or reset
   accounts from a shell:
 
