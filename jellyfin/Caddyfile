@@ -9,6 +9,15 @@
 }
 
 :80 {
+	# Unlisted: links are shared privately, so nothing on this host may be indexed
+	# (Jellyfin's own pages included).
+	header X-Robots-Tag "noindex, nofollow, noarchive"
+	handle /robots.txt {
+		respond "User-agent: *
+Disallow: /
+" 200
+	}
+
 	redir / /kodai1994/ 302
 	redir /kodai1994 /kodai1994/ 308
 

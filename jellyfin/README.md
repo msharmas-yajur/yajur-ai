@@ -47,6 +47,12 @@ it always direct-plays and the server does no transcoding.
 
 ---
 
+**Unlisted.** Nothing on yajur.ai links to `videos.yajur.ai`; the link is shared privately.
+The gateway serves `robots.txt` with `Disallow: /` and adds `X-Robots-Tag: noindex, nofollow,
+noarchive` to every response (Jellyfin's pages included), and the Kodai page also carries a
+`noindex` meta tag. This repo is public, so the URL itself is not secret; access control is
+the login.
+
 ## How it's deployed on this machine
 
 The stack runs from **`~/services/yajur-videos/`**, not from the git checkout, so switching
