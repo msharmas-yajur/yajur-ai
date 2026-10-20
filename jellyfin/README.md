@@ -106,6 +106,20 @@ Browser ──https──▶ Cloudflare ──tunnel──▶ cloudflared ──
   `~/media/kodai1994-hls/photos-enhanced/`. The photo viewer has an *Enhanced / Original*
   switch (Enhanced by default, remembered per device; falls back to the original when a
   photo has no enhanced copy). Before/after page: `/kodai1994/enhance-compare.html`.
+- **Identify faces** (`/kodai1994/identify.html`, linked from the library). Any member picks
+  a recording or photo and presses *Identify faces*; the `faceid` container
+  (`kodai1994/faceid/worker.py`) runs the queue one at a time, capped at 4 CPU cores. It
+  finds faces (2 frames a second for video, grouped into on-screen stretches), compares
+  them with every marked 1994 face plus every video face already confirmed, and lists
+  suggestions grouped by person. Members confirm, reject (*Not them*), pick someone else,
+  or name unrecognised faces; every decision shows who made it and can be undone by them
+  or the admin. Confirming in a recording adds the person to an event at that moment
+  (people confirmed within 3 s share one event); on a photo it marks the face and tags the
+  photo. Nothing changes until someone confirms. Running again skips faces already
+  reviewed. Models: InsightFace `buffalo_l` (`det_10g.onnx`, `w600k_r50.onnx`;
+  non-commercial licence) in `FACEID_MODELS` (`~/tools/faceid/models`). Check accuracy on
+  the marked faces with `docker exec yajur-kodai-faceid python3 -I /app/worker.py --eval`
+  (2026-10-20: right person first 58 times out of 66, across photos).
 - **Passwords.** Members change theirs under *Account*. The admin can still create or reset
   accounts from a shell:
 
@@ -130,6 +144,8 @@ service, and recreates the gateway and community containers. Run it after any ch
 | `~/media/kodai1994/` | Web MP4s (Jellyfin's library: metadata, durations, resume) |
 | `~/media/kodai1994-hls/` | HLS streams + thumbnails per video, `ready.json`, the backdrop photo, `photos/` (members only) |
 | `~/media/kodai1994-brand/` | Logo and favicon (public; kept out of the repo) |
+| `~/media/kodai1994-identify/` | Face crops for the Identify page (members only) |
+| `~/tools/faceid/models/` | Face detection + recognition models for the `faceid` worker |
 
 | Port (localhost only) | Service |
 |---|---|
