@@ -54,7 +54,7 @@ cd "$DEST"
 if [ "${1:-up}" = config ]; then exec docker compose config; fi
 # The faceid worker's output folder, created as this user (see above).
 MEDIA_DIR=$(sed -n 's/^MEDIA_DIR=//p' .env)
-mkdir -p "$MEDIA_DIR/kodai1994-identify" "$MEDIA_DIR/kodai1994-uploads"
+mkdir -p "$MEDIA_DIR/kodai1994-identify" "$MEDIA_DIR/kodai1994-uploads" "$MEDIA_DIR/kodai1994-memories"
 # Without a tunnel token, run locally only (gateway on 127.0.0.1:8098).
 if grep -qE '^CLOUDFLARE_TUNNEL_TOKEN=.+' .env; then
   docker compose up -d --remove-orphans

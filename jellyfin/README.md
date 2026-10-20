@@ -120,6 +120,16 @@ Browser ──https──▶ Cloudflare ──tunnel──▶ cloudflared ──
   non-commercial licence) in `FACEID_MODELS` (`~/tools/faceid/models`). Check accuracy on
   the marked faces with `docker exec yajur-kodai-faceid python3 -I /app/worker.py --eval`
   (2026-10-20: right person first 58 times out of 66, across photos).
+- **Memories** (*Memories* tab; a link is `#memory/<id>`). Members *Write a memory* (a
+  long-form article with light formatting: blank line = paragraph, `## ` heading, `- `
+  list, `> ` quote, `**bold**`, `*italic*`; turned into elements, never raw HTML) or
+  *Share notes (PDF)* (up to 25 MB, with a comment), and tag recordings (optionally at a
+  moment) and photos. A memory shows its tagged recordings and photos (opening them at that
+  moment); the player and photo viewer list the memories tagged to them, with *Write about
+  this*. PDFs are previewed with PDF.js (pages drawn as images; scripts in the PDF never
+  run) and served members-only from `~/media/kodai1994-memories/` with a `sandbox` policy.
+  Others can comment on a memory; its author or the admin can edit or delete it (deleting
+  hides it; the PDF stays on disk and in the backup).
 - **Passwords.** Members change theirs under *Account*. The admin can still create or reset
   accounts from a shell:
 

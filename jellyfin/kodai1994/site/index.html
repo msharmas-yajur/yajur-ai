@@ -303,6 +303,70 @@
 	.photo { display: block; width: 100%; margin: 0 0 18px; padding: 0; border: 0; background: var(--pine); border-radius: 10px; overflow: hidden; cursor: zoom-in; break-inside: avoid; }
 	.photo img { display: block; width: 100%; height: auto; }
 	.photo:hover img, .photo:focus-visible img { filter: brightness(1.08); }
+	/* Memories: articles and PDF notes */
+	.icon { display: inline-grid; place-items: center; }
+	.icon svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+	.memories__actions { display: flex; flex-wrap: wrap; gap: 10px; }
+	.memories__list { list-style: none; margin: 28px 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
+	.memory-card { display: flex; flex-direction: column; gap: 8px; width: 100%; height: 100%; text-align: left; padding: 18px 20px; border: 1px solid var(--line); border-radius: 16px; background: var(--panel); cursor: pointer; color: inherit; font: inherit; }
+	.memory-card:hover { border-color: var(--mist); }
+	.memory-card__kind { display: flex; align-items: center; gap: 8px; font-size: .82rem; color: var(--mist); }
+	.memory-card__kind .icon { color: #f3b083; }
+	.memory-card h3 { font: 400 1.35rem/1.25 var(--display); margin: 0; }
+	.memory-card p { margin: 0; font-size: .95rem; color: var(--mist); overflow: hidden; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; }
+	.memory-card__tags { display: flex; gap: 6px; margin-top: auto; padding-top: 6px; }
+	.memory-card__tags span { width: 44px; height: 33px; border-radius: 5px; background: var(--pine) center / cover no-repeat; }
+	.memory { max-width: 760px; margin-top: 24px; }
+	.memory h2 { font: 400 clamp(2rem, 4.5vw, 3rem)/1.1 var(--display); margin: 0 0 10px; }
+	.memory__meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; color: var(--mist); font-size: .92rem; }
+	.memory__meta .icon-btn { width: 34px; height: 34px; }
+	.memory__body { margin-top: 28px; font-size: 1.08rem; line-height: 1.75; }
+	.memory__body p { margin: 0 0 1.1em; }
+	.memory__body h3 { font: 400 1.5rem/1.25 var(--display); margin: 1.6em 0 .5em; }
+	.memory__body h4 { font-size: 1.1rem; margin: 1.4em 0 .4em; }
+	.memory__body blockquote { margin: 0 0 1.1em; padding-left: 18px; border-left: 3px solid var(--saffron); color: var(--mist); font-style: italic; }
+	.memory__body ul { margin: 0 0 1.1em; padding-left: 1.3em; }
+	.memory h3.memory__section { font: 400 1.4rem var(--display); margin: 40px 0 14px; }
+	.memory__pdf { display: grid; gap: 12px; margin-top: 28px; }
+	.memory__pdf canvas { width: 100%; height: auto; border-radius: 6px; background: #fff; box-shadow: 0 8px 30px rgba(0,0,0,.35); }
+	.memory__pdf-page { position: relative; min-height: 120px; }
+	.memory__pdf-page span { position: absolute; right: 10px; bottom: 8px; font-size: .75rem; background: rgba(6,13,9,.75); padding: 1px 8px; border-radius: 999px; }
+	.memory__tagged { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 14px; }
+	.memory__tag { display: flex; flex-direction: column; gap: 6px; border: 0; padding: 0; background: none; text-align: left; cursor: pointer; color: inherit; font: inherit; }
+	.memory__tag span.pic { aspect-ratio: 4 / 3; border-radius: 10px; background: var(--pine) center / cover no-repeat; }
+	.memory__tag b { font-weight: 600; font-size: .92rem; line-height: 1.3; }
+	.memory__tag small { color: var(--mist); font-size: .8rem; }
+	.memory__tag:hover b { color: #f3b083; }
+	/* editor */
+	.memory-edit { max-width: 820px; margin-top: 24px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; }
+	.memory-edit h2 { font: 400 clamp(1.8rem, 4vw, 2.6rem)/1.1 var(--display); margin: 0; }
+	.memory-edit label { font-weight: 600; font-size: .92rem; display: block; margin-bottom: 6px; }
+	.memory-edit textarea.field { min-height: 340px; line-height: 1.65; resize: vertical; }
+	.memory-edit .notes-body textarea.field { min-height: 140px; }
+	.memory-edit fieldset { border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px; margin: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
+	.memory-edit legend { padding: 0 6px; font-weight: 600; }
+	.tag-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+	.tag-chip { display: inline-flex; align-items: center; gap: 8px; padding: 4px 6px 4px 4px; border-radius: 999px; border: 1px solid var(--line); background: rgba(243,241,234,.06); font-size: .85rem; }
+	.tag-chip i { width: 34px; height: 26px; border-radius: 999px; background: var(--pine) center / cover no-repeat; flex: none; }
+	.tag-chip button { border: 0; background: none; color: var(--mist); cursor: pointer; padding: 2px; display: grid; }
+	.tag-chip button svg { width: 15px; height: 15px; }
+	.tag-add { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+	.tag-add select.field { flex: 1 1 260px; width: auto; min-width: 0; max-width: 100%; text-overflow: ellipsis; }
+	.memory-edit, .memory-edit > *, .memory-edit fieldset { min-width: 0; }
+	.tag-add input.field { width: 110px; font-variant-numeric: tabular-nums; }
+	.tag-photos { display: grid; grid-template-columns: repeat(auto-fill, minmax(78px, 1fr)); gap: 8px; }
+	.tag-photos button { aspect-ratio: 1; border-radius: 8px; border: 2px solid transparent; background: var(--pine) center / cover no-repeat; cursor: pointer; padding: 0; }
+	.tag-photos button[aria-pressed=true] { border-color: var(--saffron); box-shadow: 0 0 0 2px rgba(234,122,42,.35); }
+	.pdf-pick { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: center; }
+	/* side panels in the player and photo viewer */
+	.mem-side { margin: 18px 0; max-width: 760px; }
+	.mem-side h3 { font: 400 1.3rem var(--display); margin: 0 0 8px; padding-bottom: 8px; border-bottom: 1px solid var(--line); }
+	.mem-side ul { list-style: none; margin: 0 0 8px; padding: 0; display: grid; gap: 4px; }
+	.mem-side li button { display: flex; gap: 10px; align-items: flex-start; width: 100%; text-align: left; border: 0; background: none; padding: 6px 4px; border-radius: 8px; cursor: pointer; color: inherit; font: inherit; }
+	.mem-side li button:hover { background: rgba(243,241,234,.06); }
+	.mem-side li .icon { color: #f3b083; margin-top: 2px; }
+	.mem-side li small { display: block; color: var(--mist); font-size: .8rem; }
+	@media (max-width: 640px) { .memories__list { grid-template-columns: 1fr; } }
 	/* Adding photos */
 	.upload { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; margin-top: 28px; padding: 16px 18px; border: 1px dashed var(--line); border-radius: 14px; }
 	.upload.is-over { border-color: var(--saffron); background: rgba(234,122,42,.08); }
@@ -586,6 +650,7 @@
 			<button type="button" data-view="gallery" aria-pressed="false">Gallery</button>
 			<button type="button" data-view="photos" aria-pressed="false">Photos</button>
 			<button type="button" data-view="people" aria-pressed="false">People</button>
+			<button type="button" data-view="memories" aria-pressed="false">Memories</button>
 		</div>
 		<a class="controls__link" href="identify.html">Identify faces</a>
 		<span class="muted" id="signed-in"></span>
@@ -1102,7 +1167,7 @@
 		return bar;
 	}
 	var view = storeGet('localStorage', VIEW_KEY);
-	if (['timeline', 'gallery', 'photos', 'people'].indexOf(view) < 0) view = 'timeline';
+	if (['timeline', 'gallery', 'photos', 'people', 'memories'].indexOf(view) < 0) view = 'timeline';
 
 	function openLibrary() {
 		setMediaCookie();
@@ -1131,6 +1196,8 @@
 			if (location.hash === '#requests' && me && me.isAdmin && $('account').hidden) openAccount();
 			var link = /^#person\/(\d+)$/.exec(location.hash);
 			if (link) { personId = Number(link[1]); view = 'person'; }
+			var mlink = /^#memory\/(\d+)$/.exec(location.hash);
+			if (mlink) { memoryId = Number(mlink[1]); view = 'memory'; }
 			loadPhotoTags();
 			ready = {}; res[1].forEach(function (s) { ready[s] = true; });
 			photos = res[2];
@@ -1540,21 +1607,393 @@
 		}).catch(function (ex) { status.textContent = ex.message; });
 	}
 
+	// ── Memories: long-form articles and PDF notes, tagged to recordings and photos.
+	// An article's text uses a little formatting: blank line = new paragraph, "## " heading,
+	// "- " list, "> " quote, **bold**, *italic*. It's turned into elements here, never HTML.
+	var memoryId = null, memoryDraft = null, memoryComments = null;
+	function openMemory(id) {
+		memoryId = id; view = 'memory';
+		try { history.replaceState(null, '', '#memory/' + id); } catch (e) {}
+		render(); $('content').scrollIntoView({ behavior: 'smooth', block: 'start' });
+	}
+	function closeMemory() {
+		memoryId = null; memoryDraft = null; view = 'memories';
+		try { history.replaceState(null, '', location.pathname); } catch (e) {}
+		render();
+	}
+	window.addEventListener('hashchange', function () {
+		var m = /^#memory\/(\d+)$/.exec(location.hash);
+		if (m && session && !$('library-view').hidden && Number(m[1]) !== memoryId) openMemory(Number(m[1]));
+	});
+	function editMemory(draft) {
+		memoryDraft = draft; view = 'memory-edit';
+		try { history.replaceState(null, '', location.pathname); } catch (e) {}
+		render(); $('content').scrollIntoView({ behavior: 'smooth', block: 'start' });
+	}
+	function inline(parent, text) {
+		// **bold** and *italic*; everything else is plain text
+		var re = /(\*\*([^*]+)\*\*|\*([^*\s][^*]*)\*)/g, last = 0, m;
+		while ((m = re.exec(text))) {
+			if (m.index > last) parent.appendChild(document.createTextNode(text.slice(last, m.index)));
+			parent.appendChild(el(m[2] ? 'strong' : 'em', '', m[2] || m[3]));
+			last = re.lastIndex;
+		}
+		if (last < text.length) parent.appendChild(document.createTextNode(text.slice(last)));
+	}
+	function renderText(body) {
+		var out = el('div', 'memory__body');
+		String(body || '').replace(/\r/g, '').split(/\n\s*\n/).forEach(function (block) {
+			var lines = block.split('\n').filter(function (l) { return l.trim(); });
+			if (!lines.length) return;
+			if (/^##\s/.test(lines[0]) && lines.length === 1) { var h = el(/^###\s/.test(lines[0]) ? 'h4' : 'h3'); inline(h, lines[0].replace(/^#+\s*/, '')); out.appendChild(h); return; }
+			if (lines.every(function (l) { return /^\s*[-*]\s+/.test(l); })) {
+				var ul = el('ul'); lines.forEach(function (l) { var li = el('li'); inline(li, l.replace(/^\s*[-*]\s+/, '')); ul.appendChild(li); }); out.appendChild(ul); return;
+			}
+			if (lines.every(function (l) { return /^>\s?/.test(l); })) { var q = el('blockquote'); inline(q, lines.map(function (l) { return l.replace(/^>\s?/, ''); }).join(' ')); out.appendChild(q); return; }
+			var para = el('p');
+			lines.forEach(function (l, i) { if (i) para.appendChild(el('br')); inline(para, l); });
+			out.appendChild(para);
+		});
+		return out;
+	}
+	function entryBySlug(slug) { return entries.filter(function (e) { return e.slug === slug; })[0]; }
+	function photoById(id) { return photos.filter(function (x) { return x.id === id; })[0]; }
+	function tagLabel(l) {
+		if (l.target.indexOf('video:') === 0) {
+			var e = entryBySlug(l.target.slice(6));
+			return { title: e ? e.title : 'A recording', sub: (e ? e.longDate : '') + (l.position != null ? ' · at ' + (fmtDuration(l.position * 1e7) || '0:00') : ''),
+				pic: e && ready[e.slug] ? HLS + e.slug + '/thumb.jpg' : '' };
+		}
+		var ph = photoById(l.target.slice(6));
+		return { title: ph ? 'Photo ' + (photos.indexOf(ph) + 1) : 'A photo (removed)', sub: '', pic: ph ? HLS + 'photos/' + ph.thumb : '' };
+	}
+	function openTag(l, links) {
+		if (l.target.indexOf('video:') === 0) {
+			var e = entryBySlug(l.target.slice(6));
+			if (e && ready[e.slug]) play(e, l.position != null ? l.position : undefined);
+			return;
+		}
+		// Open the photo among the memory's photos, so next/previous stay within them.
+		var list = links.filter(function (x) { return x.target.indexOf('photo:') === 0; }).map(function (x) { return photoById(x.target.slice(6)); }).filter(Boolean);
+		var ph = photoById(l.target.slice(6));
+		if (ph) openPhoto(list.indexOf(ph), list);
+	}
+	function kindLabel(m) { return m.kind === 'notes' ? 'Notes (PDF)' : 'Article'; }
+
+	function renderMemories(root) {
+		var wrap = el('section', 'memories-view');
+		var head = el('div', 'people__head'), intro = el('div');
+		intro.appendChild(el('h2', '', 'Memories'));
+		intro.appendChild(el('p', 'muted', 'Write down what you remember, or share your notes from that time as a PDF. Tag the recordings and photos it’s about: it shows up with them, and they show up with it.'));
+		var acts = el('div', 'memories__actions');
+		var write = el('button', 'btn', ''); write.type = 'button'; write.append(icon('pen-line'), document.createTextNode('Write a memory'));
+		write.addEventListener('click', function () { editMemory({ kind: 'article', title: '', body: '', links: [] }); });
+		var notes = el('button', 'btn btn--quiet', ''); notes.type = 'button'; notes.append(icon('file-text'), document.createTextNode('Share notes (PDF)'));
+		notes.addEventListener('click', function () { editMemory({ kind: 'notes', title: '', body: '', links: [] }); });
+		acts.append(write, notes);
+		head.append(intro, acts); wrap.appendChild(head);
+		var status = el('p', 'muted', 'Loading…'); wrap.appendChild(status);
+		root.appendChild(wrap);
+		capi('/memories').then(function (list) {
+			status.remove();
+			if (!list.length) { wrap.appendChild(el('p', 'muted', 'No memories yet. Be the first to write one.')); return; }
+			var ul = el('ul', 'memories__list');
+			list.forEach(function (m) {
+				var li = el('li'), b = el('button', 'memory-card'); b.type = 'button';
+				var k = el('span', 'memory-card__kind'); k.append(icon(m.kind === 'notes' ? 'file-text' : 'pen-line'),
+					document.createTextNode(kindLabel(m) + ' · ' + m.author + ' · ' + fmtWhen(m.createdAt)));
+				b.append(k, el('h3', '', m.title));
+				if (m.excerpt) b.appendChild(el('p', '', m.excerpt.replace(/[#*>]/g, '').replace(/\s+/g, ' ')));
+				var tags = el('span', 'memory-card__tags');
+				m.links.slice(0, 6).forEach(function (l) { var t = el('span'), lab = tagLabel(l); if (lab.pic) t.style.backgroundImage = 'url("' + lab.pic + '")'; t.title = lab.title; tags.appendChild(t); });
+				var extra = [];
+				if (m.links.length) extra.push(plural(m.links.length, 'tag'));
+				if (m.comments) extra.push(plural(m.comments, 'comment'));
+				if (extra.length) tags.appendChild(el('small', 'muted', extra.join(' · ')));
+				b.appendChild(tags);
+				b.addEventListener('click', function () { openMemory(m.id); });
+				li.appendChild(b); ul.appendChild(li);
+			});
+			wrap.appendChild(ul);
+		}).catch(function (ex) { status.textContent = ex.message; });
+	}
+
+	function renderMemory(root) {
+		var wrap = el('article', 'memory');
+		var back = el('button', 'btn btn--quiet profile__back', '← All memories'); back.type = 'button';
+		back.addEventListener('click', closeMemory);
+		wrap.appendChild(back);
+		var status = el('p', 'muted', 'Loading…'); wrap.appendChild(status);
+		root.appendChild(wrap);
+		capi('/memories/' + memoryId).then(function (m) {
+			status.remove();
+			wrap.appendChild(el('h2', '', m.title));
+			var meta = el('div', 'memory__meta');
+			meta.append(icon(m.kind === 'notes' ? 'file-text' : 'pen-line'),
+				el('span', '', kindLabel(m) + ' by ' + m.author + ' · ' + fmtWhen(m.createdAt) + (m.updatedAt ? ' · edited' : '')));
+			if (m.canEdit) {
+				var ed = iconButton('pencil', 'Edit');
+				ed.addEventListener('click', function () { editMemory({ id: m.id, kind: m.kind, title: m.title, body: m.body, links: m.links.slice(), pdf: m.pdf }); });
+				var del = iconButton('trash', 'Delete this memory');
+				del.addEventListener('click', function () {
+					if (!del.classList.contains('is-armed')) { del.classList.add('is-armed'); del.title = 'Click again to delete'; setTimeout(function () { del.classList.remove('is-armed'); del.title = 'Delete this memory'; }, 4000); return; }
+					capi('/memories/' + m.id, { method: 'DELETE' }).then(closeMemory).catch(function (ex) { status.textContent = ex.message; wrap.insertBefore(status, wrap.children[1]); });
+				});
+				meta.append(ed, del);
+			}
+			wrap.appendChild(meta);
+			if (m.body) wrap.appendChild(renderText(m.body));
+			if (m.pdf) wrap.appendChild(pdfPreview(m.pdf));
+			if (m.links.length) {
+				wrap.appendChild(el('h3', 'memory__section', 'Tagged recordings and photos'));
+				var grid = el('div', 'memory__tagged');
+				m.links.forEach(function (l) {
+					var lab = tagLabel(l), b = el('button', 'memory__tag'), pic = el('span', 'pic'); b.type = 'button';
+					if (lab.pic) pic.style.backgroundImage = 'url("' + lab.pic + '")';
+					b.append(pic, el('b', '', lab.title));
+					if (lab.sub) b.appendChild(el('small', '', lab.sub));
+					b.addEventListener('click', function () { openTag(l, m.links); });
+					grid.appendChild(b);
+				});
+				grid.addEventListener('contextmenu', function (ev) { ev.preventDefault(); });
+				wrap.appendChild(grid);
+			}
+			memoryComments = el('div');
+			wrap.appendChild(memoryComments);
+			mountComments(memoryComments, commentsPanel('memory:' + m.id));
+		}).catch(function (ex) { status.textContent = ex.message; });
+	}
+
+	// PDF preview with PDF.js (loaded on first use). Pages render as canvases when they
+	// scroll near the screen; scripts in the PDF never run.
+	var PDFJS = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/', pdfjsReady = null;
+	function loadPdfJs() {
+		if (!pdfjsReady) pdfjsReady = new Promise(function (ok, fail) {
+			var sc = document.createElement('script'); sc.src = PDFJS + 'pdf.min.js';
+			sc.onload = function () { window.pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS + 'pdf.worker.min.js'; ok(window.pdfjsLib); };
+			sc.onerror = function () { pdfjsReady = null; fail(new Error('The PDF viewer couldn’t load. Check your connection and reload.')); };
+			document.head.appendChild(sc);
+		});
+		return pdfjsReady;
+	}
+	function pdfPreview(url) {
+		var box = el('div', 'memory__pdf'), status = el('p', 'muted', 'Loading the PDF…');
+		box.appendChild(status);
+		box.addEventListener('contextmenu', function (ev) { ev.preventDefault(); });
+		loadPdfJs().then(function (lib) {
+			return lib.getDocument({ url: url, withCredentials: true, isEvalSupported: false, enableXfa: false }).promise;
+		}).then(function (doc) {
+			status.textContent = plural(doc.numPages, 'page');
+			var io = 'IntersectionObserver' in window ? new IntersectionObserver(function (es) {
+				es.forEach(function (en) { if (en.isIntersecting) { io.unobserve(en.target); en.target._draw(); } });
+			}, { rootMargin: '600px 0px' }) : null;
+			for (var n = 1; n <= doc.numPages; n++) (function (n) {
+				var holder = el('div', 'memory__pdf-page'), canvas = el('canvas');
+				canvas.setAttribute('aria-label', 'Page ' + n);
+				holder.append(canvas, el('span', '', n + ' / ' + doc.numPages));
+				box.appendChild(holder);
+				holder._draw = function () {
+					doc.getPage(n).then(function (pg) {
+						var w = Math.max(320, box.clientWidth || 700), base = pg.getViewport({ scale: 1 });
+						var vp = pg.getViewport({ scale: w / base.width * Math.min(2, window.devicePixelRatio || 1) });
+						canvas.width = vp.width; canvas.height = vp.height;
+						return pg.render({ canvasContext: canvas.getContext('2d'), viewport: vp }).promise;
+					}).catch(function () {});
+				};
+				if (io) io.observe(holder); else holder._draw();
+			})(n);
+		}).catch(function (ex) { status.textContent = ex && ex.message && /load|connection/.test(ex.message) ? ex.message : 'This PDF couldn’t be shown.'; });
+		return box;
+	}
+
+	// Write or edit a memory. Draft: {id?, kind, title, body, links: [{target, position}], file?, pdf?}
+	function renderMemoryEditor(root) {
+		var d = memoryDraft, isNotes = d.kind === 'notes';
+		var form = el('form', 'memory-edit'); form.noValidate = true;
+		var back = el('button', 'btn btn--quiet profile__back', '← Cancel'); back.type = 'button';
+		back.addEventListener('click', function () { if (d.id) openMemory(d.id); else closeMemory(); });
+		form.append(back, el('h2', '', d.id ? 'Edit memory' : isNotes ? 'Share your notes' : 'Write a memory'));
+		var nameInput = null;
+		if (!me || !me.displayName) {
+			var nl = el('div'), lab0 = el('label', '', 'Your name, as others will see it'); lab0.htmlFor = 'mem-name';
+			nameInput = el('input', 'field'); nameInput.id = 'mem-name'; nameInput.maxLength = 60; nameInput.autocomplete = 'name';
+			nl.append(lab0, nameInput); form.appendChild(nl);
+		}
+		var tl = el('div'), lab1 = el('label', '', 'Title'); lab1.htmlFor = 'mem-title';
+		var title = el('input', 'field'); title.id = 'mem-title'; title.maxLength = 140; title.value = d.title || '';
+		title.placeholder = isNotes ? 'For example, My diary from the Kodai trip' : 'For example, The morning by the lake';
+		title.addEventListener('input', function () { d.title = title.value; });
+		tl.append(lab1, title); form.appendChild(tl);
+
+		if (isNotes && !d.id) {
+			var pick = el('div', 'pdf-pick'), file = el('input'); file.type = 'file'; file.accept = 'application/pdf,.pdf'; file.hidden = true; file.id = 'mem-pdf';
+			var choose = el('button', 'btn btn--quiet', ''); choose.type = 'button'; choose.append(icon('file-text'), document.createTextNode(d.file ? 'Choose another PDF' : 'Choose the PDF'));
+			var pstat = el('span', 'muted', d.file ? (d.fileName || 'PDF') + ' added' : 'Up to 25 MB');
+			choose.addEventListener('click', function () { file.click(); });
+			file.addEventListener('change', function () {
+				var f = file.files[0]; if (!f) return;
+				if (f.size > 25 * 1024 * 1024) { pstat.textContent = 'That PDF is too large (25 MB at most).'; return; }
+				choose.disabled = true; pstat.textContent = 'Uploading 0%';
+				saveName().then(function () {
+					return new Promise(function (ok, fail) {
+						var x = new XMLHttpRequest(); x.open('POST', '/kodai1994/api/memory-files'); x.withCredentials = true;
+						x.setRequestHeader('X-Kodai', '1'); x.setRequestHeader('Content-Type', 'application/pdf');
+						x.upload.onprogress = function (ev) { if (ev.lengthComputable) pstat.textContent = 'Uploading ' + Math.round(ev.loaded / ev.total * 100) + '%'; };
+						x.onload = function () { var r = {}; try { r = JSON.parse(x.responseText); } catch (e) {} if (x.status < 300) ok(r); else fail(new Error(r.error || 'The server answered ' + x.status + '.')); };
+						x.onerror = function () { fail(new Error('The connection dropped. Try again.')); };
+						x.send(f);
+					});
+				}).then(function (r) {
+					d.file = r.file; d.fileName = f.name; d.pdf = '/kodai1994/memories/' + r.file;
+					if (!title.value) { title.value = f.name.replace(/\.pdf$/i, '').replace(/[_-]+/g, ' '); d.title = title.value; }
+					pstat.textContent = f.name + ' added'; choose.disabled = false;
+					var old = form.querySelector('.memory__pdf'); if (old) old.remove();
+					pick.after(pdfPreview(d.pdf));
+				}).catch(function (ex) { choose.disabled = false; pstat.textContent = ex.message; });
+			});
+			pick.append(choose, file, pstat);
+			var pl = el('div'); pl.append(el('label', '', 'The PDF'), pick); form.appendChild(pl);
+			if (d.pdf) form.appendChild(pdfPreview(d.pdf));
+		}
+
+		var bl = el('div', isNotes ? 'notes-body' : ''), lab2 = el('label', '', isNotes ? 'A note about it (optional)' : 'Your memory'); lab2.htmlFor = 'mem-body';
+		var body = el('textarea', 'field'); body.id = 'mem-body'; body.value = d.body || ''; body.maxLength = 60000;
+		body.placeholder = isNotes ? 'What are these notes, and when did you write them?' : 'What happened, who was there, what do you remember most?';
+		body.addEventListener('input', function () { d.body = body.value; });
+		bl.append(lab2, body);
+		if (!isNotes) bl.appendChild(el('p', 'hint', 'Leave a blank line between paragraphs. “## ” starts a heading, “- ” a list, “> ” a quote; **bold** and *italic* work too.'));
+		form.appendChild(bl);
+
+		// Tags: recordings (optionally at a moment) and photos
+		var fs = el('fieldset'); fs.appendChild(el('legend', '', 'What it’s about'));
+		fs.appendChild(el('p', 'hint', 'Tag the recordings and photos this is about. It will be listed with them, and readers can open them from here.'));
+		var chips = el('div', 'tag-chips'); fs.appendChild(chips);
+		function drawChips() {
+			chips.textContent = '';
+			if (!d.links.length) chips.appendChild(el('span', 'muted', 'Nothing tagged yet.'));
+			d.links.forEach(function (l, i) {
+				var lab = tagLabel(l), c = el('span', 'tag-chip'), pic = el('i'), x = el('button'); x.type = 'button';
+				if (lab.pic) pic.style.backgroundImage = 'url("' + lab.pic + '")';
+				x.setAttribute('aria-label', 'Untag ' + lab.title); x.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">' + ICONS.x + '</svg>';
+				x.addEventListener('click', function () { d.links.splice(i, 1); drawChips(); drawPhotos(); });
+				c.append(pic, document.createTextNode(lab.title + (lab.sub && l.position != null ? ' · ' + lab.sub.split(' · ').pop() : '')), x);
+				chips.appendChild(c);
+			});
+		}
+		var addRow = el('div', 'tag-add'), sel = el('select', 'field'), at = el('input', 'field'), addBtn = el('button', 'btn btn--quiet', 'Tag recording');
+		sel.setAttribute('aria-label', 'Recording'); at.placeholder = 'at 12:30'; at.setAttribute('aria-label', 'Moment in the recording (optional)'); at.inputMode = 'numeric'; addBtn.type = 'button';
+		sel.appendChild(Object.assign(el('option', '', 'Choose a recording…'), { value: '' }));
+		entries.filter(function (e) { return ready[e.slug]; }).forEach(function (e) { sel.appendChild(Object.assign(el('option', '', e.longDate + ': ' + e.title), { value: e.slug })); });
+		addBtn.addEventListener('click', function () {
+			if (!sel.value) { sel.focus(); return; }
+			var pos = at.value.trim() ? parseTime(at.value.replace(/^at\s*/i, '')) : null;
+			if (at.value.trim() && pos == null) { at.setCustomValidity('Enter a time like 12:30 or 1:02:10.'); at.reportValidity(); return; }
+			var target = 'video:' + sel.value;
+			d.links = d.links.filter(function (l) { return l.target !== target; });
+			d.links.push({ target: target, position: pos }); sel.value = ''; at.value = ''; drawChips();
+		});
+		at.addEventListener('input', function () { at.setCustomValidity(''); });
+		addRow.append(sel, at, addBtn); fs.appendChild(addRow);
+		fs.appendChild(el('p', 'hint', 'Photos: tap to tag or untag.'));
+		var grid = el('div', 'tag-photos'); fs.appendChild(grid);
+		function drawPhotos() {
+			grid.textContent = '';
+			photos.forEach(function (ph, i) {
+				var b = el('button'); b.type = 'button'; b.style.backgroundImage = 'url("' + HLS + 'photos/' + ph.thumb + '")';
+				var target = 'photo:' + ph.id, on = d.links.some(function (l) { return l.target === target; });
+				b.setAttribute('aria-pressed', String(on)); b.setAttribute('aria-label', 'Photo ' + (i + 1));
+				b.addEventListener('click', function () {
+					if (d.links.some(function (l) { return l.target === target; })) d.links = d.links.filter(function (l) { return l.target !== target; });
+					else d.links.push({ target: target, position: null });
+					drawChips(); drawPhotos();
+				});
+				grid.appendChild(b);
+			});
+		}
+		drawChips(); drawPhotos();
+		grid.addEventListener('contextmenu', function (ev) { ev.preventDefault(); });
+		form.appendChild(fs);
+
+		var err = el('p', 'error', ''), actions = el('div', 'form-actions');
+		var save = el('button', 'btn', d.id ? 'Save changes' : isNotes ? 'Share notes' : 'Publish memory'); save.type = 'submit';
+		actions.appendChild(save); form.append(err, actions);
+		function saveName() {
+			return nameInput && nameInput.value.trim()
+				? capi('/me', { method: 'PUT', body: { displayName: nameInput.value } }).then(function (r) { if (me) me.displayName = r.displayName; })
+				: Promise.resolve();
+		}
+		form.addEventListener('submit', function (ev) {
+			ev.preventDefault(); err.textContent = '';
+			if (nameInput && nameInput.value.trim().length < 2) { err.textContent = 'Enter your name, as others will see it.'; nameInput.focus(); return; }
+			if (isNotes && !d.id && !d.file) { err.textContent = 'Choose the PDF first.'; return; }
+			save.disabled = true;
+			var links = d.links.map(function (l) { return { target: l.target, position: l.position }; });
+			saveName().then(function () {
+				return d.id
+					? capi('/memories/' + d.id, { method: 'PUT', body: { title: title.value, body: body.value, links: links } }).then(function () { return d.id; })
+					: capi('/memories', { method: 'POST', body: { kind: d.kind, title: title.value, body: body.value, file: d.file, links: links } }).then(function (r) { return r.id; });
+			}).then(function (id) { memoryDraft = null; openMemory(id); })
+				.catch(function (ex) { save.disabled = false; err.textContent = ex.message; });
+		});
+		root.appendChild(form);
+		(nameInput || title).focus();
+	}
+
+	// "Memories" in the player and photo viewer: what's tagged to this recording or photo.
+	function memoriesSection(target, timeOf) {
+		var sec = el('section', 'mem-side');
+		sec.appendChild(el('h3', '', 'Memories'));
+		var ul = el('ul'); sec.appendChild(ul);
+		var write = el('button', 'linkish', target.indexOf('video:') === 0 ? 'Write about this recording' : 'Write about this photo'); write.type = 'button';
+		write.addEventListener('click', function () {
+			var pos = timeOf ? Math.floor(timeOf() || 0) : null;
+			var link = { target: target, position: pos || null };
+			if (target.indexOf('video:') === 0) closePlayer(); else closePhoto();
+			editMemory({ kind: 'article', title: '', body: '', links: [link] });
+		});
+		capi('/memories?target=' + encodeURIComponent(target)).then(function (list) {
+			if (!list.length) ul.appendChild(el('li', 'muted', 'None yet.'));
+			list.forEach(function (m) {
+				var li = el('li'), b = el('button'); b.type = 'button';
+				var txt = el('span'); txt.append(el('span', '', m.title), el('small', '', kindLabel(m) + ' by ' + m.author));
+				b.append(icon(m.kind === 'notes' ? 'file-text' : 'pen-line'), txt);
+				b.addEventListener('click', function () {
+					if (target.indexOf('video:') === 0) closePlayer(); else closePhoto();
+					openMemory(m.id);
+				});
+				li.appendChild(b); ul.appendChild(li);
+			});
+		}).catch(function () { ul.appendChild(el('li', 'muted', 'Couldn’t load memories.')); });
+		sec.appendChild(write);
+		return sec;
+	}
+
 	function render() {
 		var root = $('content'); root.textContent = '';
-		document.querySelectorAll('.views button').forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.view === (view === 'person' ? 'people' : view))); });
+		var tab = view === 'person' ? 'people' : (view === 'memory' || view === 'memory-edit') ? 'memories' : view;
+		document.querySelectorAll('.views button').forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.view === tab)); });
 		if (view === 'person' && !personId) view = 'people';
-		({ timeline: renderTimeline, gallery: renderGallery, photos: renderPhotos, people: renderPeople, person: renderPerson })[view](root);
+		if (view === 'memory' && !memoryId) view = 'memories';
+		if (view === 'memory-edit' && !memoryDraft) view = 'memories';
+		if (memoryComments) { mountComments(memoryComments, null); memoryComments = null; }
+		({ timeline: renderTimeline, gallery: renderGallery, photos: renderPhotos, people: renderPeople, person: renderPerson,
+			memories: renderMemories, memory: renderMemory, 'memory-edit': renderMemoryEditor })[view](root);
 	}
 
 	// ── Comments on a video ("video:<slug>") or photo ("photo:<id>")
 	// opts.timeOf() → seconds into the video now; opts.seek(seconds) jumps there.
 	function el(tag, cls, text) { var x = document.createElement(tag); if (cls) x.className = cls; if (text != null) x.textContent = text; return x; }
-	// Lucide icons (lucide.dev, ISC licence), inlined: pencil, trash-2.
+	// Lucide icons (lucide.dev, ISC licence), inlined: pencil, trash-2, file-text, pen-line, x.
 	var ICONS = {
+		'file-text': '<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/>',
+		'pen-line': '<path d="M12 20h9"/><path d="M16.376 3.622a1 1 0 0 1 3.002 3.002L7.368 18.635a2 2 0 0 1-.855.506l-2.872.838a.5.5 0 0 1-.62-.62l.838-2.872a2 2 0 0 1 .506-.854z"/>',
+		x: '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
 		pencil: '<path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/>',
 		trash: '<path d="M10 11v6"/><path d="M14 11v6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>'
 	};
+	function icon(name) {
+		var w = el('span', 'icon'); w.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true">' + ICONS[name] + '</svg>'; return w;
+	}
 	function iconButton(name, label) {
 		var b = el('button', 'icon-btn'); b.type = 'button'; b.title = label; b.setAttribute('aria-label', label);
 		b.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true">' + ICONS[name] + '</svg>';
@@ -1645,8 +2084,8 @@
 		return root;
 	}
 	function mountComments(slot, panel) {
-		var old = slot.firstChild;
-		if (old && old._tick) clearInterval(old._tick);
+		// The panel may sit inside a wrapper (photo viewer, player): stop every refresh timer.
+		slot.querySelectorAll('.comments').forEach(function (c) { if (c._tick) clearInterval(c._tick); });
 		slot.textContent = '';
 		if (panel) slot.appendChild(panel);
 	}
@@ -1919,6 +2358,7 @@
 			side.appendChild(added);
 		}
 		side.appendChild(photoPeopleSection(list[photoIndex].id));
+		side.appendChild(memoriesSection('photo:' + list[photoIndex].id));
 		side.appendChild(commentsPanel('photo:' + list[photoIndex].id));
 		mountComments($('viewer-comments'), side);
 		var mark = $('viewer-mark');
@@ -2090,8 +2530,8 @@
 	});
 	document.querySelectorAll('.views button').forEach(function (b) {
 		b.addEventListener('click', function () {
-			view = b.dataset.view; personId = null; storeSet('localStorage', VIEW_KEY, view);
-			if (location.hash.indexOf('#person/') === 0) { try { history.replaceState(null, '', location.pathname); } catch (e) {} }
+			view = b.dataset.view; personId = null; memoryId = null; storeSet('localStorage', VIEW_KEY, view);
+			if (/^#(person|memory)\//.test(location.hash)) { try { history.replaceState(null, '', location.pathname); } catch (e) {} }
 			render();
 		});
 	});
@@ -2559,10 +2999,13 @@
 		$('close').focus();
 		loadStoryboard(e.slug, (item.RunTimeTicks || 0) / 1e7);
 		mountMarkers(e.slug);
-		mountComments($('player-comments'), commentsPanel('video:' + e.slug, {
+		var below = el('div');
+		below.appendChild(memoriesSection('video:' + e.slug, function () { return player.currentTime(); }));
+		below.appendChild(commentsPanel('video:' + e.slug, {
 			timeOf: function () { return player.currentTime(); },
 			seek: function (t) { player.currentTime(t); player.play().catch(function () {}); $('player').scrollTo({ top: 0, behavior: 'smooth' }); }
 		}));
+		mountComments($('player-comments'), below);
 
 		var resumeAt = startAt != null ? startAt : (item.UserData && item.UserData.PlaybackPositionTicks || 0) / 1e7;
 		player.playbackRates(RATES); // player.reset() on close empties the list, hiding the speed button

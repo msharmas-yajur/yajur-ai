@@ -3,6 +3,7 @@
 #
 #   SOURCE          the original videos and photos  →  the folder itself (same names)
 #   uploads         photos members added on the page →  Uploaded photos/
+#   memories        PDFs members shared as notes      →  Memories/ (articles are in the database)
 #   community.db    comments, people, face marks, events, identify reviews
 #                   (a consistent snapshot)           →  Site data/community-YYYY-MM-DD.db
 #
@@ -30,6 +31,7 @@ rc() { rclone --drive-root-folder-id "$FOLDER" --stats-one-line --stats 5m "$@";
 # Drive allows two folders with one name; create them once, up front, so parallel
 # uploads don't each make their own.
 rc mkdir "$REMOTE/Uploaded photos"
+rc mkdir "$REMOTE/Memories"
 rc mkdir "$REMOTE/Site data"
 
 echo "== originals: $SOURCE"
@@ -37,6 +39,9 @@ rc copy "$SOURCE" "$REMOTE" --ignore-existing --max-depth 1
 
 echo "== uploaded photos"
 rc copy "$MEDIA_DIR/kodai1994-uploads" "$REMOTE/Uploaded photos" --ignore-existing
+
+echo "== memories (PDF notes)"
+rc copy "$MEDIA_DIR/kodai1994-memories" "$REMOTE/Memories" --ignore-existing
 
 echo "== community database"
 snap=$(mktemp -d)

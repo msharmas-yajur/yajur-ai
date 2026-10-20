@@ -35,6 +35,8 @@ services:
       - "${MEDIA_DIR}/kodai1994-brand:/srv/kodai1994-brand:ro"
       # face crops from the faceid worker (members only)
       - "${MEDIA_DIR}/kodai1994-identify:/srv/kodai1994-faces:ro"
+      # PDFs attached to memories (members only)
+      - "${MEDIA_DIR}/kodai1994-memories:/srv/kodai1994-memories:ro"
     environment:
       # Jellyfin ItemId of the "Kodai 1994" library; HLS access is checked against it
       - KODAI_LIBRARY_ID=${KODAI_LIBRARY_ID}
@@ -54,6 +56,8 @@ services:
       - ./community-data:/data
       # originals of photos members upload (kept; never served)
       - "${MEDIA_DIR}/kodai1994-uploads:/uploads"
+      # PDFs attached to memories (served by the gateway, members only)
+      - "${MEDIA_DIR}/kodai1994-memories:/memories"
     environment:
       - KODAI_LIBRARY_ID=${KODAI_LIBRARY_ID}
       - DATA_DIR=/data
