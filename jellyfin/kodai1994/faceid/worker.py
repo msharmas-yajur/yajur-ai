@@ -286,7 +286,9 @@ def add_upload(db, u):
     if min(img.shape[:2]) < 200:
         raise ValueError("That photo is too small (at least 200 pixels on each side).")
     lst = list(photos().values())
-    nid = max([int(p["id"]) for p in lst if int(p["id"]) >= FIRST_UPLOAD_ID] + [FIRST_UPLOAD_ID - 1]) + 1
+    # Never reuse a removed photo's number: comments and face marks are keyed by it.
+    used = [int(r[0]) for r in db.execute("SELECT photo_id FROM photo_uploads WHERE photo_id IS NOT NULL")]
+    nid = max([int(p["id"]) for p in lst if int(p["id"]) >= FIRST_UPLOAD_ID] + used + [FIRST_UPLOAD_ID - 1]) + 1
     if nid > 999:
         raise ValueError("The photo collection is full.")
     pid = str(nid)

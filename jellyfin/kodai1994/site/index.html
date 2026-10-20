@@ -308,8 +308,30 @@
 	.upload.is-over { border-color: var(--saffron); background: rgba(234,122,42,.08); }
 	.upload p { margin: 0; flex: 1 1 260px; font-size: .92rem; }
 	.upload input[type=text] { padding: 9px 12px; border-radius: 10px; border: 1px solid var(--line); background: rgba(0,0,0,.25); color: var(--khadi); font: inherit; }
-	.upload__list { flex-basis: 100%; list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; font-size: .88rem; }
-	.upload__list li.is-error { color: #ffb38a; }
+	.upload__summary { flex-basis: 100%; margin: 0; font-size: .9rem; }
+	.upload__summary:empty { display: none; }
+	.upload__list { flex-basis: 100%; list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(132px, 1fr)); gap: 12px; }
+	.upload__list:empty { display: none; }
+	.up-tile { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+	.up-tile__pic { position: relative; aspect-ratio: 1; border-radius: 10px; background: var(--pine) center / cover no-repeat; display: grid; place-items: center; overflow: hidden; }
+	.up-tile__pic::before { content: ''; position: absolute; inset: 0; background: rgba(6,13,9,.55); transition: opacity .4s; }
+	.up-tile.is-done .up-tile__pic::before { opacity: 0; }
+	.up-ring { position: relative; width: 56px; height: 56px; transform: rotate(-90deg); }
+	.up-ring circle { fill: none; stroke-width: 3.5; }
+	.up-ring__track { stroke: rgba(243,241,234,.22); }
+	.up-ring__bar { stroke: var(--saffron); stroke-linecap: round; transition: stroke-dashoffset .2s linear; }
+	.up-ring__pct { position: absolute; font-size: .78rem; font-weight: 600; color: var(--khadi); }
+	.up-ring__pct svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; display: block; }
+	.up-tile.is-waiting .up-ring__pct { color: var(--mist); }
+	.up-tile.is-done .up-ring__bar { stroke: #8fc79d; }
+	.up-tile.is-done .up-ring__pct { color: #8fc79d; }
+	.up-tile.is-done .up-ring, .up-tile.is-done .up-ring__pct { filter: drop-shadow(0 1px 3px rgba(0,0,0,.6)); }
+	.up-tile.is-error .up-ring__bar { stroke: #ffb38a; stroke-dashoffset: 0; }
+	.up-tile.is-error .up-ring__pct { color: #ffb38a; }
+	.up-tile__name { font-size: .8rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+	.up-tile__note { font-size: .76rem; color: var(--mist); line-height: 1.35; }
+	.up-tile.is-error .up-tile__note { color: #ffb38a; }
+	@media (prefers-reduced-motion: reduce) { .up-ring__bar, .up-tile__pic::before { transition: none; } }
 	.photo--pending { display: grid; place-items: center; aspect-ratio: 4 / 3; color: var(--mist); font-size: .9rem; cursor: default; border: 1px dashed var(--line); background: transparent; }
 	.photo-added { margin: 0 0 14px; font-size: .9rem; display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; }
 
@@ -969,21 +991,63 @@
 			return new Promise(function (ok, fail) { c.toBlob(function (b) { b ? ok(b) : fail(new Error('encode')); }, 'image/jpeg', 0.92); });
 		}).catch(function () { throw new Error('This browser can’t read that file. Save it as a JPEG and try again.'); });
 	}
-	function uploadOne(file) {
+	// XMLHttpRequest rather than fetch: it reports upload progress (onProgress: 0-1).
+	function uploadOne(file, onProgress) {
 		return prepareUpload(file).then(function (blob) {
-			return fetch('/kodai1994/api/photo-uploads', { method: 'POST', credentials: 'same-origin', headers: { 'X-Kodai': '1', 'Content-Type': blob.type || 'image/jpeg' }, body: blob })
-				.then(function (res) {
-					return res.json().catch(function () { return {}; }).then(function (d) {
-						if (!res.ok) { var e = new Error(d.error || 'The server answered ' + res.status + '.'); e.status = res.status; throw e; }
-						return d;
-					});
-				});
+			return new Promise(function (ok, fail) {
+				var x = new XMLHttpRequest();
+				x.open('POST', '/kodai1994/api/photo-uploads');
+				x.withCredentials = true;
+				x.setRequestHeader('X-Kodai', '1');
+				x.setRequestHeader('Content-Type', blob.type || 'image/jpeg');
+				x.upload.onprogress = function (ev) { if (ev.lengthComputable) onProgress(ev.loaded / ev.total); };
+				x.onload = function () {
+					var d = {}; try { d = JSON.parse(x.responseText); } catch (e) {}
+					if (x.status >= 200 && x.status < 300) return ok(d);
+					var err = new Error(d.error || 'The server answered ' + x.status + '.'); err.status = x.status; fail(err);
+				};
+				x.onerror = function () { fail(new Error('The connection dropped. Try this photo again.')); };
+				x.send(blob);
+			});
 		});
 	}
-	var uploadLog = []; // this visit's upload messages; kept when the view re-renders
+	// One tile per chosen photo: preview, a ring that fills as it uploads, then ✓ or the problem.
+	var RING = 2 * Math.PI * 17;
+	function uploadTile(file) {
+		var t = el('li', 'up-tile is-waiting'), pic = el('span', 'up-tile__pic'), name = el('span', 'up-tile__name', file.name), note = el('span', 'up-tile__note', 'Waiting…');
+		var url = /^image\/(jpeg|png|webp|gif)$/.test(file.type) ? URL.createObjectURL(file) : null;
+		if (url) pic.style.backgroundImage = 'url("' + url + '")';
+		pic.innerHTML = '<svg class="up-ring" viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="17" class="up-ring__track"/>' +
+			'<circle cx="20" cy="20" r="17" class="up-ring__bar" stroke-dasharray="' + RING + '" stroke-dashoffset="' + RING + '"/></svg><span class="up-ring__pct">0%</span>';
+		t.setAttribute('aria-label', file.name);
+		t.append(pic, name, note);
+		var bar = pic.querySelector('.up-ring__bar'), pct = pic.querySelector('.up-ring__pct');
+		return {
+			el: t,
+			progress: function (f) {
+				t.className = 'up-tile is-uploading';
+				var n = Math.round(f * 100);
+				bar.setAttribute('stroke-dashoffset', String(RING * (1 - f)));
+				pct.textContent = n + '%'; note.textContent = n < 100 ? 'Uploading ' + n + '%' : 'Saving…';
+			},
+			done: function () {
+				t.className = 'up-tile is-done'; bar.setAttribute('stroke-dashoffset', '0');
+				pct.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>'; // Lucide check
+				note.textContent = 'Uploaded; it will appear below in a moment';
+				if (url) setTimeout(function () { URL.revokeObjectURL(url); }, 60000);
+			},
+			fail: function (msg) {
+				t.className = 'up-tile is-error';
+				pct.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>'; // Lucide x
+				note.textContent = msg;
+			}
+		};
+	}
+	var uploadLog = [], uploadSummary = null; // this visit's upload tiles; kept when the view re-renders
 	function uploadBar() {
 		var bar = el('div', 'upload'), list = el('ul', 'upload__list');
 		uploadLog.forEach(function (li) { list.appendChild(li); });
+		if (!uploadSummary) { uploadSummary = el('p', 'upload__summary'); uploadSummary.setAttribute('aria-live', 'polite'); }
 		var input = el('input'); input.type = 'file'; input.multiple = true; input.hidden = true; input.id = 'photo-files';
 		input.accept = 'image/jpeg,image/png,image/webp,image/heic,image/heif';
 		var pick = el('button', 'btn btn--quiet', 'Add photos'); pick.type = 'button'; pick.id = 'add-photos';
@@ -994,7 +1058,7 @@
 			nameInput.setAttribute('aria-label', 'Your name, as others will see it'); nameInput.id = 'upload-name';
 			bar.appendChild(nameInput);
 		}
-		bar.append(pick, input, list);
+		bar.append(pick, input, uploadSummary, list);
 		pick.addEventListener('click', function () {
 			if (nameInput && nameInput.value.trim().length < 2) { nameInput.focus(); nameInput.setCustomValidity('Enter your name first, at least 2 characters.'); nameInput.reportValidity(); return; }
 			input.click();
@@ -1005,19 +1069,27 @@
 			if (!files.length) return;
 			pick.disabled = true;
 			var setName = nameInput && nameInput.value.trim() ? capi('/me', { method: 'PUT', body: { displayName: nameInput.value } }).then(function (r) { if (me) me.displayName = r.displayName; }) : Promise.resolve();
-			var i = 0, added = 0;
+			// Every photo gets its tile straight away; they upload one after another.
+			var tiles = files.map(function (f) { var t = uploadTile(f); uploadLog.push(t.el); list.appendChild(t.el); return t; });
+			var i = 0, added = 0, failed = 0;
+			function summary() {
+				uploadSummary.textContent = i < files.length || added + failed < files.length
+					? 'Uploading ' + Math.min(i, files.length) + ' of ' + files.length + '…'
+					: plural(added, 'photo') + ' uploaded' + (failed ? ', ' + failed + ' couldn’t be added' : '') + '.';
+			}
 			function next() {
 				if (i >= files.length) {
+					summary();
 					pick.disabled = false; input.value = '';
 					return reloadPhotos().then(function () { if (added) { render(); watchUploads(); } });
 				}
-				var f = files[i++], li = el('li', '', 'Adding ' + f.name + '…');
-				uploadLog.push(li); list.appendChild(li);
-				return uploadOne(f).then(function () { added++; li.textContent = f.name + ': uploaded, it will appear in a moment.'; })
-					.catch(function (e) { li.className = 'is-error'; li.textContent = f.name + ': ' + e.message; })
+				var f = files[i], t = tiles[i]; i++;
+				summary(); t.progress(0);
+				return uploadOne(f, t.progress).then(function () { added++; t.done(); })
+					.catch(function (e) { failed++; t.fail(e.message); })
 					.then(next);
 			}
-			setName.then(next).catch(function (e) { pick.disabled = false; list.appendChild(Object.assign(el('li', 'is-error', e.message))); });
+			setName.then(next).catch(function (e) { pick.disabled = false; tiles.forEach(function (t) { t.fail(e.message); }); });
 		}
 		input.addEventListener('change', function () { send(input.files); });
 		bar.addEventListener('dragover', function (ev) { ev.preventDefault(); bar.classList.add('is-over'); });
