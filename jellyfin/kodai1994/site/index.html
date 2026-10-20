@@ -543,11 +543,20 @@
 	.viewer__head { grid-column: 1 / -1; }
 	.viewer__side { overflow-y: auto; padding-right: 4px; }
 	.viewer__side .comments { margin-top: 0; }
+	.photo__hires { position: absolute; left: 8px; top: 8px; background: rgba(12,25,18,.82); color: #f3b083; border: 1px solid rgba(234,122,42,.6); font-size: 0.74rem; font-weight: 600; padding: 2px 9px; border-radius: 999px; pointer-events: none; }
+	.photo-filter { display: inline-flex; gap: 4px; padding: 4px; margin-top: 22px; border: 1px solid var(--line); border-radius: 999px; background: var(--panel); }
+	.photo-filter button { border: 0; background: transparent; padding: 7px 16px; border-radius: 999px; cursor: pointer; color: var(--mist); font-weight: 500; }
+	.photo-filter button b { font-weight: 600; margin-left: 2px; }
+	.photo-filter button[aria-pressed=true] { background: var(--khadi); color: var(--pine-deep); }
 	.photo__count { position: absolute; left: 8px; bottom: 8px; background: rgba(0,0,0,.72); color: #fff; font-size: 0.78rem; padding: 2px 9px; border-radius: 999px; }
 	.photo { position: relative; }
 	@media (max-width: 900px) {
-		.viewer { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto auto; overflow-y: auto; overflow-x: hidden; }
-		.viewer__frame img { max-height: 62vh; }
+		/* Stacked: header, photo, then people / memories / comments, scrolling as one page.
+		   The photo gets a fixed height: it clips (for zoom), so as a grid row it could
+		   otherwise shrink to nothing under a long side panel. */
+		.viewer { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto auto; align-content: start; overflow-y: auto; overflow-x: hidden; }
+		.viewer__frame { height: 62vh; height: 62svh; }
+		.viewer__frame img { max-height: 62vh; max-height: 62svh; }
 		.viewer__side { overflow: visible; padding: 20px 0 40px; }
 	}
 
@@ -1377,23 +1386,41 @@
 		root.appendChild(grid);
 	}
 
+	// "High res": the original (ow × oh, recorded by the worker for uploads; folder photos
+	// fall back to their shown size) has at least HIRES_PIXELS pixels, about 2400 × 1700.
+	var HIRES_PIXELS = 4e6, photoFilter = 'all';
+	function isHires(ph) { return (ph.ow || ph.w) * (ph.oh || ph.h) >= HIRES_PIXELS; }
+	function origSize(ph) { return (ph.ow || ph.w) + ' × ' + (ph.oh || ph.h); }
 	function renderPhotos(root) {
 		root.appendChild(uploadBar());
 		var waiting = uploads.filter(function (u) { return u.mine && (u.status === 'pending' || u.status === 'failed'); });
 		if (!photos.length && !waiting.length) { var p = document.createElement('p'); p.className = 'muted'; p.textContent = 'No photographs have been added yet.'; root.appendChild(p); return; }
+		var hires = photos.filter(isHires);
+		if (hires.length) {
+			var filt = el('div', 'photo-filter'); filt.setAttribute('role', 'group'); filt.setAttribute('aria-label', 'Show');
+			[['all', 'All photos', photos.length], ['hires', 'High res', hires.length]].forEach(function (o) {
+				var fb = el('button', '', o[1] + ' '); fb.type = 'button'; fb.appendChild(el('b', '', String(o[2])));
+				fb.setAttribute('aria-pressed', String(photoFilter === o[0]));
+				fb.addEventListener('click', function () { photoFilter = o[0]; render(); });
+				filt.appendChild(fb);
+			});
+			root.appendChild(filt);
+		}
+		var shown = photoFilter === 'hires' && hires.length ? hires : photos;
 		var grid = document.createElement('div'); grid.className = 'photos';
 		grid.addEventListener('contextmenu', function (ev) { ev.preventDefault(); });
 		grid.addEventListener('dragstart', function (ev) { ev.preventDefault(); });
-		photos.forEach(function (ph, i) {
+		shown.forEach(function (ph, i) {
 			var b = document.createElement('button'); b.type = 'button'; b.className = 'photo';
-			b.setAttribute('aria-label', 'Open photo ' + (i + 1) + ' of ' + photos.length);
+			b.setAttribute('aria-label', 'Open photo ' + (i + 1) + ' of ' + shown.length + (isHires(ph) ? ', high resolution' : ''));
 			var img = document.createElement('img');
 			img.loading = 'lazy'; img.alt = ''; img.src = HLS + 'photos/' + ph.thumb;
 			img.width = ph.w; img.height = ph.h; // reserves the space before it loads
 			b.appendChild(img);
+			if (isHires(ph)) { var hr = el('span', 'photo__hires', 'High res'); hr.title = origSize(ph) + ' original'; b.appendChild(hr); }
 			var n = counts['photo:' + ph.id] || 0;
 			if (n) { var pill = document.createElement('span'); pill.className = 'photo__count'; pill.textContent = plural(n, 'comment'); b.appendChild(pill); }
-			b.addEventListener('click', function () { openPhoto(i); });
+			b.addEventListener('click', function () { openPhoto(i, shown); });
 			grid.appendChild(b);
 		});
 		waiting.forEach(function (u) {
@@ -2365,7 +2392,7 @@
 		img.dataset.version = photoQuality;
 		img.src = photoSrc(ph);
 		showQuality(true);
-		$('viewer-count').textContent = 'Photo ' + (photoIndex + 1) + ' of ' + n;
+		$('viewer-count').textContent = 'Photo ' + (photoIndex + 1) + ' of ' + n + (isHires(ph) ? ' · High res, ' + origSize(ph) + ' original' : '');
 		var side = el('div'), up = uploadsByPhoto[list[photoIndex].id];
 		if (up) {
 			var added = el('p', 'photo-added muted', 'Added by ' + up.uploadedBy + ' · ' + fmtWhen(up.createdAt));
