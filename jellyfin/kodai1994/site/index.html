@@ -232,6 +232,14 @@
 	.video-js .vjs-big-play-button .vjs-icon-placeholder::before { color: var(--pine-deep); }
 	.video-js .vjs-menu-content { background: rgba(12,25,18,.95) !important; font-family: var(--text); }
 	.video-js .vjs-menu li.vjs-selected { background: var(--khadi); color: var(--pine-deep); }
+	.video-js .vjs-playback-rate { width: 4.4em; }
+	.video-js .vjs-playback-rate .vjs-playback-rate-value { font-size: 1.6em; line-height: 1.95; font-weight: 600; }
+	.video-js .vjs-playback-rate .vjs-menu { width: 6em; left: -0.8em; }
+	.video-js .vjs-playback-rate .vjs-menu-content { max-height: none; bottom: 1.2em; }
+	.video-js .vjs-playback-rate .vjs-menu li { font-size: 1.25em; line-height: 1.5; padding: 0.35em 0; text-transform: none; }
+	.video-js.is-fast .vjs-playback-rate .vjs-playback-rate-value { color: var(--saffron); }
+	.speed-toast { position: absolute; top: 16px; left: 50%; transform: translateX(-50%); z-index: 4; background: rgba(6,13,9,.82); color: var(--khadi); padding: 6px 14px; border-radius: 999px; font: 600 1rem var(--text); pointer-events: none; opacity: 0; transition: opacity .25s; }
+	.speed-toast.is-on { opacity: 1; }
 	/* Frame preview above the seek bar (storyboard sprites from package-hls.sh) */
 	.sprite-preview { position: absolute; bottom: 3.4em; transform: translateX(-50%); pointer-events: none; text-align: center; z-index: 3; font-size: 10px; }
 	.sprite-preview__frame { width: 160px; height: 120px; border-radius: 8px; border: 2px solid var(--khadi); background: #111 no-repeat; box-shadow: 0 8px 24px rgba(0,0,0,.6); }
@@ -1367,7 +1375,7 @@
 	// (full-window on iPhone, where native full screen would drop it).
 	var player = videojs('video', {
 		controls: true, fluid: true, aspectRatio: '4:3', preload: 'none',
-		playbackRates: [0.75, 1, 1.25, 1.5, 2],
+		playbackRates: [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2],
 		preferFullWindow: true,
 		controlBar: { pictureInPictureToggle: false, remainingTimeDisplay: false },
 		userActions: { hotkeys: true, doubleClick: true },
@@ -1398,6 +1406,47 @@
 		if (playing && session) api('/Sessions/Playing/Progress', { method: 'POST', body: progressBody() }).catch(function () {});
 	}
 	player.on('pause', reportProgress);
+
+	// ── Playback speed: the control bar's speed button (0.5×–2×), plus < and > on the
+	// keyboard. The chosen speed carries over to the next video and the next visit.
+	var RATES = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2], SPEED_KEY = 'yajur-kodai-speed';
+	var savedRate = Number(storeGet('localStorage', SPEED_KEY));
+	if (RATES.indexOf(savedRate) < 0) savedRate = 1;
+	var rateReady = false; // ignore the browser's reset to 1× while a new video loads
+	var speedToast = document.createElement('div'); speedToast.className = 'speed-toast'; speedToast.setAttribute('aria-live', 'polite');
+	player.el().appendChild(speedToast);
+	var toastTimer = null;
+	function showSpeed(r) {
+		speedToast.textContent = 'Speed ' + r + '×';
+		speedToast.classList.add('is-on');
+		clearTimeout(toastTimer); toastTimer = setTimeout(function () { speedToast.classList.remove('is-on'); }, 1100);
+	}
+	function markRate() { player.toggleClass('is-fast', player.playbackRate() !== 1); }
+	player.ready(function () {
+		var btn = player.controlBar.getChild('PlaybackRateMenuButton');
+		if (btn) { btn.controlText('Playback speed'); btn.el().title = 'Playback speed'; }
+	});
+	player.on('loadstart', function () { rateReady = false; });
+	player.on('loadedmetadata', function () {
+		player.defaultPlaybackRate(savedRate); player.playbackRate(savedRate);
+		rateReady = true; markRate();
+	});
+	player.on('ratechange', function () {
+		var r = player.playbackRate();
+		markRate();
+		if (!rateReady || RATES.indexOf(r) < 0 || r === savedRate) return;
+		savedRate = r; storeSet('localStorage', SPEED_KEY, String(r)); showSpeed(r);
+	});
+	document.addEventListener('keydown', function (ev) {
+		if ($('player').hidden || ev.ctrlKey || ev.metaKey || ev.altKey) return;
+		if (/^(INPUT|TEXTAREA|SELECT)$/.test((document.activeElement || {}).tagName || '')) return;
+		if (ev.key !== '>' && ev.key !== '<') return;
+		var i = RATES.indexOf(player.playbackRate()); if (i < 0) i = RATES.indexOf(1);
+		var next = RATES[Math.max(0, Math.min(RATES.length - 1, i + (ev.key === '>' ? 1 : -1)))];
+		player.playbackRate(next);
+		if (next === savedRate) showSpeed(next); // at the end of the range: still confirm
+		ev.preventDefault();
+	});
 	player.on('timeupdate', highlightCurrent);
 	player.on('durationchange', function () { renderTicks(); });
 	player.on('error', function () {
@@ -1432,6 +1481,7 @@
 		}));
 
 		var resumeAt = (item.UserData && item.UserData.PlaybackPositionTicks || 0) / 1e7;
+		player.playbackRates(RATES); // player.reset() on close empties the list, hiding the speed button
 		player.src({ src: HLS + e.slug + '/master.m3u8', type: 'application/x-mpegURL' });
 		if (resumeAt > 0) player.one('loadedmetadata', function () { player.currentTime(resumeAt); });
 		var started = player.play();
@@ -1455,6 +1505,7 @@
 				.then(function () { if (!$('library-view').hidden) openLibrary(); })
 				.catch(function () {});
 		}
+		rateReady = false; // resetting puts the speed back to 1×; that isn't the viewer's choice
 		player.pause();
 		if (player.currentSrc()) player.reset();
 		playing = null;
