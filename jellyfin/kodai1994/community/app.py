@@ -77,7 +77,12 @@ Routes (JSON):
   GET    /identify/suggestions?target=...   the latest run and its suggested faces, best guess first
   POST   /identify/suggestions/<id>   {action: "confirm", person?} | {action: "reject"} | {action: "undo"}
                                    confirm (person = the right one if the guess was wrong) adds the
-                                   person to an event at that moment (video) or marks the face (photo)
+                                   person to an event at that moment (video) or marks the face (photo);
+                                   kind "check" (a hand mark that looks like someone else): confirm
+                                   moves the mark to that person, reject keeps it
+  POST   /identify/clear           {photo}  set the photo's hand marks aside and identify it afresh (moderators)
+  POST   /identify/restore         {photo}  put the marks set aside back (moderators)
+  PUT    /people/<id>/detect       {detect: true|false}  whether identification looks for this face (moderators)
   POST   /access-requests          {name, email, message?}    public: the sign-in page's form
   GET    /admin/requests           pending requests (admin)
   POST   /admin/requests/<id>/approve   creates the account, returns its password (admin)
@@ -297,6 +302,18 @@ CREATE TABLE IF NOT EXISTS identify_suggestions (
     created_at      TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS identify_suggestions_by_target ON identify_suggestions (target, status);
+CREATE TABLE IF NOT EXISTS photo_faces_cleared (  -- hand marks set aside by "Clear marks and re-run", to restore
+    id          INTEGER PRIMARY KEY,
+    photo_id    TEXT NOT NULL,
+    person_id   INTEGER NOT NULL,
+    x REAL NOT NULL, y REAL NOT NULL, w REAL NOT NULL, h REAL NOT NULL,
+    added_by    TEXT NOT NULL,
+    created_at  TEXT NOT NULL,
+    was_portrait INTEGER NOT NULL DEFAULT 0,
+    cleared_by  TEXT NOT NULL,
+    cleared_at  TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS photo_faces_cleared_by_photo ON photo_faces_cleared (photo_id);
 CREATE TABLE IF NOT EXISTS identify_refs (       -- worker cache: embedding of each marked photo face
     face_id   INTEGER PRIMARY KEY,
     x REAL, y REAL, w REAL, h REAL,
@@ -414,6 +431,29 @@ db.commit()
 if "portrait_face" not in [r[1] for r in db.execute("PRAGMA table_info(people)").fetchall()]:
     db.execute("ALTER TABLE people ADD COLUMN portrait_face INTEGER")  # chosen 1994 face; NULL = first marked
     db.commit()
+if "no_detect" not in [r[1] for r in db.execute("PRAGMA table_info(people)").fetchall()]:
+    # 1 = identification leaves this face out (someone in nearly every photo): tagged by hand only
+    db.execute("ALTER TABLE people ADD COLUMN no_detect INTEGER NOT NULL DEFAULT 0")
+    db.commit()
+# Hand marks and identification kept in step (photos):
+#   kind 'face'   a detected face; mark_id set = settled by a face marked by hand on it
+#   kind 'check'  a hand mark (mark_id, as mark_person_id) that looks like someone else (person_id)
+_sug_cols = [r[1] for r in db.execute("PRAGMA table_info(identify_suggestions)").fetchall()]
+for _col, _type in (("kind", "TEXT NOT NULL DEFAULT 'face'"), ("mark_id", "INTEGER"), ("mark_person_id", "INTEGER")):
+    if _col not in _sug_cols:
+        db.execute(f"ALTER TABLE identify_suggestions ADD COLUMN {_col} {_type}")
+db.commit()
+
+
+def covered(a, b):
+    """Share of the smaller box (x, y, w, h fractions) that the two overlap: a tight detected
+    face inside a loose hand-drawn box is the same face even though they differ in size."""
+    ix = max(0, min(a[0] + a[2], b[0] + b[2]) - max(a[0], b[0]))
+    iy = max(0, min(a[1] + a[3], b[1] + b[3]) - max(a[1], b[1]))
+    return ix * iy / (min(a[2] * a[3], b[2] * b[3]) or 1e-9)
+
+
+SAME_FACE = 0.5   # covered() above this: two boxes are the same face
 
 
 def query(sql, args=()):
@@ -840,9 +880,9 @@ class Handler(BaseHTTPRequestHandler):
                              if r.get("pf_id") else None),
                 "mine": r["added_by"] == who["id"], "canEdit": who["isAdmin"],
                 "member": r.get("member_name"), "isMe": r.get("member_id") == who["id"],
-                "canDelete": who["isAdmin"] or r["added_by"] == who["id"]}
+                "canDelete": who["isAdmin"] or r["added_by"] == who["id"], "noDetect": bool(r.get("no_detect"))}
 
-    PEOPLE_SQL = ("SELECT pe.id, pe.name, pe.added_by, pe.created_at, COALESCE(p.display_name, p.username, 'Member') AS adder, "
+    PEOPLE_SQL = ("SELECT pe.id, pe.name, pe.added_by, pe.created_at, pe.no_detect, COALESCE(p.display_name, p.username, 'Member') AS adder, "
                   "(SELECT COUNT(*) FROM photo_people pp WHERE pp.person_id = pe.id) AS photos, "
                   "(SELECT COUNT(*) FROM marker_people mp JOIN markers m ON m.id = mp.marker_id AND m.deleted_at IS NULL "
                   " WHERE mp.person_id = pe.id) AS moments, "
@@ -986,6 +1026,11 @@ class Handler(BaseHTTPRequestHandler):
             raise ApiError(400, "That box isn't inside the photo. Draw it again.")
         if not allow(("face", who["id"]), 40, 60):
             raise ApiError(429, "You're marking quickly. Wait a minute and try again.")
+        clash = [r for r in query("SELECT f.x, f.y, f.w, f.h, pe.name FROM photo_faces f JOIN people pe ON pe.id = f.person_id "
+                                  "WHERE f.photo_id = ? AND f.person_id != ?", (photo, person))
+                 if covered((x, y, w, h), (r["x"], r["y"], r["w"], r["h"])) > SAME_FACE]
+        if clash:
+            raise ApiError(409, f"This face is already marked as {clash[0]['name']}. Remove that mark first if it's wrong.")
         existing = query("SELECT id, added_by FROM photo_faces WHERE photo_id = ? AND person_id = ?", (photo, person))
         if existing:
             if existing[0]["added_by"] != who["id"] and not who["isAdmin"]:
@@ -1000,8 +1045,27 @@ class Handler(BaseHTTPRequestHandler):
         if not query("SELECT 1 FROM photo_people WHERE photo_id = ? AND person_id = ?", (photo, person)):
             execute("INSERT INTO photo_people (photo_id, person_id, added_by, created_at) VALUES (?, ?, ?, ?)",
                     (photo, person, who["id"], now()))
+        self.settle_by_mark(who, photo, fid, person, (x, y, w, h))
         notify_tagged(who["id"], [person], "tagged_photo", "photo:" + photo)
         return 201, {"id": fid}
+
+    @staticmethod
+    def settle_by_mark(who, photo, fid, person, box):
+        """A face marked by hand answers the identification suggestions on that face."""
+        # A moved mark gets checked again on the next run.
+        execute("DELETE FROM identify_suggestions WHERE kind = 'check' AND status = 'pending' AND mark_id = ?", (fid,))
+        for s in query("SELECT id, x, y, w, h FROM identify_suggestions WHERE target = ? AND kind = 'face' AND status = 'pending'",
+                       ("photo:" + photo,)):
+            if covered(box, (s["x"], s["y"], s["w"], s["h"])) > SAME_FACE:
+                execute("UPDATE identify_suggestions SET status = 'confirmed', final_person_id = ?, reviewed_by = ?, reviewed_at = ?, "
+                        "mark_id = ? WHERE id = ?", (person, who["id"], now(), fid, s["id"]))
+
+    @staticmethod
+    def unsettle_mark(fid):
+        """A mark was removed: what it answered goes back to review, its checks go."""
+        execute("DELETE FROM identify_suggestions WHERE kind = 'check' AND mark_id = ?", (fid,))
+        execute("UPDATE identify_suggestions SET status = 'pending', final_person_id = NULL, reviewed_by = NULL, reviewed_at = NULL, "
+                "mark_id = NULL, face_id = NULL, tag_id = NULL WHERE kind = 'face' AND (mark_id = ? OR face_id = ?)", (fid, fid))
 
     def delete_photo_face(self, params, fid):
         who = self.member()
@@ -1012,6 +1076,7 @@ class Handler(BaseHTTPRequestHandler):
             raise ApiError(403, "Only the person who marked this face, or the administrator, can remove it.")
         execute("DELETE FROM photo_faces WHERE id = ?", (int(fid),))
         execute("UPDATE people SET portrait_face = NULL WHERE portrait_face = ?", (int(fid),))
+        self.unsettle_mark(int(fid))
         return 200, {"deleted": int(fid)}
 
     def put_portrait(self, params, pid):
@@ -1233,7 +1298,7 @@ class Handler(BaseHTTPRequestHandler):
         except ValueError:
             n = 5
         rows = query("SELECT s.*, NULL AS reviewer, pe.name AS person_name FROM identify_suggestions s JOIN people pe ON pe.id = s.person_id "
-                     "AND pe.deleted_at IS NULL WHERE s.status = 'pending' AND s.score >= 0.35 ORDER BY RANDOM() LIMIT ?", (n,))
+                     "AND pe.deleted_at IS NULL WHERE s.status = 'pending' AND s.kind = 'face' AND s.score >= 0.35 ORDER BY RANDOM() LIMIT ?", (n,))
         out = []
         for r in rows:
             row = self.suggestion_row(who, r)
@@ -1245,6 +1310,71 @@ class Handler(BaseHTTPRequestHandler):
         return 200, out
 
     # ── "this is me": a member and their 1994 self
+    # ── a fresh identification run on a photo: hand marks set aside, then restorable
+    def photo_target(self, data):
+        photo = str(data.get("photo", ""))
+        if not PHOTO_ID.match(photo):
+            raise ApiError(400, "Unknown photo.")
+        if query("SELECT 1 FROM identify_runs WHERE target = ? AND status IN ('queued', 'running')", ("photo:" + photo,)):
+            raise ApiError(409, "This photo is being identified now. Wait for the run to finish.")
+        return photo
+
+    def post_identify_clear(self, params):
+        """Set the photo's hand marks aside, forget its identification answers, and identify it afresh.
+        Who is tagged in the photo stays as it is."""
+        who = self.admin()
+        photo = self.photo_target(self.read_json())
+        marks = query("SELECT f.*, (SELECT 1 FROM people pe WHERE pe.portrait_face = f.id) AS portrait FROM photo_faces f "
+                      "WHERE f.photo_id = ?", (photo,))
+        for m in marks:
+            execute("INSERT INTO photo_faces_cleared (photo_id, person_id, x, y, w, h, added_by, created_at, was_portrait, cleared_by, cleared_at) "
+                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (photo, m["person_id"], m["x"], m["y"], m["w"], m["h"], m["added_by"],
+                                                               m["created_at"], 1 if m["portrait"] else 0, who["id"], now()))
+            execute("UPDATE people SET portrait_face = NULL WHERE portrait_face = ?", (m["id"],))
+            execute("DELETE FROM identify_refs WHERE face_id = ?", (m["id"],))
+        execute("DELETE FROM photo_faces WHERE photo_id = ?", (photo,))
+        execute("DELETE FROM identify_suggestions WHERE target = ?", ("photo:" + photo,))
+        rid = execute("INSERT INTO identify_runs (target, requested_by, created_at) VALUES (?, ?, ?)", ("photo:" + photo, who["id"], now()))
+        return 200, {"cleared": len(marks), "runId": rid}
+
+    def post_identify_restore(self, params):
+        """Put the hand marks set aside back, except where that face or person is marked again since."""
+        who = self.admin()
+        photo = self.photo_target(self.read_json())
+        restored = skipped = 0
+        for c in query("SELECT * FROM photo_faces_cleared WHERE photo_id = ? ORDER BY id", (photo,)):
+            box = (c["x"], c["y"], c["w"], c["h"])
+            now_marks = query("SELECT person_id, x, y, w, h FROM photo_faces WHERE photo_id = ?", (photo,))
+            if any(m["person_id"] == c["person_id"] or covered(box, (m["x"], m["y"], m["w"], m["h"])) > SAME_FACE for m in now_marks) \
+                    or not query("SELECT 1 FROM people WHERE id = ? AND deleted_at IS NULL", (c["person_id"],)):
+                skipped += 1
+            else:
+                fid = execute("INSERT INTO photo_faces (photo_id, person_id, x, y, w, h, added_by, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                              (photo, c["person_id"], *box, c["added_by"], c["created_at"]))
+                if c["was_portrait"]:
+                    execute("UPDATE people SET portrait_face = ? WHERE id = ? AND portrait_face IS NULL", (fid, c["person_id"]))
+                if not query("SELECT 1 FROM photo_people WHERE photo_id = ? AND person_id = ?", (photo, c["person_id"])):
+                    execute("INSERT INTO photo_people (photo_id, person_id, added_by, created_at) VALUES (?, ?, ?, ?)",
+                            (photo, c["person_id"], c["added_by"], now()))
+                self.settle_by_mark(who, photo, fid, c["person_id"], box)
+                restored += 1
+            execute("DELETE FROM photo_faces_cleared WHERE id = ?", (c["id"],))
+        return 200, {"restored": restored, "skipped": skipped}
+
+    def put_person_detect(self, params, pid):
+        """Whether identification looks for this person's face (off for someone in nearly every photo)."""
+        self.admin()
+        detect = bool(self.read_json().get("detect"))
+        if not query("SELECT 1 FROM people WHERE id = ? AND deleted_at IS NULL", (int(pid),)):
+            raise ApiError(404, "That person isn't on the list any more.")
+        execute("UPDATE people SET no_detect = ?, updated_at = ? WHERE id = ?", (0 if detect else 1, now(), int(pid)))
+        removed = 0
+        if not detect:   # their unreviewed guesses go; the next runs leave their face out
+            removed = len(query("SELECT id FROM identify_suggestions WHERE status = 'pending' AND (person_id = ? OR mark_person_id = ?)",
+                                (int(pid), int(pid))))
+            execute("DELETE FROM identify_suggestions WHERE status = 'pending' AND (person_id = ? OR mark_person_id = ?)", (int(pid), int(pid)))
+        return 200, {"personId": int(pid), "detect": detect, "removed": removed}
+
     def put_person_member(self, params, pid):
         who = self.member()
         claim = bool(self.read_json().get("claim"))
@@ -1604,7 +1734,10 @@ class Handler(BaseHTTPRequestHandler):
                 "alternatives": json.loads(r["alternatives"] or "[]"), "cluster": r["cluster"], "facePx": r["face_px"],
                 "crop": "/kodai1994/faces/" + r["crop"], "status": r["status"], "finalPersonId": r["final_person_id"],
                 "reviewedBy": r["reviewer"], "reviewedAt": r["reviewed_at"], "markerId": r["marker_id"],
-                "canUndo": r["status"] != "pending" and (r["reviewed_by"] == who["id"] or who["isAdmin"])}
+                "kind": r["kind"], "markPersonId": r["mark_person_id"],
+                "byHand": r["kind"] == "face" and r["mark_id"] is not None,   # settled by a face marked by hand
+                "canUndo": r["status"] != "pending" and not (r["kind"] == "face" and r["mark_id"] is not None)
+                           and (r["reviewed_by"] == who["id"] or who["isAdmin"])}
 
     def get_identify_suggestions(self, params):
         who = self.member()
@@ -1616,7 +1749,13 @@ class Handler(BaseHTTPRequestHandler):
                      "LEFT JOIN profiles p ON p.user_id = s.reviewed_by WHERE s.target = ? "
                      "ORDER BY s.person_id IS NULL, s.score DESC, s.cluster, s.face_px DESC", (target,))
         out = self.queue_place(self.run_row(run[0], self.review_counts(target).get(target))) if run else None
-        return 200, {"run": out, "suggestions": [self.suggestion_row(who, r) for r in rows]}
+        cleared = None
+        if target.startswith("photo:"):
+            c = query("SELECT COUNT(*) AS n, MAX(c.cleared_at) AS at, COALESCE(p.display_name, p.username, 'A moderator') AS by "
+                      "FROM photo_faces_cleared c LEFT JOIN profiles p ON p.user_id = c.cleared_by WHERE c.photo_id = ?", (target[len("photo:"):],))[0]
+            cleared = {"count": c["n"], "at": c["at"], "by": c["by"]} if c["n"] else None
+        return 200, {"run": out, "suggestions": [self.suggestion_row(who, r) for r in rows],
+                     "cleared": cleared, "canClear": who["isAdmin"]}
 
     def marker_people_rows(self, mid):
         return query("SELECT pe.id, pe.name FROM marker_people mp JOIN people pe ON pe.id = mp.person_id "
@@ -1663,6 +1802,15 @@ class Handler(BaseHTTPRequestHandler):
     def confirm_photo(who, s, person):
         """Mark the face and tag the photo, unless that's already done; returns what was created."""
         photo = s["target"][len("photo:"):]
+        box = (s["x"], s["y"], s["w"], s["h"])
+        for m in query("SELECT f.person_id, f.x, f.y, f.w, f.h, pe.name FROM photo_faces f JOIN people pe ON pe.id = f.person_id "
+                       "WHERE f.photo_id = ?", (photo,)):
+            same = covered(box, (m["x"], m["y"], m["w"], m["h"])) > SAME_FACE
+            if same and m["person_id"] != person:
+                raise ApiError(409, f"This face is already marked as {m['name']}. Remove that mark on the photo first if it's wrong.")
+            if not same and m["person_id"] == person:
+                raise ApiError(409, f"{m['name']} is already marked on another face in this photo. Choose someone else, "
+                                    "or remove that mark on the photo first.")
         face_id = tag_id = None
         if not query("SELECT 1 FROM photo_faces WHERE photo_id = ? AND person_id = ?", (photo, person)):
             face_id = execute("INSERT INTO photo_faces (photo_id, person_id, x, y, w, h, added_by, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
@@ -1672,6 +1820,42 @@ class Handler(BaseHTTPRequestHandler):
                              (photo, person, who["id"], now()))
         notify_tagged(who["id"], [person], "tagged_photo", s["target"])
         return face_id, tag_id
+
+    @staticmethod
+    def recheck_photo(who, s, person):
+        """A hand mark that looked like someone else: move it to the person chosen."""
+        photo, old = s["target"][len("photo:"):], s["mark_person_id"]
+        mark = query("SELECT id, person_id FROM photo_faces WHERE id = ?", (s["mark_id"],))
+        if not mark or mark[0]["person_id"] != old:
+            raise ApiError(409, "That face mark changed since. Reload the page.")
+        if person == old:
+            return None
+        if query("SELECT 1 FROM photo_faces WHERE photo_id = ? AND person_id = ?", (photo, person)):
+            name = query("SELECT name FROM people WHERE id = ?", (person,))[0]["name"]
+            raise ApiError(409, f"{name} is already marked on another face in this photo. Remove that mark on the photo first.")
+        execute("UPDATE photo_faces SET person_id = ?, added_by = ?, created_at = ? WHERE id = ?", (person, who["id"], now(), s["mark_id"]))
+        execute("UPDATE people SET portrait_face = NULL WHERE portrait_face = ?", (s["mark_id"],))
+        execute("DELETE FROM photo_people WHERE photo_id = ? AND person_id = ?", (photo, old))
+        tag_id = None
+        if not query("SELECT 1 FROM photo_people WHERE photo_id = ? AND person_id = ?", (photo, person)):
+            tag_id = execute("INSERT INTO photo_people (photo_id, person_id, added_by, created_at) VALUES (?, ?, ?, ?)",
+                             (photo, person, who["id"], now()))
+        notify_tagged(who["id"], [person], "tagged_photo", s["target"])
+        return tag_id
+
+    @staticmethod
+    def undo_recheck(s):
+        if s["final_person_id"] in (None, s["mark_person_id"]):
+            return
+        photo = s["target"][len("photo:"):]
+        if query("SELECT 1 FROM photo_faces WHERE photo_id = ? AND person_id = ?", (photo, s["mark_person_id"])):
+            raise ApiError(409, "The first name is now marked on another face in this photo, so this can't be undone here.")
+        execute("UPDATE photo_faces SET person_id = ? WHERE id = ? AND person_id = ?", (s["mark_person_id"], s["mark_id"], s["final_person_id"]))
+        if s["tag_id"]:
+            execute("DELETE FROM photo_people WHERE id = ?", (s["tag_id"],))
+        if not query("SELECT 1 FROM photo_people WHERE photo_id = ? AND person_id = ?", (photo, s["mark_person_id"])):
+            execute("INSERT INTO photo_people (photo_id, person_id, added_by, created_at) VALUES (?, ?, ?, ?)",
+                    (photo, s["mark_person_id"], s["reviewed_by"], now()))
 
     @staticmethod
     def undo_photo(s):
@@ -1699,8 +1883,13 @@ class Handler(BaseHTTPRequestHandler):
                 return 200, {"id": s["id"], "status": "pending"}
             if s["reviewed_by"] != who["id"] and not who["isAdmin"]:
                 raise ApiError(403, "Only the person who reviewed this, or the administrator, can undo it.")
+            if s["kind"] == "face" and s["mark_id"] is not None:
+                raise ApiError(409, "This was answered by a face marked by hand. Change it on the photo.")
             if s["status"] == "confirmed":
-                self.undo_video(s) if is_video else self.undo_photo(s)
+                if s["kind"] == "check":
+                    self.undo_recheck(s)
+                else:
+                    self.undo_video(s) if is_video else self.undo_photo(s)
             execute("UPDATE identify_suggestions SET status = 'pending', final_person_id = NULL, reviewed_by = NULL, reviewed_at = NULL, "
                     "marker_id = NULL, marker_added = 0, face_id = NULL, tag_id = NULL WHERE id = ?", (s["id"],))
             return 200, {"id": s["id"], "status": "pending"}
@@ -1713,7 +1902,11 @@ class Handler(BaseHTTPRequestHandler):
         person = data.get("person", s["person_id"])
         if not isinstance(person, int) or not query("SELECT 1 FROM people WHERE id = ? AND deleted_at IS NULL", (person,)):
             raise ApiError(400, "Choose who this is from the People list.")
-        if is_video:
+        if s["kind"] == "check":
+            tag_id = self.recheck_photo(who, s, person)
+            execute("UPDATE identify_suggestions SET status = 'confirmed', final_person_id = ?, reviewed_by = ?, reviewed_at = ?, "
+                    "tag_id = ? WHERE id = ?", (person, who["id"], now(), tag_id, s["id"]))
+        elif is_video:
             self.need_name(who)
             mid, added = self.confirm_video(who, s, person)
             execute("UPDATE identify_suggestions SET status = 'confirmed', final_person_id = ?, reviewed_by = ?, reviewed_at = ?, "
@@ -1842,12 +2035,13 @@ ROUTES = {
             (r"/notifications", Handler.get_notifications), (r"/search", Handler.get_search),
             (r"/identify/challenge", Handler.get_challenge),
             (r"/admin/requests", Handler.get_requests), (r"/admin/moderators", Handler.get_moderators)],
-    "PUT": [(r"/me", Handler.put_me), (r"/people/(\d+)/member", Handler.put_person_member),
+    "PUT": [(r"/me", Handler.put_me), (r"/people/(\d+)/member", Handler.put_person_member), (r"/people/(\d+)/detect", Handler.put_person_detect),
             (r"/memories/(\d+)/feature", Handler.put_memory_feature), (r"/admin/moderators/([0-9a-f]{32})", Handler.put_moderator), (r"/memories/(\d+)", Handler.put_memory), (r"/markers/(\d+)", Handler.put_marker), (r"/people/(\d+)", Handler.put_person),
             (r"/people/(\d+)/portrait", Handler.put_portrait)],
     "POST": [(r"/comments", Handler.post_comment), (r"/markers", Handler.post_marker), (r"/people", Handler.post_person),
              (r"/photo-tags", Handler.post_photo_tag), (r"/photo-faces", Handler.post_photo_face),
              (r"/identify/runs", Handler.post_identify_run), (r"/identify/suggestions/(\d+)", Handler.review_suggestion),
+             (r"/identify/clear", Handler.post_identify_clear), (r"/identify/restore", Handler.post_identify_restore),
              (r"/photo-uploads", Handler.post_photo_upload),
              (r"/memories", Handler.post_memory), (r"/memory-files", Handler.post_memory_file),
              (r"/activity/seen", Handler.post_activity_seen),

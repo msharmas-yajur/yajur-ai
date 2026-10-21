@@ -208,8 +208,9 @@ def face_for_box(det, rec, img, box):
 
 
 def load_refs(db, det, rec):
-    """{person_id: [embedding, ...]} from marked photo faces (cached) and confirmed video faces."""
-    phs, refs, unreadable = photos(), {}, 0
+    """{person_id: [embedding, ...]} from marked photo faces (cached) and confirmed faces, and
+    {face_id: embedding} of the marked faces."""
+    phs, refs, unreadable, by_mark = photos(), {}, 0, {}
     marks = db.execute("SELECT f.id, f.photo_id, f.person_id, f.x, f.y, f.w, f.h FROM photo_faces f "
                        "JOIN people p ON p.id = f.person_id AND p.deleted_at IS NULL").fetchall()
     cache = {r["face_id"]: r for r in db.execute("SELECT * FROM identify_refs")}
@@ -232,11 +233,17 @@ def load_refs(db, det, rec):
             unreadable += 1
         else:
             refs.setdefault(m["person_id"], []).append(emb)
+            by_mark[m["id"]] = emb
     for r in db.execute("SELECT s.final_person_id, s.embedding FROM identify_suggestions s "
                         "JOIN people p ON p.id = s.final_person_id AND p.deleted_at IS NULL "
                         "WHERE s.status = 'confirmed' AND s.embedding IS NOT NULL"):
         refs.setdefault(r["final_person_id"], []).append(from_blob(r["embedding"]))
-    return refs, len(marks) - unreadable, unreadable
+    return refs, by_mark, unreadable
+
+
+def no_detect(db):
+    """People identification leaves out (someone in nearly every photo): tagged by hand only."""
+    return {r[0] for r in db.execute("SELECT id FROM people WHERE no_detect = 1 AND deleted_at IS NULL")}
 
 
 def rank(emb, refs):
@@ -428,7 +435,32 @@ def run_video(db, run, det, rec, refs):
         items.append({"start": tr["start"], "end": tr["end"], "frame": tr["best_t"], "emb": tr["emb"], "crop": tr["crop"],
                       "size": tr["size"], "dets": len(tr["embs"]),
                       "box": (b[0] / W, b[1] / H, (b[2] - b[0]) / W, (b[3] - b[1]) / H)})
-    return items, None
+    return items, None, None
+
+
+def checks(db, run, img, refs, by_mark, skip):
+    """Hand marks on this photo that look clearly like someone else, to double-check. Each
+    mark is compared with everyone's other faces (its own copies left out)."""
+    H, W = img.shape[:2]
+    out = []
+    for m in db.execute("SELECT id, person_id, x, y, w, h FROM photo_faces WHERE photo_id = ?", (run["target"][len("photo:"):],)):
+        e = by_mark.get(m["id"])
+        if e is None or m["person_id"] in skip:
+            continue
+        if db.execute("SELECT 1 FROM identify_suggestions WHERE kind = 'check' AND mark_id = ? AND mark_person_id = ? "
+                      "AND status != 'pending'", (m["id"], m["person_id"])).fetchone():
+            continue  # already answered
+        others = {p: [x for x in es if float(x @ e) < 0.98] for p, es in refs.items() if p not in skip}
+        ranked = rank(e, {p: es for p, es in others.items() if es})
+        own = next((sc for p, sc in ranked if p == m["person_id"]), None)
+        if own is None or not ranked or ranked[0][0] == m["person_id"]:
+            continue  # nothing else to compare with, or it agrees
+        if ranked[0][1] >= STRONG and own < POSSIBLE:
+            b = (m["x"] * W, m["y"] * H, (m["x"] + m["w"]) * W, (m["y"] + m["h"]) * H)
+            out.append({"kind": "check", "mark_id": m["id"], "mark_person": m["person_id"], "start": None, "end": None,
+                        "frame": None, "emb": e, "crop": crop_face(img, b), "size": min(b[2] - b[0], b[3] - b[1]), "dets": 1,
+                        "box": (m["x"], m["y"], m["w"], m["h"]), "ranked": ranked[:4]})
+    return out
 
 
 def run_photo(db, run, det, rec, refs):
@@ -457,16 +489,21 @@ def run_photo(db, run, det, rec, refs):
         items.append({"start": None, "end": None, "frame": None, "emb": f["emb"], "crop": crop_face(img, b), "size": size,
                       "dets": 1, "box": (b[0] / W, b[1] / H, (b[2] - b[0]) / W, (b[3] - b[1]) / H)})
     note = f"{len(faces)} faces found: {n_marked} already marked, {n_reviewed} already reviewed, {len(items)} new"
-    return items, note
+    return items, note, img
 
 
-def save(db, run, items, refs):
-    """Rank each face against the references and store the suggestions worth reviewing."""
+def save(db, run, items, refs, recheck=(), skip=()):
+    """Rank each face against the references and store the suggestions worth reviewing.
+    Faces that look like someone in `skip` are left out altogether."""
     folder = os.path.join(OUT, safe(run["target"]))
     os.makedirs(folder, exist_ok=True)
-    known, unknown = [], []
+    known, unknown, skipped = [], [], 0
     for it in items:
         r = rank(it["emb"], refs) if refs else []
+        if r and r[0][1] >= POSSIBLE and r[0][0] in skip:
+            skipped += 1
+            continue
+        r = [x for x in r if x[0] not in skip]
         it["ranked"] = r[:4]
         (known if r and r[0][1] >= POSSIBLE else unknown).append(it)
     is_video = run["target"].startswith("video:")
@@ -489,33 +526,43 @@ def save(db, run, items, refs):
         best["centre"] = best["sum"] / (np.linalg.norm(best["sum"]) + 1e-9)
         u["cluster"] = best["n"]
     rows = []
-    for i, it in enumerate(known + unknown):
+    for i, it in enumerate(known + unknown + list(recheck)):
         name = f"{run['id']}-{i + 1}.jpg"
         cv2.imwrite(os.path.join(folder, name), it["crop"], [cv2.IMWRITE_JPEG_QUALITY, 88])
         top = it["ranked"][0] if it["ranked"] and it["ranked"][0][1] >= POSSIBLE else None
         rows.append((run["id"], run["target"], it["start"], it["end"], it["frame"], *it["box"],
                      top[0] if top else None, top[1] if top else None,
                      json.dumps([{"personId": p, "score": round(s, 3)} for p, s in it["ranked"]]),
-                     it.get("cluster"), f"{safe(run['target'])}/{name}", to_blob(it["emb"]), round(it["size"], 1), now()))
+                     it.get("cluster"), f"{safe(run['target'])}/{name}", to_blob(it["emb"]), round(it["size"], 1), now(),
+                     it.get("kind", "face"), it.get("mark_id"), it.get("mark_person")))
     with db:
         # A new run replaces the earlier runs' unreviewed suggestions for the same video or photo.
         db.execute("DELETE FROM identify_suggestions WHERE target = ? AND status = 'pending' AND run_id != ?", (run["target"], run["id"]))
         db.executemany("INSERT INTO identify_suggestions (run_id, target, start_s, end_s, frame_s, x, y, w, h, person_id, score, "
-                       "alternatives, cluster, crop, embedding, face_px, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", rows)
-    return len(known), len(unknown)
+                       "alternatives, cluster, crop, embedding, face_px, created_at, kind, mark_id, mark_person_id) "
+                       "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", rows)
+    return len(known), len(unknown), skipped
 
 
 def process(db, run, det, rec):
     progress(db, run["id"], 0.01, "Reading the marked faces")
-    refs, used, unreadable = load_refs(db, det, rec)
+    refs, by_mark, unreadable = load_refs(db, det, rec)
+    skip = no_detect(db)
     db.execute("UPDATE identify_runs SET refs = ?, people = ? WHERE id = ?", (sum(len(v) for v in refs.values()), len(refs), run["id"]))
     db.commit()
-    items, note = (run_video if run["target"].startswith("video:") else run_photo)(db, run, det, rec, refs)
+    items, note, img = (run_video if run["target"].startswith("video:") else run_photo)(db, run, det, rec, refs)
+    recheck = checks(db, run, img, refs, by_mark, skip) if img is not None else []
     progress(db, run["id"], 0.97, "Matching faces")
-    known, unknown = save(db, run, items, refs)
+    known, unknown, skipped = save(db, run, items, refs, recheck, skip)
     msg = f"{known} faces matched to people, {unknown} not recognised"
     if note:
-        msg = f"{note} ({known} matched to people, {unknown} not recognised)" if items else f"{note}: nothing more to review"
+        msg = f"{note} ({known} matched to people, {unknown} not recognised)" if known + unknown else f"{note}"
+    if skipped:
+        msg += f"; {skipped} left out (people set to not be detected)"
+    if recheck:
+        msg += f"; {len(recheck)} marked by hand look like someone else: double-check them"
+    elif note and not known + unknown:
+        msg += ": nothing more to review"
     db.execute("UPDATE identify_runs SET status = 'done', progress = 1, message = ?, finished_at = ? WHERE id = ?", (msg, now(), run["id"]))
     db.commit()
     log(f"run {run['id']} {run['target']}: {msg}; {unreadable} marked faces in the archive too unclear to use")
