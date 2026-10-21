@@ -226,6 +226,57 @@
 		.nav__extra .theme-toggle { display: inline-grid; margin: 4px 14px; }
 	}
 	.nav__extra .theme-toggle { display: none; }
+	/* ── Home cards: featured, challenge, this week, on this day, milestones */
+	.home__h { font: 400 1.5rem/1.2 var(--display); margin: 0 0 6px; }
+	.home__main > .home__h { margin-top: 30px; }
+	.featured { position: relative; padding: 26px 28px; margin-bottom: 26px; border-radius: 22px; border: 1px solid rgba(234,122,42,.4);
+		background: radial-gradient(120% 140% at 0% 0%, rgba(234,122,42,.18), transparent 60%), var(--panel); }
+	.featured__label { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; font-size: .82rem; font-weight: 600; color: var(--accent-text); }
+	.featured__label .icon svg { width: 16px; height: 16px; }
+	.featured h3 { font: 400 clamp(1.7rem, 3.4vw, 2.4rem)/1.12 var(--display); margin: 0 0 6px; }
+	.featured__by { margin: 0 0 14px; color: var(--mist); font-size: .92rem; }
+	.featured__text { margin: 0 0 16px; font-size: 1.04rem; line-height: 1.7; max-width: 62ch; }
+	.featured__pics { display: flex; gap: 8px; margin-bottom: 18px; }
+	.featured__pics span { width: 110px; aspect-ratio: 4 / 3; border-radius: 10px; background: var(--pine) center / cover no-repeat; }
+	.challenge { margin-bottom: 10px; padding: 20px 22px; border-radius: 20px; border: 1px solid var(--line); background: var(--panel); }
+	.challenge__head p { margin: 0 0 14px; font-size: .93rem; max-width: 60ch; }
+	.challenge__row { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+	.chal { display: flex; flex-direction: column; gap: 6px; padding: 10px; border-radius: 14px; border: 1px solid var(--line); background: rgb(var(--bg-rgb) / .35); transition: opacity .3s; }
+	.chal.is-yes { border-color: rgba(143,199,157,.6); }
+	.chal.is-no { opacity: .55; }
+	.chal__pair { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+	.chal__face { aspect-ratio: 1; border-radius: 8px; background: #000 center / cover no-repeat; display: grid; place-items: center; font: 400 1.4rem var(--display); color: var(--mist); }
+	.chal__face--known { background-color: var(--pine); }
+	.chal__face.portrait { color: transparent; }
+	.chal__q { margin: 2px 0 0; font-size: .92rem; line-height: 1.3; }
+	.chal__where { font-size: .78rem; text-align: left; }
+	.chal__acts { display: flex; gap: 6px; flex-wrap: wrap; }
+	.chal__acts .btn { flex: 1; padding: 6px 10px; }
+	.chal__yes { background: var(--ok); color: var(--pine-deep); }
+	.chal__done { font-size: .85rem; color: var(--ok); }
+	.challenge__foot { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; margin-top: 14px; }
+	.week__chips { display: flex; flex-wrap: wrap; gap: 6px; }
+	.week__chip { padding: 3px 10px; border-radius: 999px; border: 1px solid var(--line); font-size: .85rem; }
+	.week__chip b { font-weight: 600; color: var(--accent-text); }
+	.week__sub { margin: 14px 0 6px; font-size: .82rem; color: var(--mist); }
+	.week__list { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; font-size: .92rem; }
+	.week__list .linkish { font-size: .92rem; color: var(--khadi); text-align: left; }
+	.otd__date { margin: -4px 0 12px; font-family: var(--display); font-size: 1.05rem; }
+	.otd__rec { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; border: 0; background: none; color: inherit; font: inherit; padding: 6px; margin: 0 -6px; border-radius: 10px; cursor: pointer; }
+	.otd__rec:hover { background: rgb(var(--fg-rgb) / .06); }
+	.otd__rec span { flex: none; width: 72px; aspect-ratio: 4 / 3; border-radius: 6px; background: var(--pine) center / cover no-repeat; }
+	.otd__rec b { font-weight: 600; font-size: .92rem; }
+	.otd__mem { display: block; text-align: left; color: var(--khadi); font-size: .92rem; margin: 2px 0; }
+	.miles { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; font-size: .9rem; }
+	.miles li { display: flex; gap: 10px; align-items: center; }
+	.miles b { font-weight: 600; }
+	.miles__badge { flex: none; display: grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; font: 400 .9rem var(--display);
+		color: var(--pine-deep); background: linear-gradient(140deg, #f3c46b, var(--saffron)); box-shadow: 0 0 0 3px rgba(234,122,42,.18); }
+	.members li.is-link { cursor: pointer; border-radius: 10px; }
+	.members li.is-link:hover b { color: var(--accent-text); }
+	.act__who.portrait { color: transparent; background-color: var(--pine); }
+	.claim { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-top: 10px; font-size: .92rem; }
+	.claim__me { color: var(--ok); }
 	/* ── Search, notifications, reactions */
 	.icon-round { position: relative; display: inline-grid; place-items: center; width: 42px; height: 42px; padding: 0; border-radius: 50%; border: 1px solid var(--line);
 		background: rgb(var(--bg-rgb) / .55); color: var(--khadi); cursor: pointer; }
@@ -1638,6 +1689,73 @@
 	}
 	function at(pos) { return pos == null ? '' : (fmtDuration(pos * 1e7) || '0:00'); }
 
+	var homeMemories = [];
+	// "This week": the last seven days at a glance (instead of an email digest)
+	function weekCard(w) {
+		var c = el('section', 'side-card week'); c.appendChild(el('h3', '', 'This week'));
+		var labels = [['memories', 'memory', 'memories'], ['photos', 'photo', 'photos'], ['moments', 'chapter or event', 'chapters & events'],
+			['faces', 'face confirmed', 'faces confirmed'], ['comments', 'comment', 'comments'], ['members', 'member joined', 'members joined']];
+		var chips = el('div', 'week__chips');
+		labels.forEach(function (l) { var n = w.counts[l[0]] || 0; if (!n) return; var ch = el('span', 'week__chip'); ch.append(el('b', '', n.toLocaleString('en-IN')), document.createTextNode(' ' + (n === 1 ? l[1] : l[2]))); chips.appendChild(ch); });
+		if (!chips.childNodes.length) chips.appendChild(el('span', 'muted', 'A quiet week so far.'));
+		c.appendChild(chips);
+		if (w.memories.length) {
+			c.appendChild(el('p', 'week__sub', 'New memories'));
+			var ul = el('ul', 'week__list');
+			w.memories.forEach(function (m) { var li = el('li'), b = el('button', 'linkish', m.title); b.type = 'button'; b.addEventListener('click', function () { openMemory(m.id); }); li.append(b, el('small', 'muted', ' by ' + m.author)); ul.appendChild(li); });
+			c.appendChild(ul);
+		}
+		if (w.active.length) c.appendChild(el('p', 'week__sub', 'Most active: ' + w.active.map(function (x) { return x.name; }).join(', ')));
+		return c;
+	}
+	// "On this day": in April and May the same day in 1994; otherwise a different day of the visit each day
+	function onThisDayCard() {
+		var days = [], byDay = {};
+		entries.forEach(function (e) { if (!e.day || !ready[e.slug]) return; var k = e.month + '-' + e.day; if (!byDay[k]) { byDay[k] = []; days.push(k); } byDay[k].push(e); });
+		if (!days.length) return null;
+		var t = new Date(), today = (t.getMonth() + 1) + '-' + t.getDate(), key = byDay[today] ? today : null, title = 'On this day in 1994';
+		if (!key) { var doy = Math.floor((t - new Date(t.getFullYear(), 0, 0)) / 864e5); key = days[doy % days.length]; title = 'A day from the visit'; }
+		var list = byDay[key], e0 = list[0];
+		var c = el('section', 'side-card otd'); c.appendChild(el('h3', '', title));
+		c.appendChild(el('p', 'otd__date', new Date(Date.UTC(1994, e0.month - 1, e0.day)).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' })));
+		list.forEach(function (e) {
+			var b = el('button', 'otd__rec'); b.type = 'button';
+			var pic = el('span'); pic.style.backgroundImage = 'url("' + HLS + e.slug + '/thumb.jpg")';
+			b.append(pic, el('b', '', e.title)); b.addEventListener('click', function () { play(e); });
+			c.appendChild(b);
+		});
+		var slugs = list.map(function (e) { return 'video:' + e.slug; });
+		var mems = homeMemories.filter(function (m) { return m.links.some(function (l) { return slugs.indexOf(l.target) >= 0; }); });
+		if (mems.length) {
+			c.appendChild(el('p', 'week__sub', plural(mems.length, 'memory').replace('memorys', 'memories') + ' of this day'));
+			mems.slice(0, 3).forEach(function (m) { var b = el('button', 'linkish otd__mem', m.title); b.type = 'button'; b.addEventListener('click', function () { openMemory(m.id); }); c.appendChild(b); });
+		}
+		return c;
+	}
+	// Contribution milestones: who has added the most, by the round number they've passed
+	var STEPS = [5, 10, 25, 50, 100, 250, 500, 1000, 2500];
+	function milestonesCard(members) {
+		var verbs = { photos: ['added', 'photos'], moments: ['added', 'chapters & events'], faces: ['marked', 'faces'], memories: ['wrote', 'memories'], comments: ['left', 'comments'] };
+		var out = [];
+		members.forEach(function (m) {
+			Object.keys(verbs).forEach(function (k) {
+				var n = m.contributions[k] || 0, step = STEPS.filter(function (x) { return n >= x; }).pop();
+				if (step) out.push({ name: m.name, n: n, step: step, text: verbs[k][0] + ' ' + n.toLocaleString('en-IN') + ' ' + verbs[k][1], kind: k });
+			});
+		});
+		if (!out.length) return null;
+		out.sort(function (x, y) { return y.step - x.step || y.n - x.n; });
+		var c = el('section', 'side-card'); c.appendChild(el('h3', '', 'Milestones'));
+		var ul = el('ul', 'miles');
+		out.slice(0, 6).forEach(function (o) {
+			var li = el('li'), badge = el('span', 'miles__badge', o.step >= 1000 ? (o.step / 1000) + 'k' : String(o.step));
+			badge.title = o.step + '+';
+			var t = el('span'); t.append(el('b', '', o.name), document.createTextNode(' has ' + o.text));
+			li.append(badge, t); ul.appendChild(li);
+		});
+		c.appendChild(ul);
+		return c;
+	}
 	var homeFilter = 'all';
 	var FEED_FILTERS = [['all', 'Everything'], ['memory', 'Memories'], ['comment', 'Comments'], ['moment', 'Chapters & events'], ['photo', 'Photos & videos'], ['people', 'People']];
 	function feedKind(it) {
@@ -1655,22 +1773,89 @@
 		var status = el('p', 'muted', 'Loading what’s new…'); main.appendChild(status);
 		var state = { items: [], seenAt: null, more: false };
 
-		Promise.all([capi('/activity?limit=50'), capi('/members').catch(function () { return []; })]).then(function (res) {
+		Promise.all([capi('/activity?limit=50'), capi('/members').catch(function () { return []; }),
+			capi('/memories').catch(function () { return []; }), ensurePeople().catch(function () { return []; })]).then(function (res) {
 			status.remove();
 			var a = res[0];
+			homeMemories = res[2];
 			state.seenAt = a.seenAt; state.more = a.more;
 			// New recordings: when Jellyfin added them (there are only a handful)
 			var vids = entries.filter(function (e) { return e.item.DateCreated && ready[e.slug]; }).map(function (e) {
 				return { type: 'video', at: new Date(e.item.DateCreated).toISOString().replace(/\.\d+Z$/, '+00:00'), target: 'video:' + e.slug };
 			});
 			state.items = a.items.concat(vids).sort(function (x, y) { return (y.at || '').localeCompare(x.at || ''); });
-			drawSince(); drawFeed(); drawSide(a, res[1]);
+			drawFeatured(a.featured); drawSince(); drawChallenge(); drawFeed(); drawSide(a, res[1]);
 			// Mark as seen a little later, so a quick reload still shows what was new.
 			setTimeout(function () { capi('/activity/seen', { method: 'POST' }).catch(function () {}); }, 6000);
 		}).catch(function (ex) { status.textContent = 'Couldn’t load the activity: ' + ex.message; });
 
-		var sinceBox = el('div'), filterBox = el('div', 'feed-filter'), feedBox = el('div');
-		main.append(sinceBox, filterBox, feedBox);
+		var featuredBox = el('div'), sinceBox = el('div'), challengeBox = el('div'), filterBox = el('div', 'feed-filter'), feedBox = el('div');
+		var feedTitle = el('h2', 'home__h', 'Activity');
+		main.append(featuredBox, sinceBox, challengeBox, feedTitle, filterBox, feedBox);
+
+		// 8. A memory a moderator pinned to the top of Home
+		function drawFeatured(f) {
+			featuredBox.textContent = '';
+			if (!f) return;
+			var card = el('article', 'featured'), lab = el('p', 'featured__label'); lab.append(icon('pin'), document.createTextNode('Featured memory'));
+			card.append(lab, el('h3', '', f.title), el('p', 'featured__by', (f.kind === 'notes' ? 'Notes' : 'A memory') + ' by ' + f.author));
+			if (f.excerpt) card.appendChild(el('p', 'featured__text', f.excerpt + (f.excerpt.length >= 420 ? '…' : '')));
+			var pics = el('div', 'featured__pics');
+			f.links.slice(0, 4).forEach(function (l) { var t = targetInfo(l.target); if (t && t.pic) { var sp = el('span'); sp.style.backgroundImage = 'url("' + t.pic + '")'; pics.appendChild(sp); } });
+			if (pics.childNodes.length) card.appendChild(pics);
+			var read = el('button', 'btn', 'Read the memory'); read.type = 'button';
+			read.addEventListener('click', function () { openMemory(f.id); });
+			card.appendChild(read);
+			featuredBox.appendChild(card);
+		}
+
+		// 5. Today's challenge: a few likely matches, answered right here
+		function drawChallenge() {
+			challengeBox.textContent = '';
+			capi('/identify/challenge?n=5').then(function (list) {
+				if (!list.length) return;
+				var card = el('section', 'challenge');
+				var head = el('div', 'challenge__head');
+				head.append(el('h2', 'home__h', 'Today’s challenge'), el('p', 'muted', 'The computer thinks it recognises these faces. Is it right? Each answer helps everyone find themselves in the recordings.'));
+				card.appendChild(head);
+				var row = el('div', 'challenge__row'), done = 0;
+				list.forEach(function (sg) {
+					var c = el('div', 'chal'), pair = el('div', 'chal__pair');
+					var found = el('span', 'chal__face'); found.style.backgroundImage = 'url("' + sg.crop + '")'; found.title = 'Found in the ' + (sg.target.indexOf('video:') === 0 ? 'recording' : 'photo');
+					var known = el('span', 'chal__face chal__face--known', initials(sg.personName));
+					if (sg.portrait) portraitInto(known, sg.portrait); known.title = sg.personName + ', marked on a 1994 photo';
+					pair.append(found, known);
+					var q = el('p', 'chal__q'); q.append(document.createTextNode('Is this '), el('b', '', sg.personName), document.createTextNode('?'));
+					var info = targetInfo(sg.target);
+					var where = el('button', 'linkish chal__where', info ? (info.kind === 'video' ? info.label + ' at ' + at(sg.frame != null ? sg.frame : sg.start) : info.label) : ''); where.type = 'button';
+					where.addEventListener('click', function () { openTarget(info, sg.frame != null ? Math.max(0, sg.frame - 1) : sg.start); });
+					var acts = el('div', 'chal__acts');
+					var yes = el('button', 'btn btn--small chal__yes', 'Yes'), no = el('button', 'btn btn--quiet btn--small', 'No'); yes.type = no.type = 'button';
+					function answer(action) {
+						yes.disabled = no.disabled = true;
+						capi('/identify/suggestions/' + sg.id, { method: 'POST', body: { action: action } }).then(function () {
+							c.classList.add(action === 'confirm' ? 'is-yes' : 'is-no');
+							acts.textContent = ''; acts.appendChild(el('span', 'chal__done', action === 'confirm' ? '✓ Thank you, confirmed' : 'Thanks, noted'));
+							if (++done === list.length) more.hidden = false;
+						}).catch(function (ex) {
+							yes.disabled = no.disabled = false;
+							acts.appendChild(el('span', 'error', ex.status === 409 && /name/.test(ex.message) ? 'Choose the name others see (under Account) first.' : ex.message));
+						});
+					}
+					yes.addEventListener('click', function () { answer('confirm'); });
+					no.addEventListener('click', function () { answer('reject'); });
+					acts.append(yes, no);
+					c.append(pair, q, where, acts);
+					row.appendChild(c);
+				});
+				card.appendChild(row);
+				var more = el('button', 'btn btn--quiet', 'Five more'); more.type = 'button'; more.hidden = true;
+				more.addEventListener('click', drawChallenge);
+				var all = el('a', 'linkish', 'Review them all on Identify faces'); all.href = 'identify.html';
+				var foot = el('div', 'challenge__foot'); foot.append(more, all); card.appendChild(foot);
+				challengeBox.appendChild(card);
+			}).catch(function () {});
+		}
 		filterBox.setAttribute('role', 'group'); filterBox.setAttribute('aria-label', 'Show');
 		FEED_FILTERS.forEach(function (f) {
 			var b = el('button', '', f[1]); b.type = 'button'; b.setAttribute('aria-pressed', String(homeFilter === f[0]));
@@ -1817,6 +2002,8 @@
 		}
 
 		function drawSide(a, members) {
+			if (a.week) side.appendChild(weekCard(a.week));
+			var otd = onThisDayCard(); if (otd) side.appendChild(otd);
 			var t = a.totals, hours = entries.reduce(function (s2, e) { return s2 + (e.item.RunTimeTicks || 0); }, 0);
 			var col = el('section', 'side-card'); col.appendChild(el('h3', '', 'The collection'));
 			var dl = el('dl', 'stats');
@@ -1831,6 +2018,7 @@
 				var go = el('a', 'btn', 'Identify faces'); go.href = 'identify.html'; help.appendChild(go);
 				side.appendChild(help);
 			}
+			var ms = milestonesCard(members); if (ms) side.appendChild(ms);
 			var mem = el('section', 'side-card'); mem.appendChild(el('h3', '', 'Members (' + members.length + ')'));
 			var ul = el('ul', 'members');
 			members.forEach(function (m) {
@@ -1844,7 +2032,13 @@
 				if (c.comments) bits.push(plural(c.comments, 'comment'));
 				if (c.faces) bits.push(plural(c.faces, 'face') + ' marked');
 				var line = (m.joined ? 'Joined ' + new Date(m.joined).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : 'Member') + (bits.length ? ' · ' + bits.slice(0, 2).join(', ') : '');
-				li.append(avatar(m.name), name, el('small', '', line));
+				var av = avatar(m.name), self = m.personId && people.filter(function (x) { return x.id === m.personId; })[0];
+				if (self && portraitInto(av, self.portrait)) av.title = m.name + ' in 1994';
+				li.append(av, name, el('small', '', line));
+				if (self) {   // linked to their 1994 self: open that page
+					li.classList.add('is-link'); li.tabIndex = 0; li.title = 'See ' + self.name + ' in 1994';
+					li.addEventListener('click', function () { openPerson(self.id); });
+				}
 				ul.appendChild(li);
 			});
 			mem.appendChild(ul); side.appendChild(mem);
@@ -2104,6 +2298,31 @@
 			t.appendChild(el('p', 'muted', 'Tagged in ' + plural(d.photos.length, 'photo') + ' and ' + plural(moments, 'moment') +
 				' across ' + plural(d.videos.length, 'video') + '.'));
 			head.appendChild(t); wrap.appendChild(head);
+			// A member and their 1994 self
+			var claim = el('div', 'claim');
+			function drawClaim() {
+				claim.textContent = '';
+				if (pp.isMe) {
+					claim.append(el('span', 'claim__me', 'This is you. You’ll hear when someone tags you.'));
+					var undo = el('button', 'linkish', 'That’s not me'); undo.type = 'button';
+					undo.addEventListener('click', function () { setClaim(false); }); claim.appendChild(undo);
+				} else if (pp.member) {
+					claim.appendChild(el('span', 'muted', 'Member: ' + pp.member));
+					if (me && me.isAdmin) { var fix = el('button', 'linkish', 'Unlink'); fix.type = 'button'; fix.addEventListener('click', function () { setClaim(false); }); claim.appendChild(fix); }
+				} else {
+					var mine = el('button', 'btn btn--quiet btn--small', 'This is me'); mine.type = 'button';
+					mine.title = 'Link your account to ' + pp.name + ': your 1994 portrait shows beside your name, and you hear when you’re tagged';
+					mine.addEventListener('click', function () { setClaim(true); }); claim.appendChild(mine);
+				}
+			}
+			function setClaim(on) {
+				capi('/people/' + pp.id + '/member', { method: 'PUT', body: { claim: on } }).then(function () {
+					pp.isMe = on; pp.member = on ? ((me && me.displayName) || session.name) : null;
+					if (me) me.personId = on ? pp.id : null;
+					drawClaim();
+				}).catch(function (ex) { claim.appendChild(el('span', 'error', ex.message)); });
+			}
+			drawClaim(); t.appendChild(claim);
 
 			wrap.appendChild(el('h3', '', 'Faces from 1994'));
 			if (!d.faces.length) {
@@ -2328,6 +2547,17 @@
 			var meta = el('div', 'memory__meta');
 			meta.append(icon(m.kind === 'notes' ? 'file-text' : 'pen-line'),
 				el('span', '', kindLabel(m) + ' by ' + m.author + ' · ' + fmtWhen(m.createdAt) + (m.updatedAt ? ' · edited' : '')));
+			if (m.canFeature) {
+				var pin = iconButton('pin', m.featured ? 'Remove from Home' : 'Feature on Home');
+				if (m.featured) pin.classList.add('is-armed');
+				pin.addEventListener('click', function () {
+					capi('/memories/' + m.id + '/feature', { method: 'PUT', body: { on: !m.featured } }).then(function (r) {
+						m.featured = r.featured; pin.classList.toggle('is-armed', m.featured);
+						pin.title = m.featured ? 'Remove from Home' : 'Feature on Home'; pin.setAttribute('aria-label', pin.title);
+					});
+				});
+				meta.appendChild(pin);
+			}
 			if (m.canEdit) {
 				var ed = iconButton('pencil', 'Edit');
 				ed.addEventListener('click', function () { editMemory({ id: m.id, kind: m.kind, title: m.title, body: m.body, links: m.links.slice(), people: m.people.slice(), pdf: m.pdf }); });
@@ -2756,6 +2986,7 @@
 		'file-text': '<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/>',
 		'pen-line': '<path d="M12 20h9"/><path d="M16.376 3.622a1 1 0 0 1 3.002 3.002L7.368 18.635a2 2 0 0 1-.855.506l-2.872.838a.5.5 0 0 1-.62-.62l.838-2.872a2 2 0 0 1 .506-.854z"/>',
 		x: '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
+		pin: '<path d="M12 17v5"/><path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1z"/>',
 		pencil: '<path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/>',
 		trash: '<path d="M10 11v6"/><path d="M14 11v6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>'
 	};
