@@ -668,6 +668,8 @@
 	.video-js { font-family: var(--text); background: #000; }
 	.video-js .vjs-control-bar { background: linear-gradient(180deg, rgb(var(--bg-rgb) / 0), rgb(var(--bg-rgb) / .92)); height: 3.6em; font-size: 1.05em; }
 	.video-js .vjs-play-progress, .video-js .vjs-volume-level { background: var(--saffron); }
+	/* phones: the volume keys do the volume; the room goes to the seek bar beside the 10 s skips */
+	@media (max-width: 640px) { .video-js .vjs-volume-panel { display: none; } }
 	.video-js .vjs-play-progress::before { color: var(--saffron); }
 	.video-js .vjs-load-progress div { background: rgba(255,255,255,.32); }
 	.video-js .vjs-slider { background: rgba(255,255,255,.2); }
@@ -4098,14 +4100,14 @@
 		slot.appendChild(markersPanel(slug));
 	}
 
-	// ── Player: Video.js playing HLS only (no single file to save), watermarked with the
-	// viewer's name. Its full screen covers the whole player, so the watermark stays on top
+	// ── Player: Video.js playing HLS only (no single file to save), watermarked "kodai1994"
+	// and the date. Its full screen covers the whole player, so the watermark stays on top
 	// (full-window on iPhone, where native full screen would drop it).
 	var player = videojs('video', {
 		controls: true, fluid: true, aspectRatio: '4:3', preload: 'none',
 		playbackRates: [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2],
 		preferFullWindow: true,
-		controlBar: { pictureInPictureToggle: false, remainingTimeDisplay: false },
+		controlBar: { pictureInPictureToggle: false, remainingTimeDisplay: false, skipButtons: { backward: 10, forward: 10 } },
 		userActions: { hotkeys: true, doubleClick: true },
 		html5: {
 			nativeAudioTracks: false, nativeVideoTracks: false,
@@ -4177,6 +4179,14 @@
 	document.addEventListener('keydown', function (ev) {
 		if ($('player').hidden || ev.ctrlKey || ev.metaKey || ev.altKey) return;
 		if (/^(INPUT|TEXTAREA|SELECT)$/.test((document.activeElement || {}).tagName || '')) return;
+		if (ev.key === 'ArrowLeft' || ev.key === 'ArrowRight') {
+			// ← / → skip 10 s, as the buttons do (the focused seek bar handles its own arrows)
+			if (document.activeElement && document.activeElement.closest && document.activeElement.closest('.vjs-control-bar')) return;
+			var to = (player.currentTime() || 0) + (ev.key === 'ArrowRight' ? 10 : -10);
+			player.currentTime(Math.max(0, Math.min(player.duration() || to, to)));
+			ev.preventDefault();
+			return;
+		}
 		if (ev.key !== '>' && ev.key !== '<') return;
 		var i = RATES.indexOf(player.playbackRate()); if (i < 0) i = RATES.indexOf(1);
 		var next = RATES[Math.max(0, Math.min(RATES.length - 1, i + (ev.key === '>' ? 1 : -1)))];
@@ -4204,7 +4214,7 @@
 		$('player-title').textContent = e.title;
 		$('player-date').textContent = e.longDate;
 		$('player-error').textContent = '';
-		watermark.textContent = session.name + ' · ' + new Date().toLocaleDateString('en-GB');
+		watermark.textContent = 'kodai1994 · ' + new Date().toLocaleDateString('en-GB');
 		moveWatermark(); markTimer = setInterval(moveWatermark, 20000);
 		$('player').hidden = false;
 		$('player').scrollTop = 0;

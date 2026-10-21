@@ -19,6 +19,7 @@ HERE=$(cd "$(dirname "$0")" && pwd)
 HLS=${HLS:-"$HOME/media/kodai1994-hls"}
 WORK=${WORK:-"$HOME/media/kodai1994-stabilized"}
 REPLACED=${REPLACED:-"$HOME/media/kodai1994-replaced/hls"}
+AUDIO_REPLACED=${AUDIO_REPLACED:-"$HOME/media/kodai1994-replaced/hls-audio"}   # audio.sh's kept folders
 SMOOTHING=${SMOOTHING:-20}
 mkdir -p "$WORK" "$REPLACED"
 slug() { printf '%s' "$1" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9]+/-/g; s/^-+|-+$//g'; }
@@ -43,7 +44,11 @@ for mp4 in "$@"; do
   "$HERE/package-hls.sh" "$src" "$WORK/hls-$s" >/dev/null
   [ -f "$WORK/hls-$s/$s/master.m3u8" ] || { echo "packaging failed" >&2; exit 1; }
   # Swap in: the page keeps playing the old folder until this rename.
-  [ -d "$REPLACED/$s" ] || mv "$HLS/$s" "$REPLACED/$s"
+  # Keep the true original: if audio.sh cleaned the sound first, the original is the folder it kept.
+  # (The stabilized stream has the original sound; audio-queue.sh cleans it again.)
+  if [ ! -d "$REPLACED/$s" ]; then
+    if [ -f "$HLS/$s/audio.json" ] && [ -d "$AUDIO_REPLACED/$s" ]; then mv "$AUDIO_REPLACED/$s" "$REPLACED/$s"; else mv "$HLS/$s" "$REPLACED/$s"; fi
+  fi
   rm -rf "$HLS/$s"; mv "$WORK/hls-$s/$s" "$HLS/$s"
   rm -rf "$WORK/hls-$s" "$WORK/$s.trf"
   echo "$(date +%T) done      $name  (original stream kept in $REPLACED/$s)"
