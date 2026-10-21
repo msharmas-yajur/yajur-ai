@@ -8,7 +8,7 @@
 	var APP = '/kodai1994/';
 	var PAGES = [['home', APP + '#view=home', 'Home'], ['videos', APP + '#view=videos', 'Videos'], ['photos', APP + '#view=photos', 'Photos'],
 		['people', APP + '#view=people', 'People'], ['memories', APP + '#view=memories', 'Memories'],
-		['identify', APP + 'identify.html', 'Identify faces'], ['sound', APP + 'audio-compare.html', 'Sound']];
+		['identify', APP + 'identify.html', 'Identify faces'], ['sound', APP + 'audio-compare.html', 'Sound'], ['picture', APP + 'video-compare.html', 'Picture']];
 	var bar = document.createElement('div');
 	bar.className = 'site-bar'; bar.id = 'bar';
 	bar.innerHTML =
