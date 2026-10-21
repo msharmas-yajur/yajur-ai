@@ -16,6 +16,11 @@ STOP_AFTER=${STOP_AFTER:-5}      # last hour (0-23) in which a new recording may
 mkdir -p "$WORK"
 slug() { printf '%s' "$1" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9]+/-/g; s/^-+|-+$//g'; }
 
+# Shares a lock with audio-queue.sh (hourly), so the two never swap the same folder at once:
+# wait for a sound run to finish (a few minutes) rather than skip the night.
+exec 9>"${LOCK:-$HOME/media/.kodai1994-media.lock}"
+flock 9
+
 left=0
 while IFS= read -r -d '' mp4; do
   s=$(slug "$(basename "$mp4" .mp4)")

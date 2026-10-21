@@ -83,6 +83,9 @@ Routes (JSON):
   POST   /identify/clear           {photo}  set the photo's hand marks aside and identify it afresh (moderators)
   POST   /identify/restore         {photo}  put the marks set aside back (moderators)
   PUT    /people/<id>/detect       {detect: true|false}  whether identification looks for this face (moderators)
+  GET    /sound-sections?target=video:SLUG   the recording's outdoor parts: {sections: [{id, start, end, kind}], canEdit}
+  POST   /sound-sections           {target, start, end}  mark an outdoor part (moderators); audio.sh brings the voice forward there
+  DELETE /sound-sections/<id>      remove one (moderators)
   POST   /access-requests          {name, email, message?}    public: the sign-in page's form
   GET    /admin/requests           pending requests (admin)
   POST   /admin/requests/<id>/approve   creates the account, returns its password (admin)
@@ -302,6 +305,16 @@ CREATE TABLE IF NOT EXISTS identify_suggestions (
     created_at      TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS identify_suggestions_by_target ON identify_suggestions (target, status);
+CREATE TABLE IF NOT EXISTS sound_sections (    -- outdoor stretches of a recording: audio.sh brings the voice forward there
+    id          INTEGER PRIMARY KEY,                 -- (indoors, the rest, the sound is levelled and evened)
+    target      TEXT NOT NULL,                       -- video:<slug>
+    start_s     REAL NOT NULL,
+    end_s       REAL NOT NULL,
+    kind        TEXT NOT NULL DEFAULT 'outdoor',
+    added_by    TEXT NOT NULL,
+    created_at  TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS sound_sections_by_target ON sound_sections (target, start_s);
 CREATE TABLE IF NOT EXISTS photo_faces_cleared (  -- hand marks set aside by "Clear marks and re-run", to restore
     id          INTEGER PRIMARY KEY,
     photo_id    TEXT NOT NULL,
@@ -443,6 +456,11 @@ for _col, _type in (("kind", "TEXT NOT NULL DEFAULT 'face'"), ("mark_id", "INTEG
     if _col not in _sug_cols:
         db.execute(f"ALTER TABLE identify_suggestions ADD COLUMN {_col} {_type}")
 db.commit()
+
+
+def fmt_clock(s):
+    s = int(s)
+    return f"{s // 3600}:{s // 60 % 60:02d}:{s % 60:02d}" if s >= 3600 else f"{s // 60}:{s % 60:02d}"
 
 
 def covered(a, b):
@@ -864,6 +882,44 @@ class Handler(BaseHTTPRequestHandler):
         self.own_marker(who, mid)
         execute("UPDATE markers SET deleted_at = ? WHERE id = ?", (now(), int(mid)))
         return 200, {"deleted": int(mid)}
+
+    # ── indoor / outdoor sound (moderators mark the outdoor stretches; audio.sh follows them)
+    def get_sound_sections(self, params):
+        who = self.member()
+        target = urllib.parse.unquote(params.get("target", ""))
+        if not VIDEO_TARGET.match(target):
+            raise ApiError(400, "Unknown video.")
+        rows = query("SELECT s.id, s.start_s, s.end_s, s.kind, COALESCE(p.display_name, p.username, 'A moderator') AS author "
+                     "FROM sound_sections s LEFT JOIN profiles p ON p.user_id = s.added_by WHERE s.target = ? ORDER BY s.start_s", (target,))
+        return 200, {"sections": [{"id": r["id"], "start": r["start_s"], "end": r["end_s"], "kind": r["kind"], "author": r["author"]} for r in rows],
+                     "canEdit": who["isAdmin"]}
+
+    def post_sound_section(self, params):
+        who = self.admin()
+        data = self.read_json()
+        target = str(data.get("target", ""))
+        if not VIDEO_TARGET.match(target):
+            raise ApiError(400, "Unknown video.")
+        try:
+            start, end = float(data.get("start")), float(data.get("end"))
+        except (TypeError, ValueError):
+            raise ApiError(400, "Give the start and end of the outdoor part.")
+        if not (0 <= start < end <= 24 * 3600):
+            raise ApiError(400, "The end has to come after the start.")
+        if end - start < 5:
+            raise ApiError(400, "Mark at least 5 seconds.")
+        for r in query("SELECT start_s, end_s FROM sound_sections WHERE target = ? AND start_s < ? AND end_s > ?", (target, end, start)):
+            raise ApiError(409, f"That overlaps the outdoor part {fmt_clock(r['start_s'])}–{fmt_clock(r['end_s'])}. Remove it first, or mark around it.")
+        sid = execute("INSERT INTO sound_sections (target, start_s, end_s, kind, added_by, created_at) VALUES (?, ?, ?, 'outdoor', ?, ?)",
+                      (target, round(start, 1), round(end, 1), who["id"], now()))
+        return 201, {"id": sid}
+
+    def delete_sound_section(self, params, sid):
+        self.admin()
+        if not query("SELECT 1 FROM sound_sections WHERE id = ?", (int(sid),)):
+            raise ApiError(404, "That part was already removed.")
+        execute("DELETE FROM sound_sections WHERE id = ?", (int(sid),))
+        return 200, {"deleted": int(sid)}
 
     # ── people who appear in the recordings
     @staticmethod
@@ -2033,7 +2089,7 @@ ROUTES = {
             (r"/memories", Handler.get_memories), (r"/memories/(\d+)", Handler.get_memory),
             (r"/activity", Handler.get_activity), (r"/members", Handler.get_members),
             (r"/notifications", Handler.get_notifications), (r"/search", Handler.get_search),
-            (r"/identify/challenge", Handler.get_challenge),
+            (r"/identify/challenge", Handler.get_challenge), (r"/sound-sections", Handler.get_sound_sections),
             (r"/admin/requests", Handler.get_requests), (r"/admin/moderators", Handler.get_moderators)],
     "PUT": [(r"/me", Handler.put_me), (r"/people/(\d+)/member", Handler.put_person_member), (r"/people/(\d+)/detect", Handler.put_person_detect),
             (r"/memories/(\d+)/feature", Handler.put_memory_feature), (r"/admin/moderators/([0-9a-f]{32})", Handler.put_moderator), (r"/memories/(\d+)", Handler.put_memory), (r"/markers/(\d+)", Handler.put_marker), (r"/people/(\d+)", Handler.put_person),
@@ -2041,6 +2097,7 @@ ROUTES = {
     "POST": [(r"/comments", Handler.post_comment), (r"/markers", Handler.post_marker), (r"/people", Handler.post_person),
              (r"/photo-tags", Handler.post_photo_tag), (r"/photo-faces", Handler.post_photo_face),
              (r"/identify/runs", Handler.post_identify_run), (r"/identify/suggestions/(\d+)", Handler.review_suggestion),
+             (r"/sound-sections", Handler.post_sound_section),
              (r"/identify/clear", Handler.post_identify_clear), (r"/identify/restore", Handler.post_identify_restore),
              (r"/photo-uploads", Handler.post_photo_upload),
              (r"/memories", Handler.post_memory), (r"/memory-files", Handler.post_memory_file),
@@ -2051,6 +2108,7 @@ ROUTES = {
              (r"/admin/requests/(\d+)/reject", Handler.reject_request)],
     "DELETE": [(r"/admin/moderators/([0-9a-f]{32})", Handler.delete_moderator),
                (r"/comments/(\d+)", Handler.delete_comment), (r"/markers/(\d+)", Handler.delete_marker),
+               (r"/sound-sections/(\d+)", Handler.delete_sound_section),
                (r"/people/(\d+)", Handler.delete_person), (r"/photo-tags/(\d+)", Handler.delete_photo_tag),
                (r"/photo-faces/(\d+)", Handler.delete_photo_face), (r"/identify/runs/(\d+)", Handler.cancel_identify_run),
                (r"/photo-uploads/(\d+)", Handler.delete_photo_upload), (r"/memories/(\d+)", Handler.delete_memory)],
