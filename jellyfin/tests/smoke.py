@@ -16,7 +16,7 @@ fails = 0
 
 
 def get(url, headers=None):
-    req = urllib.request.Request(url, headers=headers or {})
+    req = urllib.request.Request(url, headers=dict({"User-Agent": "kodai-smoke-test"}, **(headers or {})))
     try:
         with urllib.request.urlopen(req, timeout=20) as r:
             return r.status, r.headers, r.read(4096)
@@ -42,7 +42,7 @@ check("community service answers", get(BASE + "api/health")[0] == 200)
 check("signed out: no member data", get(BASE + "api/me")[0] == 401)
 check("signed out: the session says so", get(BASE + "api/session")[2].startswith(b'{"signedIn": false'))
 try:   # a write without the page's X-Kodai header (as another site's form would send) is refused
-    urllib.request.urlopen(urllib.request.Request(BASE + "api/comments", data=b"{}", method="POST"), timeout=20).close(); st = 200
+    urllib.request.urlopen(urllib.request.Request(BASE + "api/comments", data=b"{}", method="POST", headers={"User-Agent": "kodai-smoke-test"}), timeout=20).close(); st = 200
 except urllib.error.HTTPError as e:
     st = e.code; e.close()
 check("writes need the page's header", st == 400, st)

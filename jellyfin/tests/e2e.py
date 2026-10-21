@@ -150,7 +150,9 @@ def t_sign_out(page, ctx):
     sign_in(page, remember=True)
     page.wait_for_selector(".feed-filter", timeout=20000)   # Home has loaded: nothing still asking the server
     page.wait_for_load_state("networkidle")
-    page.evaluate("document.getElementById('logout').click()")
+    EXPECTED.extend([(401, "GET", "/thumb.jpg"), (401, "GET", "/backdrop.jpg"), (401, "GET", "/backdrop-blur.jpg")])   # still loading as we leave
+    with page.expect_response(lambda r: r.url.endswith("/api/session") and r.request.method == "DELETE"):
+        page.evaluate("document.getElementById('logout').click()")
     page.wait_for_selector("#login-form", state="visible")
     EXPECTED.append((401, "GET", "/api/me"))
     st = page.request.get(BASE + "api/me").status
