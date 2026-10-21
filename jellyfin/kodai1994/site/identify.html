@@ -452,7 +452,7 @@
 			var v = el('video', 'video-js vjs-big-play-centered'); v.setAttribute('playsinline', ''); v.setAttribute('controls', '');
 			stage.appendChild(v); d.appendChild(stage);
 			state.player = videojs(v, { controls: true, preload: 'metadata', playbackRates: [0.5, 0.75, 1, 1.25, 1.5, 2],
-				controlBar: { pictureInPictureToggle: false }, poster: HLS + it.key + '/thumb.jpg' });
+				controlBar: { pictureInPictureToggle: false, skipButtons: { backward: 10, forward: 10 } }, poster: HLS + it.key + '/thumb.jpg' });
 			state.player.src({ src: HLS + it.key + '/master.m3u8', type: 'application/x-mpegURL' });
 		} else {
 			var ph = state.photoById[it.key], img = el('img');
