@@ -214,6 +214,62 @@
 	/* "Identify faces" is its own page, but sits with the views */
 	.views a { padding: 9px 20px; border-radius: 999px; font-weight: 500; color: var(--mist); text-decoration: none; white-space: nowrap; }
 	.views button:not([aria-pressed=true]):hover, .views a:hover { color: var(--khadi); }
+	/* "KODAI 1994" beside the logo, only when the menu is behind the hamburger */
+	.bar__brand { display: none; font: 400 1.15rem/1 var(--display); letter-spacing: .14em; color: var(--khadi); white-space: nowrap; }
+	@media (max-width: 1024px) { .bar__home { display: inline-flex; align-items: center; gap: 12px; text-decoration: none; } .bar__brand { display: inline; } }
+	@media (max-width: 640px) {
+		.bar { gap: 10px; }
+		.bar__brand { font-size: 1rem; letter-spacing: .1em; }
+		.bar__actions { gap: 6px; }
+		.bar__actions .icon-round, .bar__actions .theme-toggle, .menu-btn { width: 38px; height: 38px; }
+		.bar__actions > .theme-toggle { display: none; }          /* in the menu instead */
+		.nav__extra .theme-toggle { display: inline-grid; margin: 4px 14px; }
+	}
+	.nav__extra .theme-toggle { display: none; }
+	/* ── Search, notifications, reactions */
+	.icon-round { position: relative; display: inline-grid; place-items: center; width: 42px; height: 42px; padding: 0; border-radius: 50%; border: 1px solid var(--line);
+		background: rgb(var(--bg-rgb) / .55); color: var(--khadi); cursor: pointer; }
+	.icon-round:hover { border-color: var(--mist); }
+	.icon-round svg { width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+	.bell-wrap { position: relative; }
+	.bell__count { position: absolute; top: -4px; right: -4px; min-width: 19px; height: 19px; padding: 0 5px; border-radius: 999px; background: var(--saffron); color: #fff;
+		font: 700 .7rem/19px var(--text); text-align: center; box-shadow: 0 0 0 2px var(--pine-deep); }
+	.notif { position: absolute; right: -60px; top: calc(100% + 10px); width: min(400px, calc(100vw - 24px)); max-height: min(70vh, 560px); overflow-y: auto; z-index: 45;
+		background: var(--menu); border: 1px solid var(--line); border-radius: 16px; box-shadow: 0 24px 60px rgba(0,0,0,.4); padding: 8px; }
+	.notif__head { display: flex; align-items: center; justify-content: space-between; padding: 8px 10px 10px; border-bottom: 1px solid var(--line); }
+	.notif__head h2 { font: 400 1.2rem var(--display); margin: 0; }
+	.notif__list { list-style: none; margin: 0; padding: 4px 0 0; }
+	.notif__list li button { display: grid; grid-template-columns: 36px minmax(0, 1fr); gap: 0 10px; width: 100%; text-align: left; border: 0; background: none; color: inherit; font: inherit;
+		padding: 9px 10px; border-radius: 10px; cursor: pointer; }
+	.notif__list li button:hover { background: rgb(var(--fg-rgb) / .06); }
+	.notif__list .act__who { width: 36px; height: 36px; grid-row: span 2; font-size: .8rem; }
+	.notif__list p { margin: 0; font-size: .92rem; line-height: 1.4; }
+	.notif__list small { color: var(--mist); font-size: .78rem; }
+	.notif__list li.is-unread button { background: rgba(234,122,42,.08); }
+	.notif__list li.is-unread p::after { content: ''; display: inline-block; width: 7px; height: 7px; margin-left: 6px; border-radius: 50%; background: var(--saffron); vertical-align: middle; }
+	.notif__empty { padding: 18px 12px; color: var(--mist); font-size: .92rem; }
+	.search { position: fixed; inset: 0; z-index: 70; background: rgb(var(--bg-rgb) / .7); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); display: grid; justify-items: center; align-items: start; padding: 72px 16px 16px; }
+	.search__box { width: min(760px, 100%); max-height: calc(100vh - 100px); display: flex; flex-direction: column; background: var(--menu); border: 1px solid var(--line); border-radius: 20px; box-shadow: 0 30px 80px rgba(0,0,0,.45); overflow: hidden; }
+	.search__field { display: flex; align-items: center; gap: 12px; padding: 14px 18px; border-bottom: 1px solid var(--line); }
+	.search__field svg { width: 20px; height: 20px; fill: none; stroke: var(--mist); stroke-width: 2; stroke-linecap: round; flex: none; }
+	.search__field input { flex: 1; min-width: 0; border: 0; outline: none; background: transparent; color: var(--khadi); font: inherit; font-size: 1.1rem; }
+	.search__results { overflow-y: auto; padding: 10px 10px 16px; }
+	.search__results h3 { font: 600 .78rem var(--text); letter-spacing: .03em; color: var(--mist); margin: 14px 10px 6px; }
+	.search__results ul { list-style: none; margin: 0; padding: 0; }
+	.search__results li button { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; border: 0; background: none; color: inherit; font: inherit; padding: 8px 10px; border-radius: 10px; cursor: pointer; }
+	.search__results li button:hover, .search__results li button:focus-visible { background: rgb(var(--fg-rgb) / .07); }
+	.search__results li span.pic { flex: none; width: 54px; height: 40px; border-radius: 6px; background: var(--pine) center / cover no-repeat; }
+	.search__results b { font-weight: 600; }
+	.search__results small { display: block; color: var(--mist); font-size: .82rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 560px; }
+	.search__results mark { background: rgba(234,122,42,.28); color: inherit; border-radius: 3px; }
+	.reacts { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+	.reacts button { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--line); background: transparent; color: var(--khadi); cursor: pointer; font-size: .88rem; }
+	.reacts button:hover { border-color: var(--mist); }
+	.reacts button[aria-pressed=true] { background: rgba(234,122,42,.16); border-color: rgba(234,122,42,.6); }
+	.reacts button b { font-weight: 600; font-size: .8rem; }
+	.memory .reacts { margin-top: 22px; }
+	@media (max-width: 640px) { .notif { position: fixed; left: 12px; right: 12px; top: 64px; width: auto; } .bar__actions .icon-round#search-open { display: inline-grid; } }
+
 	/* ── Videos: Timeline | Gallery */
 	.subtabs { display: inline-flex; gap: 4px; padding: 4px; margin-top: 18px; border: 1px solid var(--line); border-radius: 999px; background: var(--panel); }
 	.subtabs button { border: 0; background: transparent; padding: 8px 18px; border-radius: 999px; cursor: pointer; color: var(--mist); font-weight: 500; }
@@ -806,6 +862,7 @@
 	<div class="bar" id="bar">
 		<button class="bar__home" id="go-home" type="button" aria-label="Home" title="Home">
 			<img class="logo" src="/kodai1994/brand/logo.png" alt="Sri Sathya Sai Centenary Celebrations" width="72" height="72">
+			<span class="bar__brand">KODAI 1994</span>
 		</button>
 		<nav class="views nav" id="nav" aria-label="Pages">
 			<button type="button" data-view="home" aria-pressed="true">Home</button>
@@ -816,11 +873,18 @@
 			<a href="identify.html" title="Help name the people the computer found in the recordings and photos">Identify faces</a>
 			<div class="nav__extra">
 				<span class="muted" id="signed-in"></span>
+				<button class="theme-toggle" data-theme-toggle type="button" aria-label="Switch theme"></button>
 				<button type="button" data-action="account">Account</button>
 				<button type="button" data-action="logout">Sign out</button>
 			</div>
 		</nav>
 		<div class="bar__actions">
+			<button class="icon-round" id="search-open" type="button" aria-label="Search" title="Search (/)"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></button>
+			<span class="bell-wrap"><button class="icon-round" id="bell" type="button" aria-label="Notifications" aria-expanded="false" aria-controls="notif-panel"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10.268 21a2 2 0 0 0 3.464 0"/><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"/></svg><span class="bell__count" id="bell-count" hidden></span></button>
+				<div class="notif" id="notif-panel" hidden role="dialog" aria-label="Notifications">
+					<div class="notif__head"><h2>Notifications</h2><button class="linkish" id="notif-readall" type="button">Mark all read</button></div>
+					<ol class="notif__list" id="notif-list"></ol>
+				</div></span>
 			<button class="theme-toggle" data-theme-toggle type="button" aria-label="Switch theme"></button>
 			<button class="btn btn--quiet acct" id="account-open" type="button" aria-label="Account"><span class="acct__avatar" id="acct-avatar" aria-hidden="true"></span><span class="acct__name" id="acct-name">Account</span><span class="badge" id="account-badge" hidden></span></button>
 			<button class="btn btn--quiet" id="logout" type="button">Sign out</button>
@@ -843,6 +907,12 @@
 	</header>
 
 	<p class="status muted" id="status" aria-live="polite"></p>
+	<div class="search" id="search" hidden role="dialog" aria-modal="true" aria-label="Search">
+		<div class="search__box">
+			<div class="search__field"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg><input id="search-q" type="search" placeholder="Search people, memories, chapters, comments, recordings…" autocomplete="off" aria-label="Search"><button class="linkish" id="search-close" type="button">Close</button></div>
+			<div class="search__results" id="search-results" aria-live="polite"><p class="muted">Type at least two letters.</p></div>
+		</div>
+	</div>
 	<main id="content"></main>
 </div>
 
@@ -1414,6 +1484,9 @@
 			if (vlink) { view = vlink[1]; storeSet('localStorage', VIEW_KEY, view); try { history.replaceState(null, '', location.pathname); } catch (e) {} }
 			if (location.hash === '#account') { try { history.replaceState(null, '', location.pathname); } catch (e) {} setTimeout(openAccount, 0); }
 			if (location.hash === '#signout') { try { history.replaceState(null, '', location.pathname); } catch (e) {} signOut(); return; }
+			if (location.hash === '#search') { try { history.replaceState(null, '', location.pathname); } catch (e) {} setTimeout(openSearch, 0); }
+			if (location.hash === '#notifications') { try { history.replaceState(null, '', location.pathname); } catch (e) {} setTimeout(function () { $('bell').click(); }, 0); }
+			loadNotifs();
 			var link = /^#person\/(\d+)$/.exec(location.hash);
 			if (link) { personId = Number(link[1]); view = 'person'; }
 			var mlink = /^#memory\/(\d+)$/.exec(location.hash);
@@ -2277,6 +2350,7 @@
 			}
 			if (m.body) wrap.appendChild(renderText(m.body));
 			if (m.pdf) wrap.appendChild(pdfPreview(m.pdf));
+			wrap.appendChild(reactionBar('memory', m.id, m.reactions));
 			if (m.links.length) {
 				wrap.appendChild(el('h3', 'memory__section', 'Tagged recordings and photos'));
 				var grid = el('div', 'memory__tagged');
@@ -2694,6 +2768,29 @@
 		return b;
 	}
 
+	// 🙏 ❤️ 😊 under a memory or a comment: tap to add or take back yours
+	var EMOJIS = [['🙏', 'Thank you'], ['❤️', 'Love'], ['😊', 'Smile']];
+	function reactionBar(kind, id, data) {
+		data = data || { counts: {}, mine: [] };
+		var bar = el('div', 'reacts'); bar.setAttribute('role', 'group'); bar.setAttribute('aria-label', 'Reactions');
+		function draw() {
+			bar.textContent = '';
+			EMOJIS.forEach(function (e) {
+				var n = data.counts[e[0]] || 0, mine = data.mine.indexOf(e[0]) >= 0;
+				var b = el('button', '', e[0]); b.type = 'button'; b.title = e[1];
+				b.setAttribute('aria-pressed', String(mine)); b.setAttribute('aria-label', e[1] + (n ? ', ' + n : ''));
+				if (n) b.appendChild(el('b', '', String(n)));
+				b.addEventListener('click', function () {
+					b.disabled = true;
+					capi('/reactions', { method: 'POST', body: { kind: kind, id: id, emoji: e[0] } }).then(function (r) { data = r; draw(); })
+						.catch(function () { b.disabled = false; });
+				});
+				bar.appendChild(b);
+			});
+		}
+		draw();
+		return bar;
+	}
 	function commentsPanel(target, opts) {
 		opts = opts || {};
 		var isVideo = target.indexOf('video:') === 0;
@@ -2754,6 +2851,7 @@
 					}
 					li.appendChild(meta);
 					li.appendChild(el('p', 'comment__body', c.body));
+					li.appendChild(reactionBar('comment', c.id, c.reactions));
 					list.appendChild(li);
 				});
 			}).catch(function (ex) { status.hidden = false; status.textContent = ex.message; });
@@ -3248,6 +3346,127 @@
 		var dx = ev.changedTouches[0].clientX - touchX; touchX = null;
 		if (Math.abs(dx) > 40) showPhoto(photoIndex + (dx < 0 ? 1 : -1));
 	});
+	// ── Notifications: the bell
+	var notifItems = [];
+	function notifText(n) {
+		var t = targetInfo(n.target), where = t ? (t.kind === 'video' ? t.label + (n.position != null ? ' at ' + at(n.position) : '') : t.kind === 'photo' ? t.label : '') : '';
+		switch (n.kind) {
+		case 'comment_on_memory': return n.actor + ' commented on your memory “' + (n.memoryTitle || '') + '”';
+		case 'comment_thread': return n.actor + ' also commented on ' + (n.memoryTitle ? 'the memory “' + n.memoryTitle + '”' : where || 'something you commented on');
+		case 'reaction':
+			var d = (n.detail || '').split(':');
+			return n.actor + ' reacted ' + (d[1] || '') + ' to your ' + (d[0] === 'memory' ? 'memory' + (n.memoryTitle ? ' “' + n.memoryTitle + '”' : '') : 'comment' + (where ? ' on ' + where : ''));
+		case 'tagged_memory': return n.actor + ' tagged you in the memory “' + (n.detail || n.memoryTitle || '') + '”';
+		case 'tagged_event': return n.actor + ' tagged you in ' + (where || 'a recording');
+		case 'tagged_photo': return n.actor + ' tagged you in ' + (where || 'a photo');
+		}
+		return n.actor + ' did something';
+	}
+	function openNotif(n) {
+		closeNotifs();
+		if (n.target && n.target.indexOf('memory:') === 0) return openMemory(Number(n.target.slice(7)));
+		openTarget(targetInfo(n.target), n.position);
+	}
+	function loadNotifs() {
+		return capi('/notifications').then(function (r) {
+			notifItems = r.items;
+			$('bell-count').hidden = !r.unread; $('bell-count').textContent = r.unread > 99 ? '99+' : String(r.unread);
+			$('bell').setAttribute('aria-label', 'Notifications' + (r.unread ? ', ' + r.unread + ' new' : ''));
+			drawNotifs();
+		}).catch(function () {});
+	}
+	function drawNotifs() {
+		var ul = $('notif-list'); ul.textContent = '';
+		if (!notifItems.length) { ul.appendChild(el('li', 'notif__empty', 'Nothing yet. When someone comments on your memories, reacts to them, or tags you, it shows up here. Link yourself to your 1994 self on the People page to hear when you’re tagged.')); return; }
+		notifItems.forEach(function (n) {
+			var li = el('li', n.read ? '' : 'is-unread'), b = el('button'); b.type = 'button';
+			b.append(avatar(n.actor), el('p', '', notifText(n)), el('small', '', fmtWhen(n.at)));
+			b.addEventListener('click', function () { openNotif(n); });
+			li.appendChild(b); ul.appendChild(li);
+		});
+	}
+	function closeNotifs() { $('notif-panel').hidden = true; $('bell').setAttribute('aria-expanded', 'false'); }
+	$('bell').addEventListener('click', function (ev) {
+		ev.stopPropagation();
+		var open = $('notif-panel').hidden;
+		$('notif-panel').hidden = !open; $('bell').setAttribute('aria-expanded', String(open));
+		if (open) {
+			loadNotifs().then(function () {
+				// they've been seen: clear the count after a moment (the dots stay until the next open)
+				if (notifItems.some(function (n) { return !n.read; }))
+					setTimeout(function () { capi('/notifications/read', { method: 'POST', body: {} }).then(function () { $('bell-count').hidden = true; notifItems.forEach(function (n) { n.read = true; }); }); }, 1500);
+			});
+		}
+	});
+	$('notif-readall').addEventListener('click', function () { capi('/notifications/read', { method: 'POST', body: {} }).then(loadNotifs); });
+	document.addEventListener('click', function (ev) { if (!$('notif-panel').hidden && !$('notif-panel').contains(ev.target) && ev.target !== $('bell')) closeNotifs(); });
+	setInterval(function () { if (session && !$('library-view').hidden) loadNotifs(); }, 60000);
+
+	// ── Search: people, memories, chapters & events, comments (server) and recordings (here)
+	var searchSeq = 0, searchTimer = null;
+	function openSearch() { $('search').hidden = false; document.body.style.overflow = 'hidden'; $('search-q').focus(); $('search-q').select(); }
+	function closeSearch() { $('search').hidden = true; document.body.style.overflow = ''; }
+	$('search-open').addEventListener('click', openSearch);
+	$('search-close').addEventListener('click', closeSearch);
+	$('search').addEventListener('click', function (ev) { if (ev.target === $('search')) closeSearch(); });
+	document.addEventListener('keydown', function (ev) {
+		if (ev.key === '/' && !$('library-view').hidden && $('search').hidden && !/^(INPUT|TEXTAREA)$/.test(document.activeElement.tagName) && !document.activeElement.isContentEditable) { ev.preventDefault(); openSearch(); }
+		else if (ev.key === 'Escape' && !$('search').hidden) closeSearch();
+	});
+	function hl(text, q) {
+		var span = el('span'), i = text.toLowerCase().indexOf(q.toLowerCase());
+		if (i < 0) { span.textContent = text; return span; }
+		span.append(document.createTextNode(text.slice(0, i)), el('mark', '', text.slice(i, i + q.length)), document.createTextNode(text.slice(i + q.length)));
+		return span;
+	}
+	$('search-q').addEventListener('input', function () {
+		clearTimeout(searchTimer);
+		var q = $('search-q').value.trim(), box = $('search-results');
+		if (q.length < 2) { box.textContent = ''; box.appendChild(el('p', 'muted', 'Type at least two letters.')); return; }
+		searchTimer = setTimeout(function () {
+			var seq = ++searchSeq;
+			capi('/search?q=' + encodeURIComponent(q)).then(function (r) {
+				if (seq !== searchSeq) return;
+				box.textContent = '';
+				function section(title, list, row) {
+					if (!list.length) return;
+					box.appendChild(el('h3', '', title));
+					var ul = el('ul');
+					list.forEach(function (x) { var li = el('li'), b = el('button'); b.type = 'button'; row(x, b); li.appendChild(b); ul.appendChild(li); });
+					box.appendChild(ul);
+				}
+				var k = nameKey(q);
+				var recs = entries.filter(function (e) { return ready[e.slug] && nameKey(e.title + ' ' + e.longDate + ' ' + e.phrase).indexOf(k) >= 0; }).slice(0, 8);
+				section('Recordings', recs, function (e, b) {
+					var pic = el('span', 'pic'); pic.style.backgroundImage = 'url("' + HLS + e.slug + '/thumb.jpg")';
+					var t = el('span'); t.append(el('b', '', ''), el('small', '', e.longDate)); t.firstChild.appendChild(hl(e.title, q));
+					b.append(pic, t); b.addEventListener('click', function () { closeSearch(); play(e); });
+				});
+				section('People', r.people, function (x, b) {
+					b.append(avatar(x.name), el('b', '', '')); b.lastChild.appendChild(hl(x.name, q));
+					b.addEventListener('click', function () { closeSearch(); openPerson(x.id); });
+				});
+				section('Memories', r.memories, function (x, b) {
+					var t = el('span'); t.append(el('b', ''), el('small', '', '')); t.firstChild.appendChild(hl(x.title, q)); t.lastChild.appendChild(hl((x.kind === 'notes' ? 'Notes' : 'Memory') + ' by ' + x.author + ' · ' + x.excerpt, q));
+					b.append(icon(x.kind === 'notes' ? 'file-text' : 'pen-line'), t); b.addEventListener('click', function () { closeSearch(); openMemory(x.id); });
+				});
+				section('Chapters & events', r.moments, function (x, b) {
+					var info = targetInfo(x.target), pic = el('span', 'pic');
+					if (info && info.pic) pic.style.backgroundImage = 'url("' + info.pic + '")';
+					var t = el('span'); t.append(el('b', ''), el('small', '', (x.kind === 'chapter' ? 'Chapter' : 'Event') + (info ? ' · ' + info.label + ' at ' + at(x.position) : ''))); t.firstChild.appendChild(hl(x.title, q));
+					b.append(pic, t); b.addEventListener('click', function () { closeSearch(); openTarget(info, x.position); });
+				});
+				section('Comments', r.comments, function (x, b) {
+					var info = targetInfo(x.target), pic = el('span', 'pic');
+					if (info && info.pic) pic.style.backgroundImage = 'url("' + info.pic + '")';
+					var t = el('span'); t.append(el('b', '', x.author), el('small', '')); t.lastChild.appendChild(hl(x.excerpt, q));
+					b.append(pic, t); b.addEventListener('click', function () { closeSearch(); if (info && info.kind === 'memory') openMemory(info.id); else openTarget(info, x.position); });
+				});
+				if (!box.childNodes.length) box.appendChild(el('p', 'muted', 'Nothing matches “' + q + '”.'));
+			}).catch(function (ex) { box.textContent = ex.message; });
+		}, 220);
+	});
+
 	function goTo(v) {
 		view = v; personId = null; memoryId = null; storeSet('localStorage', VIEW_KEY, view);
 		if (/^#(person|memory)\//.test(location.hash)) { try { history.replaceState(null, '', location.pathname); } catch (e) {} }

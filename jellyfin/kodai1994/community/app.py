@@ -22,6 +22,14 @@ Routes (JSON):
                                    comments, uploaded photos, new names, members joining), my
                                    previous visit (seenAt), collection totals, faces to review
   POST   /activity/seen            remember that I've looked (for "new since your last visit")
+  GET    /notifications            my notifications (newest first) and how many are unread
+  POST   /notifications/read       {ids?}  mark them read (all when no ids)
+  POST   /reactions                {kind: "memory"|"comment", id, emoji}  toggle my reaction (🙏 ❤️ 😊)
+  GET    /search?q=...             people, memories, comments, chapters and events matching q
+  GET    /identify/challenge?n=5   a few likely face matches to confirm on Home
+  PUT    /people/<id>/member       {claim: true|false}  "this is me": link my account to my 1994 self
+  PUT    /memories/<id>/feature    {on: true|false}  pin a memory to the top of Home (admin/moderator)
+
   GET    /members                  everyone who has joined: display name, joined, last active,
                                    contributions (never their email)
   PUT    /me                       {displayName}
@@ -342,6 +350,27 @@ CREATE TABLE IF NOT EXISTS memory_files (       -- uploaded PDFs, so only the up
     size        INTEGER NOT NULL,
     created_at  TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS reactions (           -- 🙏 ❤️ 😊 on memories and comments
+    kind        TEXT NOT NULL CHECK (kind IN ('memory', 'comment')),
+    target_id   INTEGER NOT NULL,
+    user_id     TEXT NOT NULL,
+    emoji       TEXT NOT NULL,
+    created_at  TEXT NOT NULL,
+    PRIMARY KEY (kind, target_id, user_id, emoji)
+);
+CREATE TABLE IF NOT EXISTS notifications (
+    id          INTEGER PRIMARY KEY,
+    user_id     TEXT NOT NULL,                  -- who it's for
+    kind        TEXT NOT NULL,                  -- comment_on_memory, comment_thread, reaction, tagged_memory, tagged_event, tagged_photo
+    actor_id    TEXT NOT NULL,
+    target      TEXT,                           -- video:/photo:/memory: it's about
+    ref_id      INTEGER,                        -- the comment, memory or event
+    position_s  INTEGER,
+    detail      TEXT,                           -- e.g. the emoji, or a title
+    created_at  TEXT NOT NULL,
+    read_at     TEXT
+);
+CREATE INDEX IF NOT EXISTS notifications_by_user ON notifications (user_id, created_at);
 CREATE TABLE IF NOT EXISTS moderators (         -- members who may moderate the site (see identify)
     user_id     TEXT PRIMARY KEY,               -- Jellyfin user id
     added_by    TEXT NOT NULL,
@@ -367,6 +396,13 @@ _prof_cols = [r[1] for r in db.execute("PRAGMA table_info(profiles)").fetchall()
 for _col in ("created_at", "last_seen_at", "activity_seen_at"):
     if _col not in _prof_cols:
         db.execute(f"ALTER TABLE profiles ADD COLUMN {_col} TEXT")
+for _col, _type in (("person_id", "INTEGER"),):   # their 1994 self
+    if _col not in _prof_cols:
+        db.execute(f"ALTER TABLE profiles ADD COLUMN {_col} {_type}")
+_mem_cols = [r[1] for r in db.execute("PRAGMA table_info(memories)").fetchall()]
+for _col in ("featured_at", "featured_by"):
+    if _col not in _mem_cols:
+        db.execute(f"ALTER TABLE memories ADD COLUMN {_col} TEXT")
 db.commit()
 # Whether each access request's emails went out: the notice to ADMIN_EMAIL and, once
 # approved, the sign-in details to the person (NULL = not attempted, 0 = failed, 1 = sent).
@@ -390,6 +426,43 @@ def execute(sql, args=()):
         cur = db.execute(sql, args)
         db.commit()
         return cur.lastrowid
+
+
+# ── Reactions
+EMOJIS = ("🙏", "❤️", "😊")
+
+
+def reactions_for(kind, ids, user_id):
+    out = {}
+    if ids:
+        for r in query("SELECT target_id, emoji, COUNT(*) AS n, SUM(user_id = ?) AS mine FROM reactions WHERE kind = ? AND target_id IN (%s) "
+                       "GROUP BY target_id, emoji" % ",".join("?" * len(ids)), (user_id, kind, *ids)):
+            o = out.setdefault(r["target_id"], {"counts": {}, "mine": []})
+            o["counts"][r["emoji"]] = r["n"]
+            if r["mine"]:
+                o["mine"].append(r["emoji"])
+    return out
+
+
+# ── Notifications
+def notify(user_id, kind, actor_id, target=None, ref_id=None, position=None, detail=None):
+    """One notification; never to the person who did it, and not twice for the same thing."""
+    if not user_id or user_id == actor_id:
+        return
+    if query("SELECT 1 FROM notifications WHERE user_id = ? AND kind = ? AND actor_id = ? AND IFNULL(ref_id, 0) = IFNULL(?, 0) "
+             "AND IFNULL(target, '') = IFNULL(?, '') AND IFNULL(detail, '') = IFNULL(?, '')", (user_id, kind, actor_id, ref_id, target, detail)):
+        return
+    execute("INSERT INTO notifications (user_id, kind, actor_id, target, ref_id, position_s, detail, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            (user_id, kind, actor_id, target, ref_id, position, detail, now()))
+
+
+def notify_tagged(actor_id, person_ids, kind, target=None, ref_id=None, position=None, detail=None):
+    """Members who linked themselves to one of these 1994 people hear that they were tagged."""
+    ids = [i for i in person_ids if isinstance(i, int)]
+    if not ids:
+        return
+    for r in query("SELECT user_id FROM profiles WHERE person_id IN (%s)" % ",".join("?" * len(ids)), ids):
+        notify(r["user_id"], kind, actor_id, target, ref_id, position, detail)
 
 
 # ── Jellyfin
@@ -536,18 +609,23 @@ class Handler(BaseHTTPRequestHandler):
     # ── routes
     def get_me(self, params):
         who = self.member()
-        row = query("SELECT display_name FROM profiles WHERE user_id = ?", (who["id"],))
+        row = query("SELECT display_name, person_id FROM profiles WHERE user_id = ?", (who["id"],))
         return 200, {"id": who["id"], "username": who["username"], "isAdmin": who["isAdmin"],
                      "isServerAdmin": who["isServerAdmin"], "isModerator": who["isModerator"],
-                     "displayName": row[0]["display_name"] if row else None}
+                     "displayName": row[0]["display_name"] if row else None,
+                     "personId": row[0]["person_id"] if row else None}
 
     def put_me(self, params):
         who = self.member()
-        name = clean(self.read_json().get("displayName"), 60)
-        if len(name) < 2:
-            raise ApiError(400, "Enter the name you'd like others to see, at least 2 characters.")
-        execute("UPDATE profiles SET display_name = ?, updated_at = ? WHERE user_id = ?", (name, now(), who["id"]))
-        return 200, {"displayName": name}
+        data = self.read_json()
+        out = {}
+        if "displayName" in data or not out:
+            name = clean(data.get("displayName"), 60)
+            if len(name) < 2:
+                raise ApiError(400, "Enter the name you'd like others to see, at least 2 characters.")
+            execute("UPDATE profiles SET display_name = ?, updated_at = ? WHERE user_id = ?", (name, now(), who["id"]))
+            out["displayName"] = name
+        return 200, out
 
     def get_comments(self, params):
         who = self.member()
@@ -558,8 +636,10 @@ class Handler(BaseHTTPRequestHandler):
                      "COALESCE(p.display_name, p.username, 'Member') AS author "
                      "FROM comments c LEFT JOIN profiles p ON p.user_id = c.user_id "
                      "WHERE c.target = ? AND c.deleted_at IS NULL ORDER BY c.created_at, c.id", (target,))
+        rx = reactions_for("comment", [r["id"] for r in rows], who["id"])
         return 200, [{"id": r["id"], "author": r["author"], "body": r["body"], "position": r["position_s"],
                       "createdAt": r["created_at"], "mine": r["user_id"] == who["id"],
+                      "reactions": rx.get(r["id"], {"counts": {}, "mine": []}),
                       "canDelete": r["user_id"] == who["id"] or who["isAdmin"]} for r in rows]
 
     def get_counts(self, params):
@@ -583,6 +663,15 @@ class Handler(BaseHTTPRequestHandler):
         pos = int(pos) if isinstance(pos, (int, float)) and target.startswith("video:") and 0 <= pos < 86400 else None
         cid = execute("INSERT INTO comments (target, user_id, body, position_s, created_at) VALUES (?, ?, ?, ?, ?)",
                       (target, who["id"], body, pos, now()))
+        told = set()
+        if target.startswith("memory:"):   # the memory's author
+            owner = query("SELECT user_id FROM memories WHERE id = ?", (int(target[7:]),))
+            if owner:
+                notify(owner[0]["user_id"], "comment_on_memory", who["id"], target, cid, pos); told.add(owner[0]["user_id"])
+        # everyone else who commented on the same video/photo/memory
+        for r in query("SELECT DISTINCT user_id FROM comments WHERE target = ? AND deleted_at IS NULL AND user_id != ? LIMIT 30", (target, who["id"])):
+            if r["user_id"] not in told:
+                notify(r["user_id"], "comment_thread", who["id"], target, cid, pos)
         return 201, {"id": cid}
 
     def delete_comment(self, params, cid):
@@ -694,6 +783,7 @@ class Handler(BaseHTTPRequestHandler):
                       (target, who["id"], kind, title, pos, now()))
         if people:
             self.link_people(mid, people)
+            notify_tagged(who["id"], [r["id"] for r in people], "tagged_event", target, mid, pos)
         return 201, {"id": mid}
 
     def own_marker(self, who, mid):
@@ -719,6 +809,8 @@ class Handler(BaseHTTPRequestHandler):
                 people = self.tagged_people(data)
                 sets["title"] = self.event_title(people)
                 self.link_people(int(mid), people)
+                tgt = query("SELECT target FROM markers WHERE id = ?", (int(mid),))[0]["target"]
+                notify_tagged(who["id"], [r["id"] for r in people], "tagged_event", tgt, int(mid), sets.get("position_s"))
         else:
             if "title" in data or current["kind"] != "chapter":
                 sets["title"] = self.chapter_title(data)
@@ -747,13 +839,16 @@ class Handler(BaseHTTPRequestHandler):
                 "portrait": ({"faceId": r["pf_id"], "photo": r["pf_photo"], "box": {"x": r["pf_x"], "y": r["pf_y"], "w": r["pf_w"], "h": r["pf_h"]}}
                              if r.get("pf_id") else None),
                 "mine": r["added_by"] == who["id"], "canEdit": who["isAdmin"],
+                "member": r.get("member_name"), "isMe": r.get("member_id") == who["id"],
                 "canDelete": who["isAdmin"] or r["added_by"] == who["id"]}
 
     PEOPLE_SQL = ("SELECT pe.id, pe.name, pe.added_by, pe.created_at, COALESCE(p.display_name, p.username, 'Member') AS adder, "
                   "(SELECT COUNT(*) FROM photo_people pp WHERE pp.person_id = pe.id) AS photos, "
                   "(SELECT COUNT(*) FROM marker_people mp JOIN markers m ON m.id = mp.marker_id AND m.deleted_at IS NULL "
                   " WHERE mp.person_id = pe.id) AS moments, "
-                  "pf.id AS pf_id, pf.photo_id AS pf_photo, pf.x AS pf_x, pf.y AS pf_y, pf.w AS pf_w, pf.h AS pf_h "
+                  "pf.id AS pf_id, pf.photo_id AS pf_photo, pf.x AS pf_x, pf.y AS pf_y, pf.w AS pf_w, pf.h AS pf_h, "
+                  "(SELECT COALESCE(m.display_name, 'A member') FROM profiles m WHERE m.person_id = pe.id LIMIT 1) AS member_name, "
+                  "(SELECT m.user_id FROM profiles m WHERE m.person_id = pe.id LIMIT 1) AS member_id "
                   "FROM people pe LEFT JOIN profiles p ON p.user_id = pe.added_by "
                   # portrait: the chosen face, else the first one marked
                   "LEFT JOIN photo_faces pf ON pf.id = COALESCE(pe.portrait_face, "
@@ -850,6 +945,7 @@ class Handler(BaseHTTPRequestHandler):
             return 200, {"tagId": hit[0]["id"]}
         tid = execute("INSERT INTO photo_people (photo_id, person_id, added_by, created_at) VALUES (?, ?, ?, ?)",
                       (photo, person, who["id"], now()))
+        notify_tagged(who["id"], [person], "tagged_photo", "photo:" + photo)
         return 201, {"tagId": tid}
 
     def delete_photo_tag(self, params, tid):
@@ -904,6 +1000,7 @@ class Handler(BaseHTTPRequestHandler):
         if not query("SELECT 1 FROM photo_people WHERE photo_id = ? AND person_id = ?", (photo, person)):
             execute("INSERT INTO photo_people (photo_id, person_id, added_by, created_at) VALUES (?, ?, ?, ?)",
                     (photo, person, who["id"], now()))
+        notify_tagged(who["id"], [person], "tagged_photo", "photo:" + photo)
         return 201, {"id": fid}
 
     def delete_photo_face(self, params, fid):
@@ -986,8 +1083,46 @@ class Handler(BaseHTTPRequestHandler):
         }
         help_ = {"pending": query("SELECT COUNT(*) AS n FROM identify_suggestions WHERE status = 'pending'")[0]["n"],
                  "likely": query("SELECT COUNT(*) AS n FROM identify_suggestions WHERE status = 'pending' AND score >= 0.35")[0]["n"]}
-        return 200, {"items": items, "seenAt": mine[0]["activity_seen_at"] if mine else None,
+        feat = query(f"SELECT m.id, m.title, m.kind, m.body, {self.NAME} AS author, m.featured_at FROM memories m "
+                     "LEFT JOIN profiles p ON p.user_id = m.user_id WHERE m.deleted_at IS NULL AND m.featured_at IS NOT NULL "
+                     "ORDER BY m.featured_at DESC LIMIT 1")
+        featured = None
+        if feat:
+            f = feat[0]
+            featured = {"id": f["id"], "title": f["title"], "kind": f["kind"], "author": f["author"],
+                        "excerpt": " ".join(re.sub(r"[*#>]", "", f["body"]).split())[:420],
+                        "links": self.links_for([f["id"]]).get(f["id"], [])}
+        return 200, {"items": items, "seenAt": mine[0]["activity_seen_at"] if mine else None, "featured": featured, "week": self.this_week(),
                      "more": len(items) == limit, "totals": totals, "identify": help_}
+
+    def this_week(self):
+        """The last seven days at a glance, for the "This week" section on Home."""
+        from datetime import timedelta
+        since = (datetime.now(timezone.utc) - timedelta(days=7)).isoformat(timespec="seconds")
+        T = self.TEST_USER
+        def n(sql):
+            return query(sql, (since,))[0]["n"]
+        counts = {
+            "memories": n(f"SELECT COUNT(*) AS n FROM memories m LEFT JOIN profiles p ON p.user_id = m.user_id WHERE m.deleted_at IS NULL AND m.created_at >= ? AND NOT {T}"),
+            "photos": n(f"SELECT COUNT(*) AS n FROM photo_uploads u LEFT JOIN profiles p ON p.user_id = u.user_id WHERE u.status = 'ready' AND u.created_at >= ? AND NOT {T}"),
+            "comments": n(f"SELECT COUNT(*) AS n FROM comments c LEFT JOIN profiles p ON p.user_id = c.user_id WHERE c.deleted_at IS NULL AND c.created_at >= ? AND NOT {T}"),
+            "moments": n(f"SELECT COUNT(*) AS n FROM markers k LEFT JOIN profiles p ON p.user_id = k.user_id WHERE k.deleted_at IS NULL AND k.created_at >= ? AND NOT {T}"),
+            "faces": n("SELECT COUNT(*) AS n FROM identify_suggestions WHERE status = 'confirmed' AND reviewed_at >= ?"),
+            "members": n("SELECT COUNT(*) AS n FROM access_requests WHERE status = 'approved' AND decided_at >= ?"),
+        }
+        memories = [{"id": r["id"], "title": r["title"], "author": r["author"]} for r in query(
+            f"SELECT m.id, m.title, {self.NAME} AS author FROM memories m LEFT JOIN profiles p ON p.user_id = m.user_id "
+            f"WHERE m.deleted_at IS NULL AND m.created_at >= ? AND NOT {T} ORDER BY m.created_at DESC LIMIT 4", (since,))]
+        # who added the most this week (memories, photos, comments, chapters/events, confirmed faces)
+        active = query(f"""SELECT {self.NAME} AS name, COUNT(*) AS n FROM (
+                SELECT user_id AS uid FROM memories WHERE deleted_at IS NULL AND created_at >= :s
+                UNION ALL SELECT user_id FROM photo_uploads WHERE status = 'ready' AND created_at >= :s
+                UNION ALL SELECT user_id FROM comments WHERE deleted_at IS NULL AND created_at >= :s
+                UNION ALL SELECT user_id FROM markers WHERE deleted_at IS NULL AND created_at >= :s
+                UNION ALL SELECT reviewed_by FROM identify_suggestions WHERE status = 'confirmed' AND reviewed_at >= :s
+            ) x JOIN profiles p ON p.user_id = x.uid WHERE NOT {T} AND p.username != 'yajur-admin'
+            GROUP BY x.uid ORDER BY n DESC LIMIT 3""".replace(":s", "?"), (since,) * 5)
+        return {"since": since, "counts": counts, "memories": memories, "active": [{"name": r["name"], "count": r["n"]} for r in active]}
 
     def post_activity_seen(self, params):
         who = self.member()
@@ -997,7 +1132,7 @@ class Handler(BaseHTTPRequestHandler):
     def get_members(self, params):
         self.member()
         T = self.TEST_USER
-        rows = query("SELECT p.user_id, p.display_name, p.last_seen_at, "
+        rows = query("SELECT p.user_id, p.display_name, p.last_seen_at, p.person_id, "
                      "COALESCE((SELECT a.decided_at FROM access_requests a WHERE a.email = p.username AND a.status = 'approved'), p.created_at) AS joined, "
                      "(SELECT COUNT(*) FROM comments c WHERE c.user_id = p.user_id AND c.deleted_at IS NULL) AS comments, "
                      "(SELECT COUNT(*) FROM memories m WHERE m.user_id = p.user_id AND m.deleted_at IS NULL) AS memories, "
@@ -1015,11 +1150,132 @@ class Handler(BaseHTTPRequestHandler):
         def joined(r):
             ts = [t for t in (r["joined"], r["first_trace"]) if t]
             return min(ts) if ts else None
-        out = [{"name": r["display_name"] or "A member", "joined": joined(r), "lastSeen": r["last_seen_at"],
+        out = [{"name": r["display_name"] or "A member", "joined": joined(r), "lastSeen": r["last_seen_at"], "personId": r["person_id"],
                 "moderator": bool(r["moderator"]),
                 "contributions": {k: r[k] for k in ("comments", "memories", "moments", "photos", "faces")}} for r in rows]
         out.sort(key=lambda m: m["lastSeen"] or "", reverse=True)
         return 200, out
+
+    # ── notifications
+    def get_notifications(self, params):
+        who = self.member()
+        rows = query("SELECT n.*, COALESCE(p.display_name, 'A member') AS actor, "
+                     "(SELECT title FROM memories m WHERE n.target = 'memory:' || m.id) AS memory_title "
+                     "FROM notifications n LEFT JOIN profiles p ON p.user_id = n.actor_id "
+                     "WHERE n.user_id = ? ORDER BY n.created_at DESC, n.id DESC LIMIT 40", (who["id"],))
+        unread = query("SELECT COUNT(*) AS n FROM notifications WHERE user_id = ? AND read_at IS NULL", (who["id"],))[0]["n"]
+        return 200, {"unread": unread, "items": [{"id": r["id"], "kind": r["kind"], "actor": r["actor"], "target": r["target"],
+                                                  "refId": r["ref_id"], "position": r["position_s"], "detail": r["detail"],
+                                                  "memoryTitle": r["memory_title"], "at": r["created_at"], "read": bool(r["read_at"])} for r in rows]}
+
+    def read_notifications(self, params):
+        who = self.member()
+        ids = self.read_json().get("ids")
+        if isinstance(ids, list) and ids:
+            ids = [i for i in ids if isinstance(i, int)][:200]
+            execute("UPDATE notifications SET read_at = ? WHERE user_id = ? AND read_at IS NULL AND id IN (%s)" % ",".join("?" * len(ids)),
+                    (now(), who["id"], *ids))
+        else:
+            execute("UPDATE notifications SET read_at = ? WHERE user_id = ? AND read_at IS NULL", (now(), who["id"]))
+        return 200, {"ok": True}
+
+    # ── reactions
+    def post_reaction(self, params):
+        who = self.member()
+        data = self.read_json()
+        kind, tid, emoji = str(data.get("kind", "")), data.get("id"), str(data.get("emoji", ""))
+        if kind not in ("memory", "comment") or not isinstance(tid, int) or emoji not in EMOJIS:
+            raise ApiError(400, "That reaction isn't valid.")
+        table = "memories" if kind == "memory" else "comments"
+        owner = query(f"SELECT user_id FROM {table} WHERE id = ? AND deleted_at IS NULL", (tid,))
+        if not owner:
+            raise ApiError(404, "That was removed.")
+        if not allow(("react", who["id"]), 60, 60):
+            raise ApiError(429, "Slow down a little.")
+        if query("SELECT 1 FROM reactions WHERE kind = ? AND target_id = ? AND user_id = ? AND emoji = ?", (kind, tid, who["id"], emoji)):
+            execute("DELETE FROM reactions WHERE kind = ? AND target_id = ? AND user_id = ? AND emoji = ?", (kind, tid, who["id"], emoji))
+        else:
+            execute("INSERT INTO reactions (kind, target_id, user_id, emoji, created_at) VALUES (?, ?, ?, ?, ?)", (kind, tid, who["id"], emoji, now()))
+            target = f"memory:{tid}" if kind == "memory" else query("SELECT target FROM comments WHERE id = ?", (tid,))[0]["target"]
+            notify(owner[0]["user_id"], "reaction", who["id"], target, tid, None, f"{kind}:{emoji}")
+        return 200, reactions_for(kind, [tid], who["id"]).get(tid, {"counts": {}, "mine": []})
+
+    # ── search
+    def get_search(self, params):
+        who = self.member()
+        q = clean(urllib.parse.unquote_plus(params.get("q", "")), 80)
+        if len(q) < 2:
+            return 200, {"q": q, "people": [], "memories": [], "comments": [], "moments": []}
+        like = "%" + q.replace("\\", "").replace("%", "").replace("_", "") + "%"
+        out = {"q": q}
+        out["people"] = [{"id": r["id"], "name": r["name"]} for r in query(
+            "SELECT id, name FROM people WHERE deleted_at IS NULL AND name LIKE ? ORDER BY name_key LIMIT 10", (like,))]
+        out["memories"] = [{"id": r["id"], "title": r["title"], "kind": r["kind"], "author": r["author"],
+                            "excerpt": " ".join(re.sub(r"[*#>]", "", r["body"]).split())[:200]} for r in query(
+            self.MEMORY_SQL + "AND (m.title LIKE ? OR m.body LIKE ?) ORDER BY m.created_at DESC LIMIT 10", (like, like))]
+        out["comments"] = [{"id": r["id"], "target": r["target"], "position": r["position_s"], "author": r["author"],
+                            "excerpt": " ".join(r["body"].split())[:200]} for r in query(
+            f"SELECT c.id, c.target, c.position_s, c.body, {self.NAME} AS author FROM comments c LEFT JOIN profiles p ON p.user_id = c.user_id "
+            "WHERE c.deleted_at IS NULL AND c.body LIKE ? ORDER BY c.created_at DESC LIMIT 10", (like,))]
+        out["moments"] = [{"id": r["id"], "kind": r["kind"], "title": r["names"] or r["title"], "target": r["target"], "position": r["position_s"]}
+                          for r in query(
+            "SELECT m.id, m.kind, m.title, m.target, m.position_s, (SELECT GROUP_CONCAT(name, ', ') FROM (SELECT pe.name FROM marker_people mp "
+            " JOIN people pe ON pe.id = mp.person_id WHERE mp.marker_id = m.id ORDER BY mp.ord)) AS names "
+            "FROM markers m WHERE m.deleted_at IS NULL AND (m.title LIKE ? OR m.id IN (SELECT mp.marker_id FROM marker_people mp "
+            " JOIN people pe ON pe.id = mp.person_id WHERE pe.name LIKE ?)) ORDER BY m.target, m.position_s LIMIT 15", (like, like))]
+        return 200, out
+
+    # ── today's challenge: a few likely matches to confirm on Home
+    def get_challenge(self, params):
+        who = self.member()
+        try:
+            n = max(1, min(8, int(params.get("n", 5))))
+        except ValueError:
+            n = 5
+        rows = query("SELECT s.*, NULL AS reviewer, pe.name AS person_name FROM identify_suggestions s JOIN people pe ON pe.id = s.person_id "
+                     "AND pe.deleted_at IS NULL WHERE s.status = 'pending' AND s.score >= 0.35 ORDER BY RANDOM() LIMIT ?", (n,))
+        out = []
+        for r in rows:
+            row = self.suggestion_row(who, r)
+            row["target"] = r["target"]; row["personName"] = r["person_name"]
+            pf = query("SELECT photo_id, x, y, w, h FROM photo_faces WHERE id = COALESCE((SELECT portrait_face FROM people WHERE id = ?), "
+                       "(SELECT MIN(id) FROM photo_faces WHERE person_id = ?))", (r["person_id"], r["person_id"]))
+            row["portrait"] = {"photo": pf[0]["photo_id"], "box": {k: pf[0][k] for k in "xywh"}} if pf else None
+            out.append(row)
+        return 200, out
+
+    # ── "this is me": a member and their 1994 self
+    def put_person_member(self, params, pid):
+        who = self.member()
+        claim = bool(self.read_json().get("claim"))
+        if not query("SELECT 1 FROM people WHERE id = ? AND deleted_at IS NULL", (int(pid),)):
+            raise ApiError(404, "That person isn't on the list any more.")
+        if claim:
+            other = query("SELECT user_id FROM profiles WHERE person_id = ? AND user_id != ?", (int(pid), who["id"]))
+            if other:
+                raise ApiError(409, "Another member has already said this is them. Ask the administrator if that's wrong.")
+            execute("UPDATE profiles SET person_id = ? WHERE user_id = ?", (int(pid), who["id"]))
+        else:
+            mine = query("SELECT 1 FROM profiles WHERE user_id = ? AND person_id = ?", (who["id"], int(pid)))
+            if mine:
+                execute("UPDATE profiles SET person_id = NULL WHERE user_id = ?", (who["id"],))
+            elif who["isAdmin"]:   # moderators can undo a wrong claim
+                execute("UPDATE profiles SET person_id = NULL WHERE person_id = ?", (int(pid),))
+            else:
+                raise ApiError(403, "Only that member, or a moderator, can undo this.")
+        return 200, {"personId": int(pid), "claimed": claim}
+
+    # ── featured memory
+    def put_memory_feature(self, params, mid):
+        who = self.admin()
+        on = bool(self.read_json().get("on"))
+        if not query("SELECT 1 FROM memories WHERE id = ? AND deleted_at IS NULL", (int(mid),)):
+            raise ApiError(404, "That memory was removed.")
+        if on:
+            execute("UPDATE memories SET featured_at = ?, featured_by = ? WHERE id = ?", (now(), who["id"], int(mid)))
+        else:
+            execute("UPDATE memories SET featured_at = NULL, featured_by = NULL WHERE id = ?", (int(mid),))
+        return 200, {"id": int(mid), "featured": on}
 
     # ── memories: articles and PDF notes
     @staticmethod
@@ -1079,9 +1335,11 @@ class Handler(BaseHTTPRequestHandler):
             raise ApiError(400, "Write a little more: at least a sentence or two.")
         return title, body
 
-    def memory_row(self, who, r, links, full, people=None):
+    def memory_row(self, who, r, links, full, people=None, rx=None):
         body = r["body"]
         return {"id": r["id"], "kind": r["kind"], "title": r["title"], "people": (people or {}).get(r["id"], []),
+                "reactions": (rx or {}).get(r["id"], {"counts": {}, "mine": []}), "featured": bool(r.get("featured_at")),
+                "canFeature": who["isAdmin"],
                 "body": body if full else None,
                 "excerpt": (body[:280].rsplit(" ", 1)[0] + "…") if len(body) > 280 else body,
                 "words": len(body.split()), "pdf": f"/kodai1994/memories/{r['file']}" if r["file"] else None,
@@ -1117,10 +1375,11 @@ class Handler(BaseHTTPRequestHandler):
             rows = query(self.MEMORY_SQL + "ORDER BY m.created_at DESC")
         links = self.links_for([r["id"] for r in rows])
         people = self.people_for([r["id"] for r in rows])
+        rx = reactions_for("memory", [r["id"] for r in rows], who["id"])
         counts = {r["target"]: r["n"] for r in query("SELECT target, COUNT(*) AS n FROM comments WHERE deleted_at IS NULL AND target LIKE 'memory:%' GROUP BY target")}
         out = []
         for r in rows:
-            row = self.memory_row(who, r, links, False, people)
+            row = self.memory_row(who, r, links, False, people, rx)
             row["comments"] = counts.get(f"memory:{r['id']}", 0)
             out.append(row)
         return 200, out
@@ -1130,7 +1389,8 @@ class Handler(BaseHTTPRequestHandler):
         rows = query(self.MEMORY_SQL + "AND m.id = ?", (int(mid),))
         if not rows:
             raise ApiError(404, "That memory was removed.")
-        return 200, self.memory_row(who, rows[0], self.links_for([int(mid)]), True, self.people_for([int(mid)]))
+        return 200, self.memory_row(who, rows[0], self.links_for([int(mid)]), True, self.people_for([int(mid)]),
+                                    reactions_for("memory", [int(mid)], who["id"]))
 
     def post_memory_file(self, params):
         who = self.member()
@@ -1177,6 +1437,7 @@ class Handler(BaseHTTPRequestHandler):
                       (kind, title, body, file, who["id"], now()))
         self.set_memory_links(mid, links)
         self.set_memory_people(mid, people)
+        notify_tagged(who["id"], people, "tagged_memory", f"memory:{mid}", mid, None, title)
         return 201, {"id": mid}
 
     @staticmethod
@@ -1205,7 +1466,10 @@ class Handler(BaseHTTPRequestHandler):
             self.set_memory_links(int(mid), self.memory_links(data))
             execute("UPDATE memories SET updated_at = ? WHERE id = ?", (now(), int(mid)))
         if "people" in data:
-            self.set_memory_people(int(mid), self.memory_people_ids(data))
+            ids = self.memory_people_ids(data)
+            self.set_memory_people(int(mid), ids)
+            notify_tagged(who["id"], ids, "tagged_memory", f"memory:{mid}", int(mid), None,
+                          query("SELECT title FROM memories WHERE id = ?", (int(mid),))[0]["title"])
             execute("UPDATE memories SET updated_at = ? WHERE id = ?", (now(), int(mid)))
         return 200, {"id": int(mid)}
 
@@ -1381,6 +1645,7 @@ class Handler(BaseHTTPRequestHandler):
         rows = self.marker_people_rows(mid) + query("SELECT id, name FROM people WHERE id = ?", (person,))
         self.link_people(mid, rows)
         execute("UPDATE markers SET title = ?, updated_at = ? WHERE id = ?", (self.event_title(rows), now(), mid))
+        notify_tagged(who["id"], [person], "tagged_event", s["target"], mid, start)
         return mid, 1
 
     def undo_video(self, s):
@@ -1405,6 +1670,7 @@ class Handler(BaseHTTPRequestHandler):
         if not query("SELECT 1 FROM photo_people WHERE photo_id = ? AND person_id = ?", (photo, person)):
             tag_id = execute("INSERT INTO photo_people (photo_id, person_id, added_by, created_at) VALUES (?, ?, ?, ?)",
                              (photo, person, who["id"], now()))
+        notify_tagged(who["id"], [person], "tagged_photo", s["target"])
         return face_id, tag_id
 
     @staticmethod
@@ -1573,8 +1839,11 @@ ROUTES = {
             (r"/photo-uploads", Handler.get_photo_uploads),
             (r"/memories", Handler.get_memories), (r"/memories/(\d+)", Handler.get_memory),
             (r"/activity", Handler.get_activity), (r"/members", Handler.get_members),
+            (r"/notifications", Handler.get_notifications), (r"/search", Handler.get_search),
+            (r"/identify/challenge", Handler.get_challenge),
             (r"/admin/requests", Handler.get_requests), (r"/admin/moderators", Handler.get_moderators)],
-    "PUT": [(r"/me", Handler.put_me), (r"/admin/moderators/([0-9a-f]{32})", Handler.put_moderator), (r"/memories/(\d+)", Handler.put_memory), (r"/markers/(\d+)", Handler.put_marker), (r"/people/(\d+)", Handler.put_person),
+    "PUT": [(r"/me", Handler.put_me), (r"/people/(\d+)/member", Handler.put_person_member),
+            (r"/memories/(\d+)/feature", Handler.put_memory_feature), (r"/admin/moderators/([0-9a-f]{32})", Handler.put_moderator), (r"/memories/(\d+)", Handler.put_memory), (r"/markers/(\d+)", Handler.put_marker), (r"/people/(\d+)", Handler.put_person),
             (r"/people/(\d+)/portrait", Handler.put_portrait)],
     "POST": [(r"/comments", Handler.post_comment), (r"/markers", Handler.post_marker), (r"/people", Handler.post_person),
              (r"/photo-tags", Handler.post_photo_tag), (r"/photo-faces", Handler.post_photo_face),
@@ -1582,6 +1851,7 @@ ROUTES = {
              (r"/photo-uploads", Handler.post_photo_upload),
              (r"/memories", Handler.post_memory), (r"/memory-files", Handler.post_memory_file),
              (r"/activity/seen", Handler.post_activity_seen),
+             (r"/notifications/read", Handler.read_notifications), (r"/reactions", Handler.post_reaction),
              (r"/access-requests", Handler.post_access_request),
              (r"/admin/requests/(\d+)/approve", Handler.approve_request),
              (r"/admin/requests/(\d+)/reject", Handler.reject_request)],

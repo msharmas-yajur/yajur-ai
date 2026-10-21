@@ -66,6 +66,21 @@
 	.acct { display: inline-flex; align-items: center; gap: 8px; }
 	.acct__avatar { display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; font: 700 .72rem var(--text); color: #0c1912; background: hsl(24 45% 72%); }
 	.acct__name { max-width: 16ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+	.icon-round { position: relative; display: inline-grid; place-items: center; width: 42px; height: 42px; padding: 0; border-radius: 50%; border: 1px solid var(--line);
+		background: rgb(var(--bg-rgb) / .55); color: var(--khadi); cursor: pointer; }
+	.icon-round svg { width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+	/* "KODAI 1994" beside the logo, only when the menu is behind the hamburger */
+	.bar__brand { display: none; font: 400 1.15rem/1 var(--display); letter-spacing: .14em; color: var(--khadi); white-space: nowrap; }
+	@media (max-width: 1024px) { .bar__home { display: inline-flex; align-items: center; gap: 12px; text-decoration: none; } .bar__brand { display: inline; } }
+	@media (max-width: 640px) {
+		.bar { gap: 10px; }
+		.bar__brand { font-size: 1rem; letter-spacing: .1em; }
+		.bar__actions { gap: 6px; }
+		.bar__actions .icon-round, .bar__actions .theme-toggle, .menu-btn { width: 38px; height: 38px; }
+		.bar__actions > .theme-toggle { display: none; }          /* in the menu instead */
+		.nav__extra .theme-toggle { display: inline-grid; margin: 4px 14px; }
+	}
+	.nav__extra .theme-toggle { display: none; }
 	/* Top bar: the same as the main pages (index.html) */
 	.site-bar { position: sticky; top: 0; z-index: 40; display: flex; align-items: center; gap: 20px; padding: 10px var(--gutter);
 		background: rgb(var(--bg-rgb) / .82); -webkit-backdrop-filter: blur(14px) saturate(1.2); backdrop-filter: blur(14px) saturate(1.2); border-bottom: 1px solid var(--line); }
@@ -192,7 +207,7 @@
 </head>
 <body>
 <div class="site-bar" id="bar">
-	<a class="bar__home" href="/kodai1994/#view=home" aria-label="Home" title="Home"><img class="logo" src="/kodai1994/brand/logo.png" alt="Sri Sathya Sai Centenary Celebrations" width="72" height="72"></a>
+	<a class="bar__home" href="/kodai1994/#view=home" aria-label="Home" title="Home"><img class="logo" src="/kodai1994/brand/logo.png" alt="Sri Sathya Sai Centenary Celebrations" width="72" height="72"><span class="bar__brand">KODAI 1994</span></a>
 	<nav class="views nav" id="nav" aria-label="Pages">
 		<a href="/kodai1994/#view=home">Home</a>
 		<a href="/kodai1994/#view=videos">Videos</a>
@@ -202,11 +217,14 @@
 		<a href="identify.html" aria-current="page">Identify faces</a>
 		<div class="nav__extra">
 			<span class="muted" id="signed-in"></span>
+			<button class="theme-toggle" data-theme-toggle type="button" aria-label="Switch theme"></button>
 			<a href="/kodai1994/#account">Account</a>
 			<a href="/kodai1994/#signout">Sign out</a>
 		</div>
 	</nav>
 	<div class="bar__actions">
+		<a class="icon-round" href="/kodai1994/#search" aria-label="Search" title="Search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></a>
+		<a class="icon-round" href="/kodai1994/#notifications" aria-label="Notifications" title="Notifications"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10.268 21a2 2 0 0 0 3.464 0"/><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"/></svg></a>
 		<button class="theme-toggle" data-theme-toggle type="button" aria-label="Switch theme"></button>
 		<a class="btn btn--quiet acct" id="acct" href="/kodai1994/#account" aria-label="Account"><span class="acct__avatar" id="acct-avatar" aria-hidden="true"></span><span class="acct__name" id="acct-name">Account</span></a>
 		<a class="btn btn--quiet" href="/kodai1994/#signout">Sign out</a>
