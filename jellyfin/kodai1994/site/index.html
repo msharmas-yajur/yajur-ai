@@ -226,7 +226,7 @@
 		.nav__extra .theme-toggle { display: inline-grid; margin: 4px 14px; }
 	}
 	.nav__extra .theme-toggle { display: none; }
-	/* ── Home cards: featured, challenge, this week, on this day, milestones */
+	/* ── Home cards: featured, this week, on this day, milestones */
 	.home__h { font: 400 1.5rem/1.2 var(--display); margin: 0 0 6px; }
 	.home__main > .home__h { margin-top: 30px; }
 	.featured { position: relative; padding: 26px 28px; margin-bottom: 26px; border-radius: 22px; border: 1px solid rgba(234,122,42,.4);
@@ -238,29 +238,6 @@
 	.featured__text { margin: 0 0 16px; font-size: 1.04rem; line-height: 1.7; max-width: 62ch; }
 	.featured__pics { display: flex; gap: 8px; margin-bottom: 18px; }
 	.featured__pics span { width: 110px; aspect-ratio: 4 / 3; border-radius: 10px; background: var(--pine) center / cover no-repeat; }
-	.challenge { margin-bottom: 10px; padding: 20px 22px; border-radius: 20px; border: 1px solid var(--line); background: var(--panel); }
-	.challenge__head p { margin: 0 0 14px; font-size: .93rem; max-width: 60ch; }
-	.challenge__row { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
-	.chal { display: flex; flex-direction: column; gap: 6px; padding: 10px; border-radius: 14px; border: 1px solid var(--line); background: rgb(var(--bg-rgb) / .35); transition: opacity .3s; }
-	.chal.is-yes { border-color: rgba(143,199,157,.6); }
-	.chal.is-no { opacity: .55; }
-	.chal__pair { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
-	.chal__face { aspect-ratio: 1; border-radius: 8px; background: #000 center / cover no-repeat; display: grid; place-items: center; font: 400 1.4rem var(--display); color: var(--mist); }
-	.chal__face--known { background-color: var(--pine); }
-	.chal__face.portrait { color: transparent; }
-	.chal__q { margin: 2px 0 0; font-size: .92rem; line-height: 1.3; }
-	.chal__where { font-size: .78rem; text-align: left; }
-	.chal__acts { display: flex; gap: 6px; flex-wrap: wrap; }
-	.chal__acts .btn { flex: 1; padding: 6px 10px; }
-	.chal__yes { background: var(--ok); color: var(--pine-deep); }
-	.chal__done { font-size: .85rem; color: var(--ok); }
-	.chal__other { flex-basis: 100%; text-align: left; font-size: .8rem; }
-	.chal__pick { display: grid; gap: 6px; }
-	.chal__pick .tagger__chips { display: none; }   /* one choice: no chips, just + and the search */
-	.chal__pick .tagger__search { position: relative; }
-	.chal__pick .tagger__preview { display: none; }
-	.chal__pick .linkish { justify-self: start; font-size: .8rem; }
-	.challenge__foot { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; margin-top: 14px; }
 	.week__chips { display: flex; flex-wrap: wrap; gap: 6px; }
 	.week__chip { padding: 3px 10px; border-radius: 999px; border: 1px solid var(--line); font-size: .85rem; }
 	.week__chip b { font-weight: 600; color: var(--accent-text); }
@@ -1799,14 +1776,14 @@
 				return { type: 'video', at: new Date(e.item.DateCreated).toISOString().replace(/\.\d+Z$/, '+00:00'), target: 'video:' + e.slug };
 			});
 			state.items = a.items.concat(vids).sort(function (x, y) { return (y.at || '').localeCompare(x.at || ''); });
-			drawFeatured(a.featured); drawSince(); drawChallenge(); drawFeed(); drawSide(a, res[1]);
+			drawFeatured(a.featured); drawSince(); drawFeed(); drawSide(a, res[1]);
 			// Mark as seen a little later, so a quick reload still shows what was new.
 			setTimeout(function () { capi('/activity/seen', { method: 'POST' }).catch(function () {}); }, 6000);
 		}).catch(function (ex) { status.textContent = 'Couldn’t load the activity: ' + ex.message; });
 
-		var featuredBox = el('div'), sinceBox = el('div'), challengeBox = el('div'), filterBox = el('div', 'feed-filter'), feedBox = el('div');
+		var featuredBox = el('div'), sinceBox = el('div'), filterBox = el('div', 'feed-filter'), feedBox = el('div');
 		var feedTitle = el('h2', 'home__h', 'Activity');
-		main.append(featuredBox, sinceBox, challengeBox, feedTitle, filterBox, feedBox);
+		main.append(featuredBox, sinceBox, feedTitle, filterBox, feedBox);
 
 		// 8. A memory a moderator pinned to the top of Home
 		function drawFeatured(f) {
@@ -1824,69 +1801,6 @@
 			featuredBox.appendChild(card);
 		}
 
-		// 5. Today's challenge: a few likely matches, answered right here
-		function drawChallenge() {
-			challengeBox.textContent = '';
-			capi('/identify/challenge?n=5').then(function (list) {
-				if (!list.length) return;
-				var card = el('section', 'challenge');
-				var head = el('div', 'challenge__head');
-				head.append(el('h2', 'home__h', 'Today’s challenge'), el('p', 'muted', 'The computer thinks it recognises these faces. Is it right? Each answer helps everyone find themselves in the recordings.'));
-				card.appendChild(head);
-				var row = el('div', 'challenge__row'), done = 0;
-				list.forEach(function (sg) {
-					var c = el('div', 'chal'), pair = el('div', 'chal__pair');
-					var found = el('span', 'chal__face'); found.style.backgroundImage = 'url("' + sg.crop + '")'; found.title = 'Found in the ' + (sg.target.indexOf('video:') === 0 ? 'recording' : 'photo');
-					var known = el('span', 'chal__face chal__face--known', initials(sg.personName));
-					if (sg.portrait) portraitInto(known, sg.portrait); known.title = sg.personName + ', marked on a 1994 photo';
-					pair.append(found, known);
-					var q = el('p', 'chal__q'); q.append(document.createTextNode('Is this '), el('b', '', sg.personName), document.createTextNode('?'));
-					var info = targetInfo(sg.target);
-					var where = el('button', 'linkish chal__where', info ? (info.kind === 'video' ? info.label + ' at ' + at(sg.frame != null ? sg.frame : sg.start) : info.label) : ''); where.type = 'button';
-					where.addEventListener('click', function () { openTarget(info, sg.frame != null ? Math.max(0, sg.frame - 1) : sg.start); });
-					var acts = el('div', 'chal__acts');
-					var yes = el('button', 'btn btn--small chal__yes', 'Yes'), no = el('button', 'btn btn--quiet btn--small', 'No'); yes.type = no.type = 'button';
-					// personAs: confirm it as someone other than the suggestion ("Someone else…")
-					function answer(action, personAs) {
-						yes.disabled = no.disabled = other.disabled = true;
-						var body = { action: action }; if (personAs) body.person = personAs.id;
-						return capi('/identify/suggestions/' + sg.id, { method: 'POST', body: body }).then(function () {
-							c.classList.add(action === 'confirm' ? 'is-yes' : 'is-no');
-							acts.textContent = ''; c.querySelectorAll('.chal__pick').forEach(function (x) { x.remove(); });
-							acts.appendChild(el('span', 'chal__done', action !== 'confirm' ? 'Thanks, noted' : personAs ? '✓ Thank you, marked as ' + personAs.name : '✓ Thank you, confirmed'));
-							if (personAs) q.textContent = 'This is ' + personAs.name;
-							if (++done === list.length) more.hidden = false;
-						}).catch(function (ex) {
-							yes.disabled = no.disabled = other.disabled = false;
-							acts.appendChild(el('span', 'error', ex.status === 409 && /name/.test(ex.message) ? 'Choose the name others see (under Account) first.' : ex.message));
-							throw ex;
-						});
-					}
-					yes.addEventListener('click', function () { answer('confirm'); });
-					no.addEventListener('click', function () { answer('reject'); });
-					var other = el('button', 'linkish chal__other', 'Someone else…'); other.type = 'button';
-					other.title = 'It’s a different person: choose who';
-					other.addEventListener('click', function () {
-						other.hidden = true;
-						var box = el('div', 'chal__pick');
-						var pk = peoplePicker([], null, { label: null, empty: ' ', onAdd: function (pp) { return answer('confirm', pp); } });
-						var cancel = el('button', 'linkish', 'Cancel'); cancel.type = 'button';
-						cancel.addEventListener('click', function () { box.remove(); other.hidden = false; });
-						box.append(pk.el, cancel); c.insertBefore(box, acts.nextSibling);
-						pk.focus();
-					});
-					acts.append(yes, no, other);
-					c.append(pair, q, where, acts);
-					row.appendChild(c);
-				});
-				card.appendChild(row);
-				var more = el('button', 'btn btn--quiet', 'Five more'); more.type = 'button'; more.hidden = true;
-				more.addEventListener('click', drawChallenge);
-				var all = el('a', 'linkish', 'Review them all on Identify faces'); all.href = 'identify.html';
-				var foot = el('div', 'challenge__foot'); foot.append(more, all); card.appendChild(foot);
-				challengeBox.appendChild(card);
-			}).catch(function () {});
-		}
 		filterBox.setAttribute('role', 'group'); filterBox.setAttribute('aria-label', 'Show');
 		FEED_FILTERS.forEach(function (f) {
 			var b = el('button', '', f[1]); b.type = 'button'; b.setAttribute('aria-pressed', String(homeFilter === f[0]));
