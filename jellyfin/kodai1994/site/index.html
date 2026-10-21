@@ -31,6 +31,11 @@
 	html, body { margin: 0; }
 	body { background: var(--pine-deep); color: var(--khadi); font: 400 18px/1.55 var(--text); -webkit-font-smoothing: antialiased; }
 	[hidden] { display: none !important; }
+	/* Native controls follow the dark theme too: a browser's own drop-down list and autofill
+	   colours otherwise show light text on a light background. */
+	select, option, optgroup { background-color: #0f1f17; color: #f3f1ea; }
+	input:-webkit-autofill, input:-webkit-autofill:hover, input:-webkit-autofill:focus, textarea:-webkit-autofill {
+		-webkit-text-fill-color: #f3f1ea; caret-color: #f3f1ea; box-shadow: 0 0 0 1000px #13241b inset; transition: background-color 9999s; }
 	button { font: inherit; color: inherit; }
 	:focus-visible { outline: 3px solid var(--saffron); outline-offset: 3px; }
 	.muted { color: var(--mist); }
@@ -159,7 +164,7 @@
 	.views button[aria-pressed=true] { background: var(--khadi); color: var(--pine-deep); }
 	/* "Identify faces" is its own page, but sits with the views */
 	.views a { padding: 9px 20px; border-radius: 999px; font-weight: 500; color: var(--mist); text-decoration: none; white-space: nowrap; }
-	.views button:hover, .views a:hover { color: var(--khadi); }
+	.views button:not([aria-pressed=true]):hover, .views a:hover { color: var(--khadi); }
 	#signed-in { margin-left: auto; }
 	.status { padding: 0 var(--gutter); }
 	main { padding: 24px var(--gutter) 120px; max-width: 1280px; }
@@ -3162,8 +3167,13 @@
 			var pk = peoplePicker(startPeople);
 			var r = el('div', 'markers__row');
 			var tm = el('input', 'field'); tm.value = fmtDuration(m.position * 1e7); tm.setAttribute('aria-label', 'Time');
-			var kind = el('select', 'field'); kind.setAttribute('aria-label', 'Type'); kind.style.width = 'auto';
-			[['chapter', 'Chapter'], ['event', 'Event']].forEach(function (o) { var op = el('option', '', o[1]); op.value = o[0]; op.selected = o[0] === m.kind; kind.appendChild(op); });
+			// Chapter | Event toggle, like the add form (the browser's <select> list ignores the dark theme)
+			var kind = el('div', 'seg'); kind.setAttribute('role', 'radiogroup'); kind.setAttribute('aria-label', 'Type');
+			[['chapter', 'Chapter'], ['event', 'Event']].forEach(function (o) {
+				var l = el('label'), rb = el('input'); rb.type = 'radio'; rb.name = 'edit-kind-' + m.id; rb.value = o[0]; rb.checked = o[0] === m.kind;
+				l.appendChild(rb); l.appendChild(document.createTextNode(o[1])); kind.appendChild(l);
+			});
+			Object.defineProperty(kind, 'value', { get: function () { return kind.querySelector('input:checked').value; } });
 			r.appendChild(tm); r.appendChild(kind);
 			var a = el('div', 'form-actions'), save = el('button', 'btn', 'Save'), back = el('button', 'linkish', 'Cancel');
 			save.type = 'submit'; back.type = 'button'; a.appendChild(save); a.appendChild(back);
