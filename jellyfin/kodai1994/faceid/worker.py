@@ -167,6 +167,13 @@ def iou(a, b):
     return inter / ((a[2] - a[0]) * (a[3] - a[1]) + (b[2] - b[0]) * (b[3] - b[1]) - inter + 1e-9)
 
 
+def covered(a, b):
+    """Share of the smaller box that the two overlap: a tight detected face inside a loose
+    hand-drawn box is the same face even though their IoU is small."""
+    ix, iy = max(0, min(a[2], b[2]) - max(a[0], b[0])), max(0, min(a[3], b[3]) - max(a[1], b[1]))
+    return ix * iy / (min((a[2] - a[0]) * (a[3] - a[1]), (b[2] - b[0]) * (b[3] - b[1])) + 1e-9)
+
+
 def read_photo(ph):
     img = cv2.imread(os.path.join(HLS, "photos", ph["src"]), cv2.IMREAD_COLOR)
     if img is None:
@@ -421,7 +428,7 @@ def run_video(db, run, det, rec, refs):
         items.append({"start": tr["start"], "end": tr["end"], "frame": tr["best_t"], "emb": tr["emb"], "crop": tr["crop"],
                       "size": tr["size"], "dets": len(tr["embs"]),
                       "box": (b[0] / W, b[1] / H, (b[2] - b[0]) / W, (b[3] - b[1]) / H)})
-    return items
+    return items, None
 
 
 def run_photo(db, run, det, rec, refs):
@@ -434,18 +441,23 @@ def run_photo(db, run, det, rec, refs):
     progress(db, run["id"], 0.3, "Finding faces")
     faces = det(img, PHOTO_DET)
     rec(img, faces)
-    marked = [(r["x"] * W, r["y"] * H, (r["x"] + r["w"]) * W, (r["y"] + r["h"]) * H)
-              for r in db.execute("SELECT x, y, w, h FROM photo_faces WHERE photo_id = ?", (pid,))]
-    marked += [(r["x"] * W, r["y"] * H, (r["x"] + r["w"]) * W, (r["y"] + r["h"]) * H) for r in decided(db, run["target"])]
-    items = []
+    box = lambda r: (r["x"] * W, r["y"] * H, (r["x"] + r["w"]) * W, (r["y"] + r["h"]) * H)
+    marked = [box(r) for r in db.execute("SELECT x, y, w, h FROM photo_faces WHERE photo_id = ?", (pid,))]
+    reviewed = [box(r) for r in decided(db, run["target"])]
+    items, n_marked, n_reviewed = [], 0, 0
     for f in faces:
-        if any(iou(f["box"], m) > 0.25 for m in marked):
-            continue  # already marked by hand, or already reviewed
+        if any(covered(f["box"], m) > 0.5 for m in marked):
+            n_marked += 1
+            continue
+        if any(covered(f["box"], m) > 0.5 for m in reviewed):
+            n_reviewed += 1
+            continue
         b = f["box"]
         size = min(b[2] - b[0], b[3] - b[1])
         items.append({"start": None, "end": None, "frame": None, "emb": f["emb"], "crop": crop_face(img, b), "size": size,
                       "dets": 1, "box": (b[0] / W, b[1] / H, (b[2] - b[0]) / W, (b[3] - b[1]) / H)})
-    return items
+    note = f"{len(faces)} faces found: {n_marked} already marked, {n_reviewed} already reviewed, {len(items)} new"
+    return items, note
 
 
 def save(db, run, items, refs):
@@ -498,15 +510,15 @@ def process(db, run, det, rec):
     refs, used, unreadable = load_refs(db, det, rec)
     db.execute("UPDATE identify_runs SET refs = ?, people = ? WHERE id = ?", (sum(len(v) for v in refs.values()), len(refs), run["id"]))
     db.commit()
-    items = (run_video if run["target"].startswith("video:") else run_photo)(db, run, det, rec, refs)
+    items, note = (run_video if run["target"].startswith("video:") else run_photo)(db, run, det, rec, refs)
     progress(db, run["id"], 0.97, "Matching faces")
     known, unknown = save(db, run, items, refs)
     msg = f"{known} faces matched to people, {unknown} not recognised"
-    if unreadable:
-        msg += f"; {unreadable} marked faces were too unclear to use"
+    if note:
+        msg = f"{note} ({known} matched to people, {unknown} not recognised)" if items else f"{note}: nothing more to review"
     db.execute("UPDATE identify_runs SET status = 'done', progress = 1, message = ?, finished_at = ? WHERE id = ?", (msg, now(), run["id"]))
     db.commit()
-    log(f"run {run['id']} {run['target']}: {msg}")
+    log(f"run {run['id']} {run['target']}: {msg}; {unreadable} marked faces in the archive too unclear to use")
 
 
 def loop():
