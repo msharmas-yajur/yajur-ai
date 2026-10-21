@@ -146,6 +146,21 @@
 	.stage .boxes div.is-done { border-color: var(--leaf); }
 	.stage .boxes div.is-hot { border-color: var(--saffron); box-shadow: 0 0 0 9999px rgba(0,0,0,.35); }
 	.stage .boxes span { position: absolute; top: -1.5em; left: -2px; font-size: .72rem; font-weight: 600; padding: 0 5px; border-radius: 4px; background: rgb(var(--bg-rgb) / .85); white-space: nowrap; }
+	/* detected faces dashed and numbered; faces marked by hand solid, with the name below */
+	.stage .boxes div.is-found { border-style: dashed; }
+	.stage .boxes div.is-hand { border: 2px solid var(--ok); }
+	.stage .boxes div.is-hand span { top: auto; bottom: -1.55em; color: var(--ok); font-weight: 500; }
+	.show { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin: 0 0 10px; font-size: .88rem; color: var(--mist); }
+	.show .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 999px; overflow: hidden; }
+	.show .seg button { border: 0; background: transparent; padding: 5px 12px; cursor: pointer; font-size: .85rem; }
+	.show .seg button + button { border-left: 1px solid var(--line); }
+	.show .seg button[aria-pressed=true] { background: var(--khadi); color: var(--pine-deep); }
+	.show .key { display: inline-flex; align-items: center; gap: 5px; }
+	.show .key i { display: inline-block; width: 14px; height: 10px; border: 2px solid var(--ok); border-radius: 2px; }
+	.show .key i.is-found { border: 2px dashed rgb(var(--fg-rgb) / .7); }
+	.fresh { flex-basis: 100%; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding-top: 12px; border-top: 1px solid var(--line); font-size: .9rem; }
+	.fresh p { flex: 1 1 260px; margin: 0; }
+	.card .note { margin: 0; font-size: .85rem; }
 
 	.filters { display: flex; flex-wrap: wrap; gap: 6px; margin: 26px 0 18px; }
 	.filters button { border: 1px solid var(--line); border-radius: 999px; padding: 6px 14px; background: transparent; cursor: pointer; font-size: .9rem; }
@@ -306,7 +321,8 @@
 	}
 
 	var state = { kind: 'video', videos: [], photos: [], photoById: {}, runs: {}, people: [], personById: {}, me: null,
-		current: null, data: null, filter: 'pending', hot: null, player: null, poll: null };
+		current: null, data: null, filter: 'pending', hot: null, player: null, poll: null, marks: [],
+		show: /^(hand|found|both)$/.test(storeGet('localStorage', 'kodai-identify-show') || '') ? storeGet('localStorage', 'kodai-identify-show') : 'both' };
 
 	function photoCrop(node, photoId, box) {
 		var ph = state.photoById[photoId];
@@ -408,9 +424,11 @@
 	function target() { return state.current.kind + ':' + state.current.key; }
 	function load() {
 		var t = target();
-		return capi('/identify/suggestions?target=' + encodeURIComponent(t)).then(function (d) {
+		return Promise.all([capi('/identify/suggestions?target=' + encodeURIComponent(t)),
+			state.current.kind === 'photo' ? capi('/photo-faces?photo=' + state.current.key) : Promise.resolve([])]).then(function (res) {
+			var d = res[0];
 			if (!state.current || target() !== t) return;
-			state.data = d;
+			state.data = d; state.marks = res[1];
 			if (d.run) { state.runs[t] = d.run; renderItems(); }
 			renderRun(); renderFaces();
 			clearTimeout(state.poll);
@@ -427,7 +445,7 @@
 		back.type = 'button';
 		back.addEventListener('click', function () { $('layout').classList.remove('is-detail'); });
 		d.append(back, el('h2', '', it.title), el('p', 'muted', it.sub));
-		d.insertAdjacentHTML('beforeend', '<div class="run"><p id="run-text">Loading…</p><span id="run-actions"></span><div class="bar" id="run-bar" hidden><span></span></div></div>');
+		d.insertAdjacentHTML('beforeend', '<div class="run" id="run"><p id="run-text">Loading…</p><span id="run-actions"></span><div class="bar" id="run-bar" hidden><span></span></div></div>');
 		var stage = el('div', 'stage'); stage.id = 'stage';
 		stage.addEventListener('contextmenu', function (ev) { ev.preventDefault(); });
 		if (it.kind === 'video') {
@@ -440,12 +458,34 @@
 			var ph = state.photoById[it.key], img = el('img');
 			img.src = HLS + 'photos/' + ph.src; img.alt = it.title; img.draggable = false;
 			stage.append(img, Object.assign(el('div', 'boxes'), { id: 'boxes' }));
+			d.appendChild(showBar());
 			d.appendChild(stage);
 		}
 		var np = el('div', 'name-prompt'); np.id = 'name-prompt'; np.hidden = true; d.appendChild(np);
 		var f = el('div', 'filters'); f.id = 'filters'; f.setAttribute('role', 'group'); f.setAttribute('aria-label', 'Show');
 		d.appendChild(f);
 		var faces = el('div'); faces.id = 'faces'; d.appendChild(faces);
+	}
+
+	// Faces marked by hand, faces identification found, or both, on the photo.
+	function showBar() {
+		var bar = el('div', 'show'), seg = el('span', 'seg');
+		seg.setAttribute('role', 'group'); seg.setAttribute('aria-label', 'Faces on the photo');
+		bar.append('Show');
+		[['hand', 'Marked by hand'], ['found', 'Detected'], ['both', 'Both']].forEach(function (x) {
+			var b = el('button', '', x[1]); b.type = 'button'; b.dataset.show = x[0];
+			b.setAttribute('aria-pressed', String(state.show === x[0]));
+			b.addEventListener('click', function () {
+				state.show = x[0]; try { localStorage.setItem('kodai-identify-show', x[0]); } catch (e) {}
+				seg.querySelectorAll('button').forEach(function (o) { o.setAttribute('aria-pressed', String(o === b)); });
+				renderBoxes(state.data ? state.data.suggestions : []);
+			});
+			seg.appendChild(b);
+		});
+		var k1 = el('span', 'key'), k2 = el('span', 'key');
+		k1.append(el('i'), 'by hand'); k2.append(el('i', 'is-found'), 'detected');
+		bar.append(seg, k1, k2);
+		return bar;
 	}
 
 	function renderRun() {
@@ -478,6 +518,40 @@
 			});
 			acts.appendChild(go);
 		}
+		var old = $('run').querySelector('.fresh'); if (old) old.remove();
+		var d = state.data;
+		if (state.current.kind !== 'photo' || !d.canClear || active) return;
+		var fresh = el('div', 'fresh');
+		if (d.cleared) {
+			fresh.appendChild(el('p', '', plural(d.cleared.count, 'face') + ' marked by hand ' + (d.cleared.count === 1 ? 'was' : 'were') + ' set aside by ' + d.cleared.by +
+				' for a fresh run. Confirm the faces below, or put the marks back.'));
+			var restore = el('button', 'btn btn--quiet btn--small', 'Restore marks'); restore.type = 'button';
+			restore.title = 'Marks for faces or people marked again since are left out';
+			restore.addEventListener('click', function () {
+				restore.disabled = true;
+				capi('/identify/restore', { method: 'POST', body: { photo: state.current.key } }).then(function (r) {
+					return load().then(function () { text.textContent = plural(r.restored, 'mark') + ' restored' + (r.skipped ? ', ' + r.skipped + ' left out (marked again since)' : '') + '.'; });
+				}).catch(function (e) { text.textContent = e.message; restore.disabled = false; });
+			});
+			fresh.appendChild(restore);
+		} else if ((state.marks || []).length) {
+			fresh.appendChild(el('p', 'muted', 'Marks look wrong, or want to see what identification finds on its own? Set the ' +
+				plural(state.marks.length, 'face') + ' marked by hand aside and identify the photo afresh. Who’s tagged in the photo stays.'));
+			var clear = el('button', 'btn btn--quiet btn--small', 'Clear marks and re-run'); clear.type = 'button';
+			clear.addEventListener('click', function () {
+				clear.hidden = true;
+				var sure = el('button', 'btn btn--small', 'Clear ' + state.marks.length + ' marks and re-run'), no = el('button', 'btn btn--quiet btn--small', 'Keep them');
+				sure.type = no.type = 'button';
+				var ask = el('span', '', ''); ask.append(sure, ' ', no); fresh.appendChild(ask);
+				no.addEventListener('click', function () { ask.remove(); clear.hidden = false; });
+				sure.addEventListener('click', function () {
+					sure.disabled = no.disabled = true;
+					capi('/identify/clear', { method: 'POST', body: { photo: state.current.key } }).then(load).catch(function (e) { text.textContent = e.message; ask.remove(); clear.hidden = false; });
+				});
+			});
+			fresh.appendChild(clear);
+		} else return;
+		$('run').appendChild(fresh);
 	}
 
 	// ── The faces, grouped by who they might be
@@ -503,7 +577,8 @@
 		var groups = [], byKey = {};
 		list.forEach(function (s) {
 			var pid = s.status === 'confirmed' ? s.finalPersonId : (state.personById[s.personId] ? s.personId : null);
-			var key = pid ? 'p' + pid : (s.status === 'pending' ? 'u' + s.cluster : 'x');
+			var key = s.kind === 'check' ? 'c' : pid ? 'p' + pid : (s.status === 'pending' ? 'u' + s.cluster : 'x');
+			if (key === 'c') pid = null;
 			if (!byKey[key]) { byKey[key] = { key: key, personId: pid, cluster: s.cluster, items: [] }; groups.push(byKey[key]); }
 			byKey[key].items.push(s);
 		});
@@ -515,10 +590,10 @@
 		// Recognised people first (most likely matches, then best match), then unrecognised
 		// groups (most seen first).
 		groups.sort(function (a, b) {
-			return (!a.personId) - (!b.personId) || (a.personId ? (b.likely - a.likely) || (b.best - a.best) : b.items.length - a.items.length);
+			return (b.key === 'c') - (a.key === 'c') || (!a.personId) - (!b.personId) || (a.personId ? (b.likely - a.likely) || (b.best - a.best) : b.items.length - a.items.length);
 		});
 		var unknownN = 0;
-		groups.forEach(function (g) { box.appendChild(renderGroup(g, g.personId ? null : ++unknownN)); });
+		groups.forEach(function (g) { box.appendChild(renderGroup(g, g.personId || g.key === 'c' ? null : ++unknownN)); });
 	}
 
 	function renderGroup(g, unknownN) {
@@ -527,14 +602,17 @@
 		var face = el('div', 'face');
 		if (p && p.portrait) { photoCrop(face, p.portrait.photo, p.portrait.box); face.title = p.name + ', marked on a 1994 photo'; }
 		else { face.classList.add('face--none'); face.textContent = p ? p.name.charAt(0) : '?'; }
-		var name = p ? p.name : g.key === 'x' ? 'Skipped faces' : 'Unknown person ' + unknownN;
+		var name = p ? p.name : g.key === 'c' ? 'Marked by hand: double-check' : g.key === 'x' ? 'Skipped faces' : 'Unknown person ' + unknownN;
 		who.append(face, el('h3', '', name));
 		var pend = g.items.filter(function (s) { return s.status === 'pending'; });
 		var likelyPend = pend.filter(function (s) { return (s.score || 0) >= LIKELY; });
 		var unit = state.current.kind === 'video' ? 'moment' : 'face';
-		who.appendChild(el('p', 'muted', plural(g.items.length, unit) +
+		if (g.key === 'c') who.appendChild(el('p', 'muted', 'These faces were marked by hand, but look much more like someone else.'));
+		else who.appendChild(el('p', 'muted', plural(g.items.length, unit) +
 			(p && state.filter === 'pending' ? ' · ' + g.likely + ' likely' : '') + (p && !p.portrait ? ' · no 1994 face marked' : '')));
-		if (likelyPend.length > 1 && p) {
+		if (g.key === 'c') {
+			// one at a time: each is a correction of someone's mark
+		} else if (likelyPend.length > 1 && p) {
 			// Only the likely ones: possible matches are wrong too often to confirm unseen.
 			var all = el('button', 'btn btn--yes btn--small', 'Confirm ' + likelyPend.length + ' likely'); all.type = 'button';
 			all.addEventListener('click', function () { bulk(all, likelyPend, 'confirm', g.personId); });
@@ -572,6 +650,43 @@
 		return s.score >= LIKELY ? ['Likely match', 'score score--likely'] : ['Possible match', 'score score--possible'];
 	}
 
+	function renderCheckCard(s, card, err) {
+		var marked = state.personById[s.markPersonId], like = state.personById[s.personId];
+		var mName = marked ? marked.name : 'someone', lName = like ? like.name : 'someone else';
+		if (s.status === 'pending') {
+			card.appendChild(el('p', 'note', 'Marked as ' + mName + '. Looks more like ' + lName + '.'));
+			var acts = el('div', 'actions');
+			var keep = el('button', 'btn btn--small', 'Keep ' + mName.split(' ')[0]); keep.type = 'button';
+			keep.addEventListener('click', function () { review(card, s, 'reject', null, err); });
+			acts.appendChild(keep);
+			if (like) {
+				var change = el('button', 'btn btn--quiet btn--small', 'It’s ' + lName.split(' ')[0]); change.type = 'button';
+				change.title = 'Move this face mark to ' + lName;
+				change.addEventListener('click', function () { review(card, s, 'confirm', like.id, err); });
+				acts.appendChild(change);
+			}
+			var other = el('button', 'btn btn--quiet btn--small', 'Someone else…'); other.type = 'button';
+			other.addEventListener('click', function () {
+				acts.hidden = true;
+				var c = chooser(function (pid) { review(card, s, 'confirm', pid, err); }, function () { c.remove(); acts.hidden = false; });
+				card.insertBefore(c, err); c.querySelector('input').focus();
+			});
+			acts.appendChild(other);
+			card.appendChild(acts);
+			return;
+		}
+		var fp = state.personById[s.finalPersonId];
+		var v = el('p', 'verdict');
+		v.append(el('b', '', s.status === 'rejected' || s.finalPersonId === s.markPersonId ? 'Kept as ' + mName : 'Changed to ' + (fp ? fp.name : 'someone else')));
+		v.append(el('span', 'muted', ' · ' + (s.reviewedBy || 'a member')));
+		card.appendChild(v);
+		if (s.canUndo) {
+			var undo = el('button', 'btn btn--quiet btn--small', 'Undo'); undo.type = 'button';
+			undo.addEventListener('click', function () { review(card, s, 'undo', null, err); });
+			card.appendChild(undo);
+		}
+	}
+
 	function renderCard(s, p) {
 		var card = el('article', 'card'), crop = el('div', 'crop');
 		card.dataset.id = s.id;
@@ -590,7 +705,9 @@
 		if (sl) { var sc = el('span', sl[1], sl[0]); sc.title = 'Similarity ' + s.score.toFixed(2); meta.appendChild(sc); }
 		card.append(crop, meta);
 		var err = el('p', 'error'); err.hidden = true;
-		if (s.status === 'pending') {
+		if (s.kind === 'check') {
+			renderCheckCard(s, card, err);
+		} else if (s.status === 'pending') {
 			var alts = s.alternatives.filter(function (a) { return a.personId !== s.personId && a.score >= 0.18 && state.personById[a.personId]; }).slice(0, 2);
 			if (alts.length) {
 				var ap = el('div', 'alts'); ap.append(p ? 'Or maybe ' : 'Closest: ');
@@ -632,7 +749,7 @@
 			var fp = state.personById[s.finalPersonId];
 			if (s.status === 'confirmed') v.append(el('b', '', fp ? fp.name : 'Confirmed'));
 			else v.append(el('b', '', p ? 'Not ' + p.name : 'Skipped'));
-			v.append(el('span', 'muted', ' · ' + (s.reviewedBy || 'a member')));
+			v.append(el('span', 'muted', ' · ' + (s.byHand ? 'marked by hand by ' : '') + (s.reviewedBy || 'a member')));
 			card.appendChild(v);
 			if (s.canUndo) {
 				var undo = el('button', 'btn btn--quiet btn--small', 'Undo'); undo.type = 'button';
@@ -654,8 +771,16 @@
 		var layer = $('boxes');
 		if (!layer) return;
 		layer.textContent = '';
+		if (state.show !== 'found') (state.marks || []).forEach(function (m) {
+			var d = el('div', 'is-hand');
+			d.style.left = m.box.x * 100 + '%'; d.style.top = m.box.y * 100 + '%'; d.style.width = m.box.w * 100 + '%'; d.style.height = m.box.h * 100 + '%';
+			d.appendChild(el('span', '', m.name.split(' ')[0])); d.title = m.name + ', marked by hand';
+			layer.appendChild(d);
+		});
+		if (state.show === 'hand') return;
 		all.forEach(function (s, i) {
-			var d = el('div');
+			if (s.kind === 'check') return;  // that box is a hand mark
+			var d = el('div', 'is-found');
 			d.style.left = s.box.x * 100 + '%'; d.style.top = s.box.y * 100 + '%'; d.style.width = s.box.w * 100 + '%'; d.style.height = s.box.h * 100 + '%';
 			if (s.status !== 'pending') d.classList.add('is-done');
 			if (state.hot === s.id) d.classList.add('is-hot');

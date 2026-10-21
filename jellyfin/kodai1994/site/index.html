@@ -501,6 +501,10 @@
 	.faces.is-marking { cursor: crosshair; }
 	.face { position: absolute; border: calc(2px * var(--zs, 1)) solid var(--saffron); border-radius: calc(6px * var(--zs, 1)); box-shadow: 0 0 0 calc(1px * var(--zs, 1)) rgba(0,0,0,.6); }
 	.face.is-draft { border-style: dashed; background: rgba(234,122,42,.12); }
+	/* found by face identification: dashed, labelled above (hand marks are labelled below) */
+	.face--found { border-style: dashed; border-color: rgb(var(--fg-rgb) / .8); pointer-events: none; }
+	.face--found.is-done { border-color: var(--ok); }
+	.face--found .face__label { top: auto; bottom: 100%; margin: 0 0 calc(4px * var(--zs, 1)); transform-origin: 0 100%; padding: 2px 8px; font-weight: 500; text-decoration: none; pointer-events: auto; }
 	.face__label { position: absolute; left: -2px; top: 100%; margin-top: calc(4px * var(--zs, 1)); transform: scale(var(--zs, 1)); transform-origin: 0 0; display: inline-flex; align-items: center; gap: 2px; white-space: nowrap; background: rgb(var(--bg-rgb) / .9); color: var(--khadi); font-size: 0.78rem; font-weight: 600; padding: 2px 4px 2px 8px; border-radius: 6px; }
 	.face__label button { border: 0; background: none; color: var(--khadi); cursor: pointer; width: 20px; height: 20px; border-radius: 50%; }
 	.face__label button:hover { background: rgba(255,255,255,.15); }
@@ -1022,6 +1026,11 @@
 			<span class="zoombar" id="viewer-tool" role="group" aria-label="While marking, dragging" hidden>
 				<button type="button" data-tool="draw" aria-pressed="true">Draw</button>
 				<button type="button" data-tool="move" aria-pressed="false">Move</button>
+			</span>
+			<span class="zoombar" id="viewer-show" role="group" aria-label="Faces to show" hidden>
+				<button type="button" data-show="hand" title="Faces marked by hand">By hand</button>
+				<button type="button" data-show="found" title="Faces face identification found">Detected</button>
+				<button type="button" data-show="both">Both</button>
 			</span>
 			<button class="btn btn--quiet" id="viewer-faces" type="button" aria-pressed="false" title="Draw a box around a face and say who it is">Mark faces</button>
 			<button class="btn btn--quiet" id="viewer-close" type="button">Close</button>
@@ -2345,6 +2354,25 @@
 				}).catch(function (ex) { claim.appendChild(el('span', 'error', ex.message)); });
 			}
 			drawClaim(); t.appendChild(claim);
+			// Someone in nearly every photo: identification leaves their face out; tagged by hand only.
+			var detect = el('div', 'claim');
+			function drawDetect() {
+				detect.textContent = '';
+				if (pp.noDetect) detect.appendChild(el('span', 'muted', 'Face identification leaves ' + pp.name + ' out. Mark their face by hand.'));
+				if (!(me && me.isAdmin)) return;
+				var b = el('button', pp.noDetect ? 'linkish' : 'btn btn--quiet btn--small', pp.noDetect ? 'Detect again' : 'Don’t detect this face'); b.type = 'button';
+				b.title = pp.noDetect ? 'Suggest ' + pp.name + ' in face identification again' :
+					'For someone in nearly every photo: identification stops suggesting them, and their faces aren’t listed as unknown';
+				b.addEventListener('click', function () {
+					b.disabled = true;
+					capi('/people/' + pp.id + '/detect', { method: 'PUT', body: { detect: pp.noDetect } }).then(function (r) {
+						pp.noDetect = !r.detect; drawDetect();
+						if (r.removed) detect.appendChild(el('span', 'muted', plural(r.removed, 'unreviewed suggestion') + ' removed.'));
+					}).catch(function (ex) { b.disabled = false; detect.appendChild(el('span', 'error', ex.message)); });
+				});
+				detect.appendChild(b);
+			}
+			drawDetect(); t.appendChild(detect);
 
 			wrap.appendChild(el('h3', '', 'Faces from 1994'));
 			if (!d.faces.length) {
@@ -3437,7 +3465,8 @@
 		[photoIndex + 1, photoIndex - 1].forEach(function (k) { new Image().src = photoSrc(list[(k + n) % n]); });
 	}
 	// Marking faces: toggle "Mark faces", drag a box around a face, pick who it is.
-	var marking = false, facesHere = [];
+	var marking = false, facesHere = [], foundHere = [];
+	var SHOW_KEY = 'kodai-faces-show', faceShow = /^(hand|found|both)$/.test(storeGet('localStorage', SHOW_KEY) || '') ? storeGet('localStorage', SHOW_KEY) : 'both';
 	var layer = $('viewer-faces-layer');
 	function currentPhotoId() { return viewerPhotos[photoIndex] && viewerPhotos[photoIndex].id; }
 	function placeLayer() {
@@ -3450,7 +3479,20 @@
 	}
 	function drawFaces() {
 		layer.textContent = '';
-		facesHere.forEach(function (fc) {
+		$('viewer-show').querySelectorAll('button').forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.show === faceShow)); });
+		if (faceShow !== 'hand') foundHere.forEach(function (s) {
+			// what identification found: dashed, with its guess or answer; review it on the Identify page
+			var box = el('div', 'face face--found' + (s.status === 'pending' ? '' : ' is-done'));
+			box.style.left = s.box.x * 100 + '%'; box.style.top = s.box.y * 100 + '%';
+			box.style.width = s.box.w * 100 + '%'; box.style.height = s.box.h * 100 + '%';
+			var gid = s.status === 'confirmed' ? s.finalPersonId : s.personId, guess = (people || []).filter(function (pp) { return pp.id === gid; })[0];
+			var text = s.status === 'confirmed' ? (guess ? guess.name : 'Confirmed') : s.status === 'rejected' ? 'Skipped' : guess ? guess.name + '?' : 'Unknown';
+			var label = el('a', 'face__label', text);
+			label.href = 'identify.html#photo/' + currentPhotoId(); label.title = 'Review on the Identify page';
+			label.addEventListener('pointerdown', function (ev) { ev.stopPropagation(); });
+			box.appendChild(label); layer.appendChild(box);
+		});
+		if (faceShow !== 'found') facesHere.forEach(function (fc) {
 			var box = el('div', 'face');
 			box.style.left = fc.box.x * 100 + '%'; box.style.top = fc.box.y * 100 + '%';
 			box.style.width = fc.box.w * 100 + '%'; box.style.height = fc.box.h * 100 + '%';
@@ -3478,20 +3520,26 @@
 	function loadFaces() {
 		var id = currentPhotoId();
 		if (!marking || !id) return Promise.resolve();
-		return capi('/photo-faces?photo=' + id).then(function (list) {
+		return Promise.all([capi('/photo-faces?photo=' + id),
+			capi('/identify/suggestions?target=photo:' + id).catch(function () { return { suggestions: [] }; })]).then(function (res) {
 			if (id !== currentPhotoId()) return;
-			facesHere = list; drawFaces();
+			facesHere = res[0];
+			foundHere = res[1].suggestions.filter(function (s) { return s.kind !== 'check' && !s.byHand; });  // those boxes are hand marks
+			drawFaces();
 		}).catch(function (e) { hint(e.message); });
 	}
 	function setMarking(on) {
 		marking = on;
 		$('viewer-faces').setAttribute('aria-pressed', String(on));
 		layer.hidden = !on; layer.classList.toggle('is-marking', on && tool === 'draw'); layer.classList.toggle('is-moving', on && tool === 'move');
-		$('viewer-tool').hidden = !on;
+		$('viewer-tool').hidden = !on; $('viewer-show').hidden = !on;
 		if (on) { placeLayer(); ensurePeople().catch(function () {}); loadFaces(); }
 		else { layer.textContent = ''; document.querySelectorAll('#viewer-frame .face-pick, #viewer-frame .faces-hint').forEach(function (n) { n.remove(); }); }
 	}
 	$('viewer-faces').addEventListener('click', function () { setMarking(!marking); });
+	$('viewer-show').querySelectorAll('button').forEach(function (b) {
+		b.addEventListener('click', function () { faceShow = b.dataset.show; storeSet('localStorage', SHOW_KEY, faceShow); drawFaces(); });
+	});
 	$('viewer-quality').querySelectorAll('button').forEach(function (b) {
 		b.addEventListener('click', function () {
 			if (b.disabled || b.dataset.quality === photoQuality) return;
