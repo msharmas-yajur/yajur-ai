@@ -1,9 +1,0 @@
-[Unit]
-Description=Kodai 1994: prepare recorded memories for playback
-OnFailure=kodai1994-alert@%n.service
-
-[Service]
-Type=oneshot
-ExecStart=%h/services/yajur-videos/kodai1994/bin/media-queue.py
-Nice=10
-IOSchedulingClass=idle
