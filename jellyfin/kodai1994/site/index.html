@@ -328,6 +328,15 @@
 	.memory h2 { font: 400 clamp(2rem, 4.5vw, 3rem)/1.1 var(--display); margin: 0 0 10px; }
 	.memory__meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; color: var(--mist); font-size: .92rem; }
 	.memory__meta .icon-btn { width: 34px; height: 34px; }
+	.memory__people { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 16px; }
+	.memory__people .chip-person { cursor: pointer; padding-right: 11px; font: inherit; font-size: .88rem; }
+	.memory__people .chip-person:hover { border-color: var(--saffron); }
+	.memory-card p.memory-card__people { color: #f3b083; font-size: .85rem; -webkit-line-clamp: 1; }
+	.profile__memories { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; max-width: 680px; }
+	.linkish-row { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; border: 0; background: none; padding: 8px 6px; border-radius: 8px; cursor: pointer; color: inherit; font: inherit; }
+	.linkish-row:hover { background: rgba(243,241,234,.06); }
+	.linkish-row .icon { color: #f3b083; }
+	.linkish-row small { margin-left: auto; }
 	.memory__body { margin-top: 28px; font-size: 1.08rem; line-height: 1.75; }
 	.memory__body p { margin: 0 0 1.1em; }
 	.memory__body h3 { font: 400 1.5rem/1.25 var(--display); margin: 1.6em 0 .5em; }
@@ -1657,6 +1666,19 @@
 				row.appendChild(info);
 				wrap.appendChild(row);
 			});
+			wrap.appendChild(el('h3', '', 'Memories'));
+			if (!(d.memories || []).length) {
+				wrap.appendChild(el('p', 'muted', 'Not tagged in any memories yet. When writing a memory, tag ' + pp.name + ' under “Who it’s about”.'));
+			} else {
+				var ml = el('ul', 'profile__memories');
+				d.memories.forEach(function (m) {
+					var li = el('li'), b = el('button', 'linkish-row'); b.type = 'button';
+					b.append(icon(m.kind === 'notes' ? 'file-text' : 'pen-line'), el('span', '', m.title), el('small', 'muted', kindLabel(m) + ' by ' + m.author));
+					b.addEventListener('click', function () { openMemory(m.id); });
+					li.appendChild(b); ml.appendChild(li);
+				});
+				wrap.appendChild(ml);
+			}
 		}).catch(function (ex) { status.textContent = ex.message; });
 	}
 
@@ -1763,12 +1785,19 @@
 				if (m.links.length) extra.push(plural(m.links.length, 'tag'));
 				if (m.comments) extra.push(plural(m.comments, 'comment'));
 				if (extra.length) tags.appendChild(el('small', 'muted', extra.join(' · ')));
+				if (m.people.length) {
+					var names = m.people.slice(0, 3).map(function (pp) { return pp.name; }).join(', ') + (m.people.length > 3 ? ' +' + (m.people.length - 3) : '');
+					b.appendChild(el('p', 'memory-card__people', 'With ' + names));
+				}
 				b.appendChild(tags);
 				b.addEventListener('click', function () { openMemory(m.id); });
 				li.appendChild(b); ul.appendChild(li);
 			});
 			wrap.appendChild(ul);
-		}).catch(function (ex) { status.textContent = ex.message; });
+		}).catch(function (ex) {
+			// status may already be gone if drawing the list failed: show the problem anyway
+			status.textContent = 'Couldn’t show the memories: ' + ex.message; wrap.appendChild(status);
+		});
 	}
 
 	function renderMemory(root) {
@@ -1786,7 +1815,7 @@
 				el('span', '', kindLabel(m) + ' by ' + m.author + ' · ' + fmtWhen(m.createdAt) + (m.updatedAt ? ' · edited' : '')));
 			if (m.canEdit) {
 				var ed = iconButton('pencil', 'Edit');
-				ed.addEventListener('click', function () { editMemory({ id: m.id, kind: m.kind, title: m.title, body: m.body, links: m.links.slice(), pdf: m.pdf }); });
+				ed.addEventListener('click', function () { editMemory({ id: m.id, kind: m.kind, title: m.title, body: m.body, links: m.links.slice(), people: m.people.slice(), pdf: m.pdf }); });
 				var del = iconButton('trash', 'Delete this memory');
 				del.addEventListener('click', function () {
 					if (!del.classList.contains('is-armed')) { del.classList.add('is-armed'); del.title = 'Click again to delete'; setTimeout(function () { del.classList.remove('is-armed'); del.title = 'Delete this memory'; }, 4000); return; }
@@ -1795,6 +1824,15 @@
 				meta.append(ed, del);
 			}
 			wrap.appendChild(meta);
+			if (m.people.length) {
+				var who = el('div', 'memory__people'); who.setAttribute('aria-label', 'People in this memory');
+				m.people.forEach(function (pp) {
+					var c = el('button', 'chip-person', pp.name); c.type = 'button'; c.title = 'Open ' + pp.name + '’s page';
+					c.addEventListener('click', function () { openPerson(pp.id); });
+					who.appendChild(c);
+				});
+				wrap.appendChild(who);
+			}
 			if (m.body) wrap.appendChild(renderText(m.body));
 			if (m.pdf) wrap.appendChild(pdfPreview(m.pdf));
 			if (m.links.length) {
@@ -1918,6 +1956,13 @@
 		form.appendChild(bl);
 
 		// Tags: recordings (optionally at a moment) and photos
+		d.people = d.people || [];
+		var who = el('fieldset'); who.appendChild(el('legend', '', 'Who it’s about'));
+		who.appendChild(el('p', 'hint', 'Tag the people in this memory. It will show on their page, and their names link to it.'));
+		var pk = peoplePicker(d.people, function (list) { d.people = list.slice(); }, { label: null, empty: 'Press + to tag people.' });
+		ensurePeople().catch(function () {});
+		who.appendChild(pk.el);
+		form.appendChild(who);
 		var fs = el('fieldset'); fs.appendChild(el('legend', '', 'What it’s about'));
 		fs.appendChild(el('p', 'hint', 'Tag the recordings and photos this is about. It will be listed with them, and readers can open them from here.'));
 		var chips = el('div', 'tag-chips'); fs.appendChild(chips);
@@ -1981,10 +2026,11 @@
 			if (isNotes && !d.id && !d.file) { err.textContent = 'Choose the PDF first.'; return; }
 			save.disabled = true;
 			var links = d.links.map(function (l) { return { target: l.target, position: l.position }; });
+			var peopleIds = d.people.map(function (pp) { return pp.id; });
 			saveName().then(function () {
 				return d.id
-					? capi('/memories/' + d.id, { method: 'PUT', body: { title: title.value, body: body.value, links: links } }).then(function () { return d.id; })
-					: capi('/memories', { method: 'POST', body: { kind: d.kind, title: title.value, body: body.value, file: d.file, links: links } }).then(function (r) { return r.id; });
+					? capi('/memories/' + d.id, { method: 'PUT', body: { title: title.value, body: body.value, links: links, people: peopleIds } }).then(function () { return d.id; })
+					: capi('/memories', { method: 'POST', body: { kind: d.kind, title: title.value, body: body.value, file: d.file, links: links, people: peopleIds } }).then(function (r) { return r.id; });
 			}).then(function (id) { memoryDraft = null; openMemory(id); })
 				.catch(function (ex) { save.disabled = false; err.textContent = ex.message; });
 		});
@@ -2059,7 +2105,8 @@
 		var root = el('section', 'comments');
 		root.appendChild(el('h3', 'comments__title', 'Comments'));
 		var list = el('ol', 'comments__list'); root.appendChild(list);
-		var empty = el('p', 'muted', 'No comments yet. Share a memory or a note about this ' + (isVideo ? 'recording.' : 'photo.'));
+		var empty = el('p', 'muted', target.indexOf('memory:') === 0 ? 'No comments yet. Add a thought, or something you remember too.'
+			: 'No comments yet. Share a memory or a note about this ' + (isVideo ? 'recording.' : 'photo.'));
 		empty.hidden = true; root.appendChild(empty);
 		var status = el('p', 'muted', 'Loading comments…'); root.appendChild(status);
 
