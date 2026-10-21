@@ -1,0 +1,7 @@
+[Unit]
+Description=Kodai 1994: check the video stack, alert on problems
+
+[Service]
+Type=oneshot
+ExecStart=%h/services/yajur-videos/kodai1994/bin/monitor.py
+TimeoutStartSec=3min

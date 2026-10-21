@@ -11,6 +11,12 @@ set -euo pipefail
 HERE=$(cd "$(dirname "$0")" && pwd)
 DEST=${VIDEOS_STACK_DIR:-"$HOME/services/yajur-videos"}
 
+# The community service's tests (tests/test_community.py: no Docker, nothing live touched)
+# must pass before anything is installed. SKIP_TESTS=1 skips them, for emergencies.
+if [ "${SKIP_TESTS:-}" != 1 ]; then
+  python3 -I "$HERE/tests/test_community.py" || { echo "tests failed: nothing deployed (SKIP_TESTS=1 to deploy anyway)" >&2; exit 1; }
+fi
+
 # Create the data folders as this user; if Docker creates them they are root-owned
 # and Jellyfin (running as PUID) cannot write to them.
 mkdir -p "$DEST/kodai1994/community" "$DEST/config" "$DEST/cache" "$DEST/community-data"
@@ -24,8 +30,9 @@ changed "$HERE/kodai1994/community/app.py" "$DEST/kodai1994/community/app.py" &&
 # (new inode) would leave a running container reading the old one.
 cp "$HERE/kodai1994/community/app.py" "$DEST/kodai1994/community/app.py"
 cp "$HERE/docker-compose.yml" "$HERE/Caddyfile" "$DEST/"
-mkdir -p "$DEST/kodai1994/faceid"
+mkdir -p "$DEST/kodai1994/faceid" "$DEST/kodai1994/captions"
 cp "$HERE/kodai1994/faceid/Dockerfile" "$HERE/kodai1994/faceid/worker.py" "$DEST/kodai1994/faceid/"
+cp "$HERE/kodai1994/captions/Dockerfile" "$HERE/kodai1994/captions/worker.py" "$DEST/kodai1994/captions/"
 # Update in place: replacing the folder would leave the running gateway's bind mount
 # pointing at the deleted directory.
 # Copy over the old files first, then remove ones that no longer exist, so the page is
@@ -38,10 +45,20 @@ done
 # Cloudflare keeps scripts and stylesheets in browsers for 4 hours, whatever the gateway says
 # (the pages themselves aren't kept). So the pages ask for the shared ones by a name that
 # changes with their content: an update reaches everyone at once, an unchanged file stays cached.
-for a in theme.js site-bar.js site-bar.css; do
+# Every script and stylesheet, wherever it's named (pages, and scripts importing scripts):
+# the ones others import come first, so a change to them changes their importers' names too.
+(cd "$DEST/kodai1994/site" && ls vendor/*.js pattern-waves.js; ls *.js *.css | grep -vx pattern-waves.js) | while IFS= read -r a; do
   v=$(sha1sum "$DEST/kodai1994/site/$a" | cut -c1-10)
-  sed -i -E "s#((/kodai1994/)?${a//./\\.})(\?v=[0-9a-f]+)?\"#\1?v=$v\"#g" "$DEST"/kodai1994/site/*.html
+  sed -i -E "s#((/kodai1994/)?${a//./\\.})(\?v=[0-9a-f]+)?([\"'])#\1?v=$v\4#g" "$DEST"/kodai1994/site/*.html "$DEST"/kodai1994/site/*.js
 done
+
+# Monitoring: kodai1994/monitor.py every 5 minutes, and an alert whenever a kodai1994-* job
+# fails (their units name kodai1994-alert@ as OnFailure). Installed first, so they can.
+mkdir -p "$DEST/kodai1994/bin" "$HOME/.config/systemd/user"
+install -m 755 "$HERE/kodai1994/monitor.py" "$DEST/kodai1994/bin/"
+install -m 644 "$HERE/kodai1994/kodai1994-monitor.service" "$HERE/kodai1994/kodai1994-monitor.timer" "$HERE/kodai1994/kodai1994-alert@.service" "$HOME/.config/systemd/user/"
+systemctl --user daemon-reload
+systemctl --user enable --now kodai1994-monitor.timer >/dev/null 2>&1
 
 # Kodai 1994 processing pipeline: scripts + systemd user service (runs until all
 # videos are converted and packaged; resumes after reboot).
@@ -67,12 +84,34 @@ install -m 644 "$HERE/kodai1994/kodai1994-audio.service" "$HERE/kodai1994/kodai1
 systemctl --user daemon-reload
 systemctl --user enable --now kodai1994-audio.timer >/dev/null 2>&1
 
+# Every minute: recorded memories members add are made ready to play (kodai1994/media-queue.py).
+install -m 755 "$HERE/kodai1994/media-queue.py" "$DEST/kodai1994/bin/"
+install -m 644 "$HERE/kodai1994/kodai1994-media.service" "$HERE/kodai1994/kodai1994-media.timer" "$HOME/.config/systemd/user/"
+systemctl --user daemon-reload
+systemctl --user enable --now kodai1994-media.timer >/dev/null 2>&1
+
+# Nightly: descriptions of new transcripts, written by Claude (kodai1994/describe.py), once
+# ANTHROPIC_API_KEY is in .env. Until then nothing is sent anywhere.
+install -m 755 "$HERE/kodai1994/describe.py" "$DEST/kodai1994/bin/"
+install -m 644 "$HERE/kodai1994/kodai1994-describe.service" "$HERE/kodai1994/kodai1994-describe.timer" "$HOME/.config/systemd/user/"
+systemctl --user daemon-reload
+if grep -qE '^ANTHROPIC_API_KEY=.+' "$DEST/.env" 2>/dev/null; then
+  [ -x "$DEST/kodai1994/venv-describe/bin/python3" ] || python3 -m venv "$DEST/kodai1994/venv-describe"
+  "$DEST/kodai1994/venv-describe/bin/pip" install -q 'anthropic>=1,<2'
+  systemctl --user enable --now kodai1994-describe.timer >/dev/null 2>&1
+fi
+
+# Monthly: check the Drive backup can be read back (kodai1994/restore-test.py).
+install -m 755 "$HERE/kodai1994/restore-test.py" "$DEST/kodai1994/bin/"
+install -m 644 "$HERE/kodai1994/kodai1994-restore-test.service" "$HERE/kodai1994/kodai1994-restore-test.timer" "$HOME/.config/systemd/user/"
+systemctl --user daemon-reload
+
 # Nightly backup to Google Drive (kodai1994/backup.sh), once it's configured in .env.
 install -m 755 "$HERE/kodai1994/backup.sh" "$DEST/kodai1994/bin/"
 install -m 644 "$HERE/kodai1994/kodai1994-backup.service" "$HERE/kodai1994/kodai1994-backup.timer" "$HOME/.config/systemd/user/"
 systemctl --user daemon-reload
 if grep -qE '^BACKUP_FOLDER_ID=.+' "$DEST/.env" 2>/dev/null; then
-  systemctl --user enable --now kodai1994-backup.timer >/dev/null 2>&1
+  systemctl --user enable --now kodai1994-backup.timer kodai1994-restore-test.timer >/dev/null 2>&1
 fi
 
 if [ ! -f "$DEST/.env" ]; then
@@ -104,4 +143,12 @@ fi
 if grep -qE '^FACEID_MODELS=.+' .env; then
   docker compose --profile faceid up -d --build --no-deps faceid
 fi
+# The captions worker, once its model is there (see kodai1994/captions/worker.py --download).
+CAPTIONS_MODELS=$(sed -n 's/^CAPTIONS_MODELS=//p' .env); CAPTIONS_MODELS=${CAPTIONS_MODELS:-$DEST/captions-models}
+if [ -f "$CAPTIONS_MODELS/large-v3-turbo/model.bin" ]; then
+  docker compose --profile captions up -d --build --no-deps captions
+fi
 docker compose ps
+# The deployed site, as a visitor (tests/smoke.py); a restarted service may need a moment.
+sleep 3
+python3 -I "$HERE/tests/smoke.py" || echo "SMOKE TEST FAILED: check the site (journalctl, docker compose logs)" >&2

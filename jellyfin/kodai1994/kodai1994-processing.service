@@ -4,6 +4,7 @@
 #   status:  systemctl --user status kodai1994-processing
 #   log:     journalctl --user -u kodai1994-processing -f   (encoder log: ~/media/kodai1994-transcode.log)
 [Unit]
+OnFailure=kodai1994-alert@%n.service
 Description=Kodai 1994 video processing (web MP4 + adaptive HLS)
 
 [Service]

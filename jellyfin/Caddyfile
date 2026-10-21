@@ -3,6 +3,7 @@
 #   /kodai1994/hls/   the collection's HLS streams, thumbnails, and backdrop: members only
 #   /kodai1994/faces/ face crops for the Identify page: members only
 #   /kodai1994/memories/ PDFs attached to memories: members only
+#   /kodai1994/jf/    the page's Jellyfin calls, with the token from the HttpOnly cookie
 #   /                 redirects to the collection
 #   everything else → Jellyfin API (sign-in, listings, progress), minus playback/download
 #
@@ -95,6 +96,23 @@ Disallow: /
 			}
 		}
 
+		# The few Jellyfin calls the page makes (its library listing, playback position, password
+		# change), with the member's token added here from the HttpOnly kodai_auth cookie: script
+		# on the page never sees the token. Anything else under /jf/ is refused, so a token can't
+		# be used through here for more than this page does.
+		handle_path /kodai1994/jf/* {
+			@jf_allowed path_regexp jf_allowed (?i)^/(UserViews|Items|Items/[0-9a-f]{32}/(PlaybackInfo|Images/Primary)|Sessions/Playing(/Progress|/Stopped)?|Users/[0-9a-f]{32}/Password)$
+			handle @jf_allowed {
+				header Cache-Control "private, no-store"
+				reverse_proxy jellyfin:8096 {
+					header_up Authorization `MediaBrowser Client="Yajur Kodai 1994", Device="Browser", DeviceId="{http.request.cookie.kodai_device}", Version="2.0.0", Token="{http.request.cookie.kodai_auth}"`
+					header_up -Cookie
+					header_up X-Forwarded-For {http.request.header.Cf-Connecting-IP}
+				}
+			}
+			respond 404
+		}
+
 		# Logo and favicon: public, because the sign-in page shows them. Kept out of the
 		# repository (third-party emblem), in MEDIA_DIR/kodai1994-brand.
 		handle_path /kodai1994/brand/* {
@@ -106,11 +124,14 @@ Disallow: /
 		handle_path /kodai1994/* {
 			root * /srv/kodai1994
 			file_server
+			# Scripts only from this site and cdnjs (Video.js and PDF.js, pinned with integrity
+			# hashes); no inline script. Styles may be inline (the pages set them).
 			header {
 				Cache-Control "no-cache"
 				X-Frame-Options "DENY"
 				X-Content-Type-Options "nosniff"
 				Referrer-Policy "same-origin"
+				Content-Security-Policy "default-src 'self'; script-src 'self' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self'; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
 			}
 		}
 

@@ -1,0 +1,7 @@
+[Unit]
+Description=Kodai 1994: suggest descriptions of new transcripts (Claude)
+OnFailure=kodai1994-alert@%n.service
+
+[Service]
+Type=oneshot
+ExecStart=%h/services/yajur-videos/kodai1994/venv-describe/bin/python3 -I %h/services/yajur-videos/kodai1994/bin/describe.py

@@ -42,6 +42,12 @@ services:
       - KODAI_LIBRARY_ID=${KODAI_LIBRARY_ID}
     depends_on:
       - jellyfin
+    # monitor.py reads this (docker inspect), as well as checking the site from outside
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1/robots.txt"]
+      interval: 1m
+      timeout: 10s
+      retries: 3
     restart: unless-stopped
 
   # Comments, display names, and access requests for the Kodai page (kodai1994/community/app.py).
@@ -72,6 +78,11 @@ services:
       - MAIL_FROM=${MAIL_FROM:-}
     depends_on:
       - jellyfin
+    healthcheck:
+      test: ["CMD", "python3", "-I", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=5)"]
+      interval: 1m
+      timeout: 10s
+      retries: 3
     restart: unless-stopped
 
   # Media worker (kodai1994/faceid/worker.py): adds photos members upload, and runs the
@@ -100,6 +111,28 @@ services:
     environment:
       - DATA_DIR=/data
       - THREADS=4
+    depends_on:
+      - community
+    restart: unless-stopped
+
+  # Captions worker (kodai1994/captions/worker.py): transcribes recordings moderators queue,
+  # one at a time, with Whisper on the CPU. Like faceid: capped, and on no network at all.
+  # Started by deploy.sh once the model is in CAPTIONS_MODELS (worker.py --download).
+  captions:
+    build: ./kodai1994/captions
+    image: yajur-kodai-captions
+    container_name: yajur-kodai-captions
+    profiles: ["captions"]
+    user: "${PUID}:${PGID}"
+    cpus: 6
+    network_mode: none
+    volumes:
+      - ./community-data:/data
+      - "${CAPTIONS_MODELS:-./captions-models}:/models:ro"
+      - "${MEDIA_DIR}/kodai1994-hls:/media/hls:ro"
+    environment:
+      - DATA_DIR=/data
+      - THREADS=6
     depends_on:
       - community
     restart: unless-stopped

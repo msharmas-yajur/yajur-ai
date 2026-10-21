@@ -1,4 +1,5 @@
 [Unit]
+OnFailure=kodai1994-alert@%n.service
 Description=Kodai 1994: keep each recording's sounds up to date (Enhanced, Voice focus, Original)
 
 [Service]

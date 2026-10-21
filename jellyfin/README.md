@@ -25,8 +25,19 @@ Browser ──https──▶ Cloudflare ──tunnel──▶ cloudflared ──
 
 - **Accounts are Jellyfin users.** Each member sees only the libraries they were given
   (one: Kodai 1994). Five wrong passwords lock an account. Tokens are per user and device.
-- **Members-only media.** At sign-in the page sets a `kodai_auth` cookie (the Jellyfin
-  token; `Path=/kodai1994/`, `SameSite=Strict`, `Secure`). For every request under
+- **The token never reaches the page.** Signing in goes through the community service
+  (`POST /kodai1994/api/session`), which signs in with Jellyfin and sets the token as the
+  `kodai_auth` cookie: `HttpOnly` (script can't read it), `Path=/kodai1994/`,
+  `SameSite=Strict`, `Secure`, 30 days with "Keep me signed in". The page's few Jellyfin
+  calls go to `/kodai1994/jf/`, where the gateway adds the token from the cookie and allows
+  only those calls (library listing, playback position, password change); anything else
+  there is 404. Sessions from before this kept the token in browser storage; the page moves
+  them over on the next visit (`POST /api/session/upgrade`) without signing anyone out.
+- **Content Security Policy.** Pages may run script only from this site and cdnjs (Video.js
+  and PDF.js, each pinned with a Subresource Integrity hash); no inline script, no `eval`.
+  The sign-in page's WebGL library (`ogl`) is kept in `site/vendor/` rather than loaded from
+  jsDelivr. A cross-site script injection would have no token to steal.
+- **Members-only media.** For every request under
   `/kodai1994/hls/` the gateway asks Jellyfin `GET /Items/<Kodai library>` with that token
   and serves the file only on `200` (404 for users without the library, 401 for bad
   tokens). Responses are `Cache-Control: private, no-store`, so Cloudflare never caches them
@@ -38,9 +49,15 @@ Browser ──https──▶ Cloudflare ──tunnel──▶ cloudflared ──
   case or slash variant, even with a valid token. Jellyfin 12.2 would otherwise serve
   streams and images to anyone with an item ID, and IDs derive from file paths (which this
   public repo contains). The player hides download, picture-in-picture and the context
-  menu, and overlays the viewer's name and the date as a moving watermark (videos and
-  photos), so a screen recording is traceable. A determined member can still capture the
-  segments or record the screen; there is no DRM. Invite people you trust.
+  menu, and overlays "kodai1994" and the date as a moving watermark (videos and photos).
+  It no longer shows the viewer's name, so a screen recording isn't traceable to a member.
+  A determined member can still capture the segments or record the screen; there is no
+  DRM. Invite people you trust.
+- **Audit log.** Approvals, rejections, moderator changes, sign-ins (and wrong passwords,
+  with the IP), and every removal, rename, caption correction or face-finding change is
+  recorded (`audit_log`, kept a year). Moderators see it under *Account → Recent actions*.
+  Server errors are logged with a short reference (`docker logs yajur-kodai-community`) that
+  the member's error message shows, so a report like "ref 3fa9c1" finds the traceback.
 - **Never point the tunnel, a Tailscale Funnel path, or anything public at Jellyfin's
   port.** The tunnel's service must be `http://gateway:80`. Host ports are `127.0.0.1` only.
 - **Unlisted.** Nothing on yajur.ai links here; `robots.txt` disallows everything and every
@@ -130,6 +147,39 @@ Browser ──https──▶ Cloudflare ──tunnel──▶ cloudflared ──
   run) and served members-only from `~/media/kodai1994-memories/` with a `sandbox` policy.
   Others can comment on a memory; its author or the admin can edit or delete it (deleting
   hides it; the PDF stays on disk and in the backup).
+- **Recorded memories.** *Record a memory* (Memories tab, or beside the player and photo
+  viewer, tagged to that moment) records the member's voice or a video in the browser (up to
+  10 minutes), or takes a recording from the device (MP3, M4A, MP4, MOV, WebM, Ogg, WAV; up to
+  95 MB, Cloudflare's limit). It's tagged like any memory and can be commented on and reacted
+  to. `kodai1994/media-queue.py` (systemd timer, every minute) makes the copy members play:
+  H.264/AAC MP4 or AAC M4A, levelled, with a poster frame, in `~/media/kodai1994-memories/rec/`
+  (members only). The recording as sent stays in `~/media/kodai1994-uploads/recordings/`.
+- **Clips.** Beside the player, *Add → Clip* names a stretch of a recording (start, end, title,
+  optionally who's in it). A clip plays from its start and pauses at its end (Replay, Keep
+  watching), shows as a band on the seek bar, has a link (`#clip/<id>`, *Copy link*),
+  reactions and comments, and is listed under *Videos → Clips*, on Home and on the profiles
+  of the people in it. Its maker or a moderator edits or deletes it.
+- **Captions and transcripts.** `kodai1994/captions/worker.py` (container `captions`, no
+  network, 6 cores) writes down what is said, with Whisper large-v3-turbo on this machine:
+  the audio never leaves it. A moderator presses *Transcript → Make a transcript* under a
+  video (or *Transcribe every recording without one*); the queue runs one recording at a
+  time, about 3–4× faster than real time. The player's CC menu then offers *Original (as
+  spoken)*; the transcript under the video marks the line being said, follows along,
+  searches, and jumps to a line when clicked. Whisper mishears names and singing, so lines
+  it's unsure of are left out, and moderators correct or remove lines (✎; corrections
+  survive a new transcript). The pilot (Oct 2026) found these tapes mostly English
+  conversation and Q&A; Whisper's Telugu, and its translation into English, were unusable,
+  so English captions for Telugu parts need another service (Sarvam, or Claude on the
+  transcript; see `tasks/kodai1994-captions-plan.md`). Model: `worker.py --download` into
+  `CAPTIONS_MODELS` (default `~/services/yajur-videos/captions-models`).
+- **Descriptions.** Each recording can have a short description (under its title, on its
+  card). Moderators write or edit it; `kodai1994/describe.py` suggests one from the
+  transcript with Claude (`claude-opus-5-5`) once `ANTHROPIC_API_KEY` is in `.env`
+  (nightly timer; the transcript is sent to Anthropic; `--dry-run` shows what would be).
+- **Search** (`/`): a full-text index (SQLite FTS5) of people, memories (text and who's in
+  them), comments, chapters, events, clips, photos (by who's tagged) and what was said in
+  the transcripts. Every word must match as a word beginning, in any order, accents ignored
+  ("prem sast" finds Premkumar Sastry); best matches first, with the matching passage.
 - **Moderators.** A Jellyfin administrator can make members moderators
   (`PUT /kodai1994/api/admin/moderators/<user id>`, `DELETE` to remove; table
   `moderators`). Moderators can do everything the administrator can *on the site*: edit or
@@ -164,6 +214,8 @@ service, and recreates the gateway and community containers. Run it after any ch
 | `~/media/kodai1994-brand/` | Logo and favicon (public; kept out of the repo) |
 | `~/media/kodai1994-identify/` | Face crops for the Identify page (members only) |
 | `~/tools/faceid/models/` | Face detection + recognition models for the `faceid` worker |
+| `~/services/yajur-videos/captions-models/` | Whisper large-v3-turbo for the `captions` worker (1.6 GB) |
+| `~/media/kodai1994-memories/rec/` | Playable copies of recorded memories (members only) |
 
 | Port (localhost only) | Service |
 |---|---|
@@ -200,7 +252,7 @@ journalctl --user -u kodai1994-processing -f        # "converted 9/18, ready to 
   backgrounds (no `<img>` to save) and blocks right-click, drag and long-press saving;
   a screenshot can still capture what's on screen.
 - **Sign-in page backgrounds**: on desktop, `site/pattern-waves.js` (a vanilla port of React
-  Bits' PatternWaves; WebGL2 via `ogl` 1.0.11 from jsDelivr) draws a mist-green "silk" dot
+  Bits' PatternWaves; WebGL2 via `ogl` 1.0.11, kept in `site/vendor/`) draws a mist-green "silk" dot
   surface behind the helix and form, with cursor ripples; it pauses when the sign-in screen
   is hidden. Tablets and phones skip it and show the helix behind the form instead.
 
@@ -228,16 +280,58 @@ through the rclone remote `BACKUP_REMOTE`:
 |---|---|
 | `BACKUP_SOURCE`: the original videos and photos | the folder itself, same file names |
 | `~/media/kodai1994-uploads/`: photos members uploaded (originals, kept even after removal from the page) | `Uploaded photos/` |
-| a snapshot of `community-data/community.db` (comments, people, faces, events, identify reviews) | `Site data/community-YYYY-MM-DD.db`, last 30 days |
+| `~/media/kodai1994-uploads/recordings/`: recorded memories, as sent | `Recorded memories/` |
+| `~/media/kodai1994-memories/`: PDF notes | `Memories/` |
+| a snapshot of `community-data/community.db` (comments, people, faces, events, clips, transcripts, identify reviews) | `Site data/community-YYYY-MM-DD.db`, last 30 days |
+| the stack: Jellyfin's `config/` (accounts, password hashes, library) with consistent database snapshots, `.env`, `Caddyfile`, `docker-compose.yml`, **encrypted** with `BACKUP_PASSPHRASE` (gpg, AES-256) | `Site data/stack-YYYY-MM-DD.tar.gz.gpg`, last 30 days |
 
 It only adds: files already on Drive under the same name are left alone and nothing is
-deleted there, except database snapshots older than 30 days. Not backed up because they're
-rebuilt from the originals: HLS streams, web MP4s, thumbnails, face crops. Jellyfin's
-`config/` (password hashes) stays off Drive; back it up separately if needed.
+deleted there, except snapshots older than 30 days. Not backed up because they're rebuilt
+from the originals: HLS streams, web MP4s, thumbnails, face crops, the playable copies of
+recorded memories. **Keep `BACKUP_PASSPHRASE` somewhere other than this machine** (a password
+manager): without it the stack archive can't be opened.
 
-Run it now: `systemctl --user start kodai1994-backup.service`; log:
-`journalctl --user -u kodai1994-backup.service`. To restore the database, stop the
-community container and copy a snapshot over `community-data/community.db`.
+**Restore test.** `kodai1994/restore-test.py` (monthly, `kodai1994-restore-test.timer`)
+downloads the newest database snapshot and stack archive, checks them (SQLite integrity,
+tables as full as the live ones, the archive decrypts, Jellyfin's database is intact with
+its accounts, `.env` is there), and checks with `rclone check` that every original,
+uploaded photo, recording and PDF is on Drive at the same size. It restores nothing. A
+failure alerts (see Monitoring); the last result is in `community-data/.restore-test.json`.
+
+Run them now: `systemctl --user start kodai1994-backup.service` /
+`kodai1994-restore-test.service`; logs with `journalctl --user -u …`. To restore the
+database, stop the community container and copy a snapshot over `community-data/community.db`.
+To restore the stack: `gpg -d stack-….tar.gz.gpg | tar -xz -C ~/services/yajur-videos`.
+
+## Monitoring and alerts
+
+`kodai1994/monitor.py` runs every 5 minutes (`kodai1994-monitor.timer`) and checks the
+containers (compose health checks on the gateway and community service), the site on this
+machine and from outside through the tunnel, that every recording's playlist lists its video,
+disk space, the last backup (36 h) and restore test, failed `kodai1994-*` jobs, and recorded
+memories waiting too long. A check failing twice in a row is emailed to `ADMIN_EMAIL` (the
+stack's SMTP settings) and, if `NTFY_URL` is set, posted to ntfy; recovery is reported too.
+Every `kodai1994-*` job also alerts the moment it fails, with its last log lines
+(`OnFailure=kodai1994-alert@…`). Moderators see the latest checks under *Account → How the
+site is doing*. Test the alerts: `~/services/yajur-videos/kodai1994/bin/monitor.py --test`.
+
+## Tests and staging
+
+- `python3 jellyfin/tests/test_community.py`: the community service over HTTP against a
+  stand-in Jellyfin (`tests/stub_jellyfin.py`), with an empty database: sign-in and the
+  HttpOnly cookie, permissions, the audit log, clips, search, recordings (with ffmpeg),
+  the database migration. No Docker, nothing live. **`deploy.sh` runs it first and stops if
+  it fails** (`SKIP_TESTS=1` to override).
+- `python3 jellyfin/tests/smoke.py [BASE]`: the running site as a visitor: security headers,
+  services answering, nothing members-only reachable signed out. `deploy.sh` runs it after.
+- `jellyfin/tests/staging.sh up` starts a staging copy at `http://127.0.0.1:8097/kodai1994/`:
+  this checkout's gateway, page and community service on a copy of the live database, the
+  live streams read-only, the stand-in Jellyfin (accounts `admin`, `member@example.com`,
+  password `test-password`). `CAPTIONS=1` adds the captions worker. `staging.sh down` stops it.
+- `python3 jellyfin/tests/e2e.py`: the page in Chrome (Playwright) against staging: sign-in
+  and security, playback, the old-session move, clips, recording a memory with a fake
+  camera, captions, search, the audit panel, the other pages. Any page error or CSP
+  violation fails it.
 
 ## Capacity (measured 2026-10-20)
 

@@ -1,4 +1,5 @@
 [Unit]
+OnFailure=kodai1994-alert@%n.service
 Description=Kodai 1994: stabilize the next shaky recordings (one at a time, overnight)
 
 [Service]
