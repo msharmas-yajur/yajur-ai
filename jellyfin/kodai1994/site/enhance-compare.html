@@ -13,6 +13,11 @@
 	:root { --pine: #14271d; --pine-deep: #0c1912; --khadi: #f3f1ea; --mist: #a9bdb0; --saffron: #ea7a2a; --line: rgba(243,241,234,.14); color-scheme: dark; }
 	* { box-sizing: border-box; }
 	body { margin: 0; background: var(--pine-deep); color: var(--khadi); font: 400 17px/1.55 'Figtree', system-ui, sans-serif; }
+	/* Native controls follow the dark theme too: a browser's own drop-down list and autofill
+	   colours otherwise show light text on a light background. */
+	select, option, optgroup { background-color: #0f1f17; color: #f3f1ea; }
+	input:-webkit-autofill, input:-webkit-autofill:hover, input:-webkit-autofill:focus, textarea:-webkit-autofill {
+		-webkit-text-fill-color: #f3f1ea; caret-color: #f3f1ea; box-shadow: 0 0 0 1000px #13241b inset; transition: background-color 9999s; }
 	main { max-width: 1200px; margin: 0 auto; padding: 32px 16px 96px; }
 	h1 { font: 400 clamp(2rem, 5vw, 3rem)/1.1 'Marcellus', Georgia, serif; margin: 0 0 10px; }
 	h2 { font: 400 1.5rem/1.2 'Marcellus', Georgia, serif; margin: 0 0 12px; }
