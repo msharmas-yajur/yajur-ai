@@ -419,7 +419,15 @@
 	.viewer { position: fixed; inset: 0; z-index: 60; background: rgba(6, 13, 9, .96); display: grid; grid-template-rows: auto 1fr; padding: 16px; }
 	.viewer__head { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 0 4px 12px; }
 	.viewer__frame { position: relative; display: grid; place-items: center; min-height: 0; overflow: hidden; }
-	.viewer__frame img { max-width: 100%; max-height: calc(100vh - 110px); object-fit: contain; border-radius: 6px; user-select: none; -webkit-user-drag: none; -webkit-touch-callout: none; }
+	.viewer__frame img { max-width: 100%; max-height: calc(100vh - 110px); object-fit: contain; border-radius: 6px; user-select: none; -webkit-user-drag: none; -webkit-touch-callout: none; transition: opacity .2s; }
+	/* While the next photo loads: the previous one dimmed, with a spinner over it */
+	.viewer__frame.is-loading img { opacity: .25; }
+	.viewer__frame img:not([src]) { visibility: hidden; }
+	.viewer__frame.is-loading::after { content: ''; position: absolute; left: 50%; top: 50%; width: 46px; height: 46px; margin: -23px 0 0 -23px; border-radius: 50%;
+		border: 3px solid rgba(243,241,234,.18); border-top-color: var(--saffron); animation: viewer-spin .8s linear infinite; pointer-events: none; z-index: 3; }
+	.viewer__frame.is-failed::after { content: 'This photo couldn’t be loaded. Try the next one, or reload the page.'; position: absolute; inset: auto 16px 50% 16px; text-align: center; color: var(--mist); }
+	@keyframes viewer-spin { to { transform: rotate(360deg); } }
+	@media (prefers-reduced-motion: reduce) { .viewer__frame.is-loading::after { animation-duration: 2.4s; } }
 	.viewer__nav { position: absolute; top: 50%; transform: translateY(-50%); width: 52px; height: 52px; border-radius: 50%; border: 1px solid var(--line); background: rgba(12,25,18,.7); cursor: pointer; display: grid; place-items: center; }
 	.viewer__nav svg { width: 22px; height: 22px; fill: var(--khadi); }
 	.viewer__nav--prev { left: 8px; } .viewer__nav--next { right: 8px; }
@@ -515,6 +523,24 @@
 
 	/* Marker ticks on the seek bar */
 	.mk-tick { position: absolute; top: 50%; width: 3px; height: 160%; transform: translate(-50%, -50%); background: var(--khadi); border-radius: 2px; pointer-events: none; opacity: .85; }
+	.mk-tick--memory { width: 9px; height: 9px; border-radius: 2px; transform: translate(-50%, -50%) rotate(45deg); background: #8fc79d; box-shadow: 0 0 0 1.5px rgba(0,0,0,.6); }
+	.kind--memory { border-color: rgba(143,199,157,.6); color: #8fc79d; }
+	.marker--memory .marker__title { font-style: italic; }
+	/* Recording picker (memory editor): a searchable list, not the browser's <select> */
+	.rec-pick { position: relative; flex: 1 1 300px; min-width: 0; }
+	.rec-pick__btn { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; padding: 7px 12px; border: 1px solid var(--line); border-radius: 12px; background: rgba(0,0,0,.25); color: var(--khadi); cursor: pointer; font: inherit; min-height: 46px; }
+	.rec-pick__btn:hover { border-color: var(--mist); }
+	.rec-pick__btn span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+	.rec-pick__btn i, .rec-pick__menu i { flex: none; width: 48px; height: 36px; border-radius: 6px; background: var(--pine) center / cover no-repeat; }
+	.rec-pick__panel { position: absolute; left: 0; right: 0; top: calc(100% + 4px); z-index: 30; padding: 6px; background: #0f1f17; border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 14px 34px rgba(0,0,0,.5); }
+	.rec-pick__panel .field { margin-bottom: 6px; }
+	.rec-pick__menu { list-style: none; margin: 0; padding: 0; max-height: 300px; overflow-y: auto; }
+	.rec-pick__menu li { display: flex; align-items: center; gap: 10px; padding: 6px 8px; border-radius: 8px; cursor: pointer; }
+	.rec-pick__menu li b { display: block; font-weight: 600; font-size: .92rem; line-height: 1.3; }
+	.rec-pick__menu li small { color: var(--mist); font-size: .78rem; }
+	.rec-pick__menu li[aria-selected=true] { background: rgba(243,241,234,.12); }
+	.rec-pick__menu li.is-empty { color: var(--mist); cursor: default; }
+	.mem-side .btn { margin-top: 6px; }
 	.mk-tick--event { width: 7px; height: 7px; border-radius: 50%; background: var(--saffron); box-shadow: 0 0 0 1.5px rgba(0,0,0,.6); }
 	@media (max-width: 1000px) {
 		.player__body { grid-template-columns: minmax(0, 1fr); grid-template-areas: "main" "side" "comments"; }
@@ -1978,20 +2004,18 @@
 				chips.appendChild(c);
 			});
 		}
-		var addRow = el('div', 'tag-add'), sel = el('select', 'field'), at = el('input', 'field'), addBtn = el('button', 'btn btn--quiet', 'Tag recording');
-		sel.setAttribute('aria-label', 'Recording'); at.placeholder = 'at 12:30'; at.setAttribute('aria-label', 'Moment in the recording (optional)'); at.inputMode = 'numeric'; addBtn.type = 'button';
-		sel.appendChild(Object.assign(el('option', '', 'Choose a recording…'), { value: '' }));
-		entries.filter(function (e) { return ready[e.slug]; }).forEach(function (e) { sel.appendChild(Object.assign(el('option', '', e.longDate + ': ' + e.title), { value: e.slug })); });
+		var addRow = el('div', 'tag-add'), sel = recordingPicker(), at = el('input', 'field'), addBtn = el('button', 'btn btn--quiet', 'Tag recording');
+		at.placeholder = 'at 12:30'; at.setAttribute('aria-label', 'Moment in the recording (optional)'); at.inputMode = 'numeric'; addBtn.type = 'button';
 		addBtn.addEventListener('click', function () {
-			if (!sel.value) { sel.focus(); return; }
+			if (!sel.value) { sel.open(); return; }
 			var pos = at.value.trim() ? parseTime(at.value.replace(/^at\s*/i, '')) : null;
 			if (at.value.trim() && pos == null) { at.setCustomValidity('Enter a time like 12:30 or 1:02:10.'); at.reportValidity(); return; }
 			var target = 'video:' + sel.value;
 			d.links = d.links.filter(function (l) { return l.target !== target; });
-			d.links.push({ target: target, position: pos }); sel.value = ''; at.value = ''; drawChips();
+			d.links.push({ target: target, position: pos }); sel.clear(); at.value = ''; drawChips();
 		});
 		at.addEventListener('input', function () { at.setCustomValidity(''); });
-		addRow.append(sel, at, addBtn); fs.appendChild(addRow);
+		addRow.append(sel.el, at, addBtn); fs.appendChild(addRow);
 		fs.appendChild(el('p', 'hint', 'Photos: tap to tag or untag.'));
 		var grid = el('div', 'tag-photos'); fs.appendChild(grid);
 		function drawPhotos() {
@@ -2038,12 +2062,67 @@
 		(nameInput || title).focus();
 	}
 
+	// Choose a recording: a button showing the choice, opening a searchable list with
+	// thumbnails (the browser's own <select> list ignores the page's colours).
+	// Returns { el, value, open(), clear() }.
+	function recordingPicker() {
+		var api = { value: '' }, root = el('div', 'rec-pick');
+		var btn = el('button', 'rec-pick__btn'); btn.type = 'button'; btn.setAttribute('aria-haspopup', 'listbox');
+		var panel = el('div', 'rec-pick__panel'); panel.hidden = true;
+		var q = el('input', 'field'); q.placeholder = 'Search by date or title'; q.autocomplete = 'off'; q.setAttribute('aria-label', 'Search the recordings');
+		var menu = el('ul', 'rec-pick__menu'); menu.setAttribute('role', 'listbox');
+		panel.append(q, menu); root.append(btn, panel);
+		var list = entries.filter(function (e) { return ready[e.slug]; }), shown = [], active = 0;
+		function face(e) {
+			btn.textContent = '';
+			if (!e) { btn.appendChild(el('span', 'muted', 'Choose a recording…')); return; }
+			var i = el('i'); i.style.backgroundImage = 'url("' + HLS + e.slug + '/thumb.jpg")';
+			btn.append(i, el('span', '', e.longDate + ': ' + e.title));
+		}
+		function draw() {
+			var k = nameKey(q.value);
+			shown = list.filter(function (e) { return !k || nameKey(e.longDate + ' ' + e.title).indexOf(k) >= 0; });
+			active = Math.min(active, Math.max(0, shown.length - 1));
+			menu.textContent = '';
+			if (!shown.length) menu.appendChild(el('li', 'is-empty', 'No recording matches “' + q.value + '”.'));
+			shown.forEach(function (e, n) {
+				var li = el('li'), i = el('i'), t = el('span');
+				li.setAttribute('role', 'option'); li.setAttribute('aria-selected', String(n === active));
+				i.style.backgroundImage = 'url("' + HLS + e.slug + '/thumb.jpg")';
+				t.append(el('b', '', e.title), el('small', '', e.longDate));
+				li.append(i, t);
+				li.addEventListener('mousedown', function (ev) { ev.preventDefault(); choose(e); });
+				menu.appendChild(li);
+			});
+		}
+		function paint() {
+			menu.querySelectorAll('[role=option]').forEach(function (li, n) { li.setAttribute('aria-selected', String(n === active)); if (n === active) li.scrollIntoView({ block: 'nearest' }); });
+		}
+		function choose(e) { api.value = e.slug; face(e); close(); btn.focus(); }
+		function close() { panel.hidden = true; btn.setAttribute('aria-expanded', 'false'); }
+		api.open = function () { panel.hidden = false; btn.setAttribute('aria-expanded', 'true'); q.value = ''; active = 0; draw(); q.focus(); };
+		api.clear = function () { api.value = ''; face(null); };
+		btn.addEventListener('click', function () { if (panel.hidden) api.open(); else close(); });
+		q.addEventListener('input', function () { active = 0; draw(); });
+		q.addEventListener('keydown', function (ev) {
+			if (ev.key === 'ArrowDown') { ev.preventDefault(); active = Math.min(active + 1, shown.length - 1); paint(); }
+			else if (ev.key === 'ArrowUp') { ev.preventDefault(); active = Math.max(active - 1, 0); paint(); }
+			else if (ev.key === 'Enter') { ev.preventDefault(); if (shown[active]) choose(shown[active]); }
+			else if (ev.key === 'Escape') { ev.preventDefault(); ev.stopPropagation(); close(); btn.focus(); }
+		});
+		q.addEventListener('blur', function () { setTimeout(function () { if (!root.contains(document.activeElement)) close(); }, 120); });
+		face(null);
+		api.el = root;
+		return api;
+	}
+
 	// "Memories" in the player and photo viewer: what's tagged to this recording or photo.
 	function memoriesSection(target, timeOf) {
 		var sec = el('section', 'mem-side');
 		sec.appendChild(el('h3', '', 'Memories'));
 		var ul = el('ul'); sec.appendChild(ul);
-		var write = el('button', 'linkish', target.indexOf('video:') === 0 ? 'Write about this recording' : 'Write about this photo'); write.type = 'button';
+		var write = el('button', 'btn btn--quiet', ''); write.type = 'button';
+		write.append(icon('pen-line'), document.createTextNode(target.indexOf('video:') === 0 ? 'Write a memory about this recording' : 'Write a memory about this photo'));
 		write.addEventListener('click', function () {
 			var pos = timeOf ? Math.floor(timeOf() || 0) : null;
 			var link = { target: target, position: pos || null };
@@ -2388,7 +2467,37 @@
 	// Enhanced (Real-ESRGAN 2×, enhance-photos.sh) or the original; remembered per device.
 	var QUALITY_KEY = 'yajur-kodai-photo-quality';
 	var photoQuality = storeGet('localStorage', QUALITY_KEY) === 'original' ? 'original' : 'enhanced';
-	function photoSrc(ph, q) { return (q || photoQuality) === 'enhanced' ? HLS + 'photos-enhanced/' + ph.id + '.jpg' : HLS + 'photos/' + ph.src; }
+	// Enhanced copies exist only for the folder's photos (01-99): uploads never have one, so
+	// don't ask. (A folder photo without one, e.g. replaced by a scan, falls back quietly.)
+	function mayHaveEnhanced(ph) { return Number(ph.id) < 101; }
+	function photoSrc(ph, q) { return (q || photoQuality) === 'enhanced' && mayHaveEnhanced(ph) ? HLS + 'photos-enhanced/' + ph.id + '.jpg' : HLS + 'photos/' + ph.src; }
+	// Load a photo off-screen, then show it: while it loads the frame shows a spinner over
+	// the dimmed previous photo (never the browser's broken-image icon). If the enhanced copy
+	// is missing it falls back to the original; a load that finishes after the member has
+	// moved on is ignored.
+	var photoLoadSeq = 0;
+	function loadViewerPhoto(ph, version) {
+		var seq = ++photoLoadSeq, img = $('viewer-img'), frame = $('viewer-frame');
+		var want = version === 'enhanced' && mayHaveEnhanced(ph) ? 'enhanced' : 'original';
+		showQuality(mayHaveEnhanced(ph) ? true : false);
+		frame.classList.add('is-loading'); frame.classList.remove('is-failed');
+		function attempt(v) {
+			var probe = new Image();
+			probe.onload = function () {
+				if (seq !== photoLoadSeq) return;
+				img.dataset.version = v; img.src = probe.src;
+				frame.classList.remove('is-loading');
+			};
+			probe.onerror = function () {
+				if (seq !== photoLoadSeq) return;
+				if (v === 'enhanced') { showQuality(false); attempt('original'); return; }
+				frame.classList.remove('is-loading'); frame.classList.add('is-failed');
+				img.removeAttribute('src');
+			};
+			probe.src = photoSrc(ph, v);
+		}
+		attempt(want);
+	}
 	function showQuality(hasEnhanced) {
 		$('viewer-quality').querySelectorAll('button').forEach(function (b) {
 			var q = b.dataset.quality, effective = hasEnhanced === false ? 'original' : photoQuality;
@@ -2433,12 +2542,7 @@
 		document.querySelectorAll('#viewer-frame .face-pick, #viewer-frame .faces-hint').forEach(function (n) { n.remove(); });
 		photoZoom.reset();
 		var img = $('viewer-img'), ph = list[photoIndex];
-		img.onerror = function () {
-			if (img.dataset.version === 'enhanced') { img.dataset.version = 'original'; img.src = photoSrc(ph, 'original'); showQuality(false); }
-		};
-		img.dataset.version = photoQuality;
-		img.src = photoSrc(ph);
-		showQuality(true);
+		loadViewerPhoto(ph, photoQuality);
 		$('viewer-count').textContent = 'Photo ' + (photoIndex + 1) + ' of ' + n + (isHires(ph) ? ' · High res, ' + origSize(ph) + ' original' : '');
 		var side = el('div'), up = uploadsByPhoto[list[photoIndex].id];
 		if (up) {
@@ -2525,9 +2629,9 @@
 		b.addEventListener('click', function () {
 			if (b.disabled || b.dataset.quality === photoQuality) return;
 			photoQuality = b.dataset.quality; storeSet('localStorage', QUALITY_KEY, photoQuality);
-			var img = $('viewer-img'), ph = viewerPhotos[photoIndex];
+			var ph = viewerPhotos[photoIndex];
 			if (!ph) return;
-			img.dataset.version = photoQuality; img.src = photoSrc(ph); showQuality(true);
+			loadViewerPhoto(ph, photoQuality);
 		});
 	});
 	$('viewer-img').addEventListener('load', function () { if (marking) { placeLayer(); loadFaces(); } });
@@ -2789,9 +2893,9 @@
 		var st = markerState = { slug: slug, items: [], filter: 'all' };
 		var root = st.root = el('section', 'markers');
 		var head = el('div', 'markers__head');
-		head.appendChild(el('h3', '', 'Chapters & events'));
+		head.appendChild(el('h3', '', 'Chapters, events & memories'));
 		var filter = el('div', 'markers__filter'); filter.setAttribute('role', 'group'); filter.setAttribute('aria-label', 'Show');
-		[['all', 'All'], ['chapter', 'Chapters'], ['event', 'Events']].forEach(function (f) {
+		[['all', 'All'], ['chapter', 'Chapters'], ['event', 'Events'], ['memory', 'Memories']].forEach(function (f) {
 			var b = el('button', '', f[1]); b.type = 'button'; b.dataset.filter = f[0]; b.setAttribute('aria-pressed', String(f[0] === 'all'));
 			b.addEventListener('click', function () {
 				st.filter = f[0];
@@ -2806,23 +2910,28 @@
 
 		// Add form, collapsed behind one button so the list gets the space
 		var addWrap = el('div', 'markers__add');
-		var open = el('button', 'btn btn--quiet', 'Add a chapter or event'); open.type = 'button';
+		var open = el('button', 'btn btn--quiet', 'Add a chapter, event or memory'); open.type = 'button';
 		var form = el('form'); form.hidden = true; form.style.display = 'grid'; form.style.gap = '8px';
 		var seg = el('div', 'seg'); seg.setAttribute('role', 'radiogroup'); seg.setAttribute('aria-label', 'Type');
-		['chapter', 'event'].forEach(function (k, i) {
+		['chapter', 'event', 'memory'].forEach(function (k, i) {
 			var l = el('label'), r = el('input'); r.type = 'radio'; r.name = 'kind-' + slug; r.value = k; r.checked = i === 0;
-			l.appendChild(r); l.appendChild(document.createTextNode(k === 'chapter' ? 'Chapter' : 'Event')); seg.appendChild(l);
+			l.appendChild(r); l.appendChild(document.createTextNode({ chapter: 'Chapter', event: 'Event', memory: 'Memory' }[k])); seg.appendChild(l);
 		});
-		var hint = el('p', 'hint', 'A chapter starts a section of the tape. An event tags the people who appear at one moment.');
+		var hint = el('p', 'hint', '');
+		var HINTS = { chapter: 'A chapter starts a section of the tape.', event: 'An event tags the people who appear at one moment.',
+			memory: 'A memory is your own account of this moment, as long as you like. It opens the memory editor with this recording tagged at the time below.' };
 		var titleLabel = el('label', '', 'Title'); titleLabel.htmlFor = 'mk-title-' + slug;
 		var title = el('input', 'field'); title.id = 'mk-title-' + slug; title.maxLength = 100; title.required = true; title.placeholder = 'For example, Morning darshan';
 		var peopleLabel = el('label', '', 'People at this moment');
 		var picker = peoplePicker([]);
 		function kindNow() { return form.querySelector('input[type=radio]:checked').value; }
 		function showKind() {
-			var ev = kindNow() === 'event';
-			titleLabel.hidden = title.hidden = ev; title.required = !ev;
+			var k = kindNow(), ev = k === 'event', mem = k === 'memory';
+			titleLabel.hidden = title.hidden = ev || mem; title.required = k === 'chapter';
 			peopleLabel.hidden = picker.el.hidden = !ev;
+			hint.textContent = HINTS[k];
+			add.textContent = mem ? 'Write the memory' : 'Add';
+			if (nameLabel) nameLabel.hidden = nameInput.hidden = mem;   // the editor asks for it
 		}
 		var timeLabel = el('label', '', 'Time'); timeLabel.htmlFor = 'mk-time-' + slug;
 		var row = el('div', 'markers__row');
@@ -2840,7 +2949,7 @@
 		actions.appendChild(add); actions.appendChild(cancel);
 		var err = el('p', 'error'); err.setAttribute('role', 'alert');
 		[seg, hint, titleLabel, title, peopleLabel, picker.el, timeLabel, row].forEach(function (x) { form.appendChild(x); });
-		seg.addEventListener('change', function () { err.textContent = ''; showKind(); if (kindNow() === 'event' && !picker.count()) picker.focus(); else if (kindNow() === 'chapter') title.focus(); });
+		seg.addEventListener('change', function () { err.textContent = ''; showKind(); if (kindNow() === 'event' && !picker.count()) picker.focus(); else if (kindNow() === 'chapter') title.focus(); else time.focus(); });
 		if (nameInput) { form.appendChild(nameLabel); form.appendChild(nameInput); }
 		form.appendChild(actions); form.appendChild(err);
 		addWrap.appendChild(open); addWrap.appendChild(form); root.appendChild(addWrap);
@@ -2854,6 +2963,11 @@
 			var pos = parseTime(time.value);
 			if (pos === null) { err.textContent = 'Enter the time as hours:minutes:seconds, like 1:02:10.'; return; }
 			var kind = kindNow();
+			if (kind === 'memory') {
+				closePlayer();
+				editMemory({ kind: 'article', title: '', body: '', links: [{ target: 'video:' + slug, position: pos }], people: [] });
+				return;
+			}
 			if (kind === 'event' && !picker.count()) { err.textContent = 'Tag at least one person: press + and choose a name.'; return; }
 			add.disabled = true;
 			var setName = nameInput ? capi('/me', { method: 'PUT', body: { displayName: nameInput.value } }).then(function (r) { if (me) me.displayName = r.displayName; }) : Promise.resolve();
@@ -2874,11 +2988,12 @@
 			list.textContent = '';
 			var shown = st.items.filter(function (m) { return st.filter === 'all' || m.kind === st.filter; });
 			empty.hidden = shown.length > 0;
-			empty.textContent = st.items.length ? 'Nothing of this type yet.' : 'No chapters or events yet. Add the first one while you watch.';
+			empty.textContent = st.items.length ? 'Nothing of this type yet.' : 'No chapters, events or memories yet. Add the first one while you watch.';
 			shown.forEach(function (m) { list.appendChild(markerRow(m)); });
 			highlightCurrent();
 		}
 		function markerRow(m) {
+			if (m.kind === 'memory') return memoryRow(m);
 			var li = el('li', 'marker marker--' + m.kind); li.dataset.id = m.id; li.dataset.pos = m.position;
 			var jump = function () { player.currentTime(m.position); player.play().catch(function () {}); };
 			var t = el('button', 'marker__time', fmtDuration(m.position * 1e7)); t.type = 'button';
@@ -2898,6 +3013,21 @@
 				});
 				meta.appendChild(edit); meta.appendChild(del);
 			}
+			li.appendChild(t); li.appendChild(name); li.appendChild(meta);
+			return li;
+		}
+		// A memory tagged to this recording: the time jumps there (if it has one), the title opens it.
+		function memoryRow(m) {
+			var li = el('li', 'marker marker--memory'); li.dataset.pos = m.position == null ? '' : m.position;
+			var t = el('button', 'marker__time', m.position == null ? '—' : fmtDuration(m.position * 1e7)); t.type = 'button';
+			if (m.position == null) { t.disabled = true; t.title = 'About the whole recording'; }
+			else t.addEventListener('click', function () { player.currentTime(m.position); player.play().catch(function () {}); });
+			var name = el('button', 'marker__title', m.title); name.type = 'button';
+			name.setAttribute('aria-label', 'Open the memory: ' + m.title);
+			name.addEventListener('click', function () { closePlayer(); openMemory(m.memoryId); });
+			var meta = el('div', 'marker__meta');
+			meta.appendChild(el('span', 'kind kind--memory', 'Memory'));
+			meta.appendChild(el('span', '', 'by ' + m.author));
 			li.appendChild(t); li.appendChild(name); li.appendChild(meta);
 			return li;
 		}
@@ -2946,9 +3076,21 @@
 			});
 		}
 		function load() {
-			return capi('/markers?target=' + encodeURIComponent('video:' + slug)).then(function (items) {
+			var target = 'video:' + slug;
+			return Promise.all([
+				capi('/markers?target=' + encodeURIComponent(target)),
+				capi('/memories?target=' + encodeURIComponent(target)).catch(function () { return []; })
+			]).then(function (res) {
 				if (markerState !== st) return;
-				st.items = items; renderList(); renderTicks();
+				var mems = res[1].map(function (mm) {
+					var l = mm.links.filter(function (x) { return x.target === target; })[0] || {};
+					return { kind: 'memory', memoryId: mm.id, title: mm.title, author: mm.author, position: l.position == null ? null : l.position };
+				});
+				// by time; memories about the whole recording (no time) at the end
+				st.items = res[0].concat(mems).sort(function (a, b) {
+					return (a.position == null) - (b.position == null) || (a.position || 0) - (b.position || 0);
+				});
+				renderList(); renderTicks();
 			}).catch(function (ex) { empty.hidden = false; empty.textContent = ex.message; });
 		}
 		st.load = load;
@@ -2972,6 +3114,7 @@
 		var d = player.duration() || sbRuntime;
 		if (!markerState || !d) return;
 		markerState.items.forEach(function (m) {
+			if (m.position == null) return;
 			var tick = el('div', 'mk-tick mk-tick--' + m.kind);
 			tick.style.left = Math.min(100, m.position / d * 100) + '%';
 			tick.title = fmtDuration(m.position * 1e7) + ' ' + m.title;
@@ -3100,7 +3243,6 @@
 		loadStoryboard(e.slug, (item.RunTimeTicks || 0) / 1e7);
 		mountMarkers(e.slug);
 		var below = el('div');
-		below.appendChild(memoriesSection('video:' + e.slug, function () { return player.currentTime(); }));
 		below.appendChild(commentsPanel('video:' + e.slug, {
 			timeOf: function () { return player.currentTime(); },
 			seek: function (t) { player.currentTime(t); player.play().catch(function () {}); $('player').scrollTo({ top: 0, behavior: 'smooth' }); }

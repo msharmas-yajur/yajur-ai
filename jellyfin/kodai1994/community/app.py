@@ -158,8 +158,13 @@ def send_mail(to, subject, body):
         return False
 
 
-def send_mail_later(to, subject, body):
-    threading.Thread(target=send_mail, args=(to, subject, body), daemon=True).start()
+def send_mail_later(to, subject, body, then=None):
+    """Send in the background; then(ok) is called with the result (e.g. to record it)."""
+    def run():
+        ok = send_mail(to, subject, body)
+        if then:
+            then(ok)
+    threading.Thread(target=run, daemon=True).start()
 
 
 # ── Storage
@@ -339,6 +344,13 @@ CREATE TABLE IF NOT EXISTS access_requests (
 """)
 
 
+# Whether each access request's emails went out: the notice to ADMIN_EMAIL and, once
+# approved, the sign-in details to the person (NULL = not attempted, 0 = failed, 1 = sent).
+_req_cols = [r[1] for r in db.execute("PRAGMA table_info(access_requests)").fetchall()]
+for _col in ("notice_emailed", "credentials_emailed"):
+    if _col not in _req_cols:
+        db.execute(f"ALTER TABLE access_requests ADD COLUMN {_col} INTEGER")
+db.commit()
 if "portrait_face" not in [r[1] for r in db.execute("PRAGMA table_info(people)").fetchall()]:
     db.execute("ALTER TABLE people ADD COLUMN portrait_face INTEGER")  # chosen 1994 face; NULL = first marked
     db.commit()
@@ -1330,13 +1342,14 @@ class Handler(BaseHTTPRequestHandler):
             return 202, {"ok": True}
         if query("SELECT COUNT(*) AS n FROM access_requests WHERE status = 'pending'")[0]["n"] >= MAX_PENDING_REQUESTS:
             raise ApiError(503, "Requests are paused for now. Ask the person who shared this link.")
-        execute("INSERT INTO access_requests (name, email, message, ip, created_at) VALUES (?, ?, ?, ?, ?)",
+        rid = execute("INSERT INTO access_requests (name, email, message, ip, created_at) VALUES (?, ?, ?, ?, ?)",
                 (name, email, message, ip, now()))
         send_mail_later(ADMIN_EMAIL, f"Kodai 1994: {name} is asking for access",
                         f"{name} <{email}> asked for access to the Kodai 1994 recordings.\n\n"
                         + (f"Their message:\n{message}\n\n" if message else "")
                         + f"Approve or reject it here (sign in as the administrator):\n{SITE_URL}#requests\n\n"
-                        "Approving creates their account and emails them their sign-in details.\n")
+                        "Approving creates their account and emails them their sign-in details.\n",
+                        then=lambda ok: execute("UPDATE access_requests SET notice_emailed = ? WHERE id = ?", (int(ok), rid)))
         return 202, {"ok": True}
 
     def get_requests(self, params):
@@ -1379,6 +1392,7 @@ class Handler(BaseHTTPRequestHandler):
                             f"Link:     {SITE_URL}\nUsername: {req['email']}\nPassword: {password}\n\n"
                             "After signing in, you can choose a new password under Account.\n"
                             "Please keep these details to yourself; the recordings are shared privately.\n")
+        execute("UPDATE access_requests SET credentials_emailed = ? WHERE id = ?", (int(emailed), int(rid)))
         return 200, {"name": req["name"], "username": req["email"], "password": password, "link": SITE_URL, "emailed": emailed}
 
     def reject_request(self, params, rid):
