@@ -6,7 +6,7 @@ keywords: "Yajur, Yajur.ai, Yajur Healthcare, medical data infrastructure, healt
 url: "https://yajur.ai"
 baseurl: ""
 
-# Private video library (/videos/) — Jellyfin server exposed via Cloudflare Tunnel. See jellyfin/README.md
+# Private video library (/videos/) — Jellyfin server exposed via Cloudflare Tunnel. Code: github.com/msharmas-yajur/kodai1994
 jellyfin_url: "https://videos.yajur.ai"
 
 # Clean, category-free post URLs (/:year/:month/:day/:title.html).
@@ -32,7 +32,6 @@ exclude:
   - README.md
   - LICENSE
   - copilot
-  - jellyfin
 
 future: true
 
