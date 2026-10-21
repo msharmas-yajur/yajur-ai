@@ -1227,7 +1227,8 @@ class Handler(BaseHTTPRequestHandler):
             "memories": n(f"SELECT COUNT(*) AS n FROM memories m LEFT JOIN profiles p ON p.user_id = m.user_id WHERE m.deleted_at IS NULL AND m.created_at >= ? AND NOT {T}"),
             "photos": n(f"SELECT COUNT(*) AS n FROM photo_uploads u LEFT JOIN profiles p ON p.user_id = u.user_id WHERE u.status = 'ready' AND u.created_at >= ? AND NOT {T}"),
             "comments": n(f"SELECT COUNT(*) AS n FROM comments c LEFT JOIN profiles p ON p.user_id = c.user_id WHERE c.deleted_at IS NULL AND c.created_at >= ? AND NOT {T}"),
-            "moments": n(f"SELECT COUNT(*) AS n FROM markers k LEFT JOIN profiles p ON p.user_id = k.user_id WHERE k.deleted_at IS NULL AND k.created_at >= ? AND NOT {T}"),
+            "chapters": n(f"SELECT COUNT(*) AS n FROM markers k LEFT JOIN profiles p ON p.user_id = k.user_id WHERE k.deleted_at IS NULL AND k.kind = 'chapter' AND k.created_at >= ? AND NOT {T}"),
+            "events": n(f"SELECT COUNT(*) AS n FROM markers k LEFT JOIN profiles p ON p.user_id = k.user_id WHERE k.deleted_at IS NULL AND k.kind = 'event' AND k.created_at >= ? AND NOT {T}"),
             "faces": n("SELECT COUNT(*) AS n FROM identify_suggestions WHERE status = 'confirmed' AND reviewed_at >= ?"),
             "members": n("SELECT COUNT(*) AS n FROM access_requests WHERE status = 'approved' AND decided_at >= ?"),
         }
@@ -1257,7 +1258,8 @@ class Handler(BaseHTTPRequestHandler):
                      "COALESCE((SELECT a.decided_at FROM access_requests a WHERE a.email = p.username AND a.status = 'approved'), p.created_at) AS joined, "
                      "(SELECT COUNT(*) FROM comments c WHERE c.user_id = p.user_id AND c.deleted_at IS NULL) AS comments, "
                      "(SELECT COUNT(*) FROM memories m WHERE m.user_id = p.user_id AND m.deleted_at IS NULL) AS memories, "
-                     "(SELECT COUNT(*) FROM markers k WHERE k.user_id = p.user_id AND k.deleted_at IS NULL) AS moments, "
+                     "(SELECT COUNT(*) FROM markers k WHERE k.user_id = p.user_id AND k.deleted_at IS NULL AND k.kind = 'chapter') AS chapters, "
+                     "(SELECT COUNT(*) FROM markers k WHERE k.user_id = p.user_id AND k.deleted_at IS NULL AND k.kind = 'event') AS events, "
                      "(SELECT COUNT(*) FROM photo_uploads u WHERE u.user_id = p.user_id AND u.status = 'ready') AS photos, "
                      "(SELECT COUNT(*) FROM photo_faces f WHERE f.added_by = p.user_id) AS faces, "
                      "EXISTS (SELECT 1 FROM moderators mo WHERE mo.user_id = p.user_id) AS moderator, "
@@ -1273,7 +1275,7 @@ class Handler(BaseHTTPRequestHandler):
             return min(ts) if ts else None
         out = [{"name": r["display_name"] or "A member", "joined": joined(r), "lastSeen": r["last_seen_at"], "personId": r["person_id"],
                 "moderator": bool(r["moderator"]),
-                "contributions": {k: r[k] for k in ("comments", "memories", "moments", "photos", "faces")}} for r in rows]
+                "contributions": {k: r[k] for k in ("comments", "memories", "chapters", "events", "photos", "faces")}} for r in rows]
         out.sort(key=lambda m: m["lastSeen"] or "", reverse=True)
         return 200, out
 

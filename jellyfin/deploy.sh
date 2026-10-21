@@ -35,6 +35,13 @@ cp -r "$HERE/kodai1994/site/." "$DEST/kodai1994/site/"
 (cd "$DEST/kodai1994/site" && find . -type f) | while IFS= read -r f; do
   [ -e "$HERE/kodai1994/site/$f" ] || rm -f "$DEST/kodai1994/site/$f"
 done
+# Cloudflare keeps scripts and stylesheets in browsers for 4 hours, whatever the gateway says
+# (the pages themselves aren't kept). So the pages ask for the shared ones by a name that
+# changes with their content: an update reaches everyone at once, an unchanged file stays cached.
+for a in theme.js site-bar.js site-bar.css; do
+  v=$(sha1sum "$DEST/kodai1994/site/$a" | cut -c1-10)
+  sed -i -E "s#((/kodai1994/)?${a//./\\.})(\?v=[0-9a-f]+)?\"#\1?v=$v\"#g" "$DEST"/kodai1994/site/*.html
+done
 
 # Kodai 1994 processing pipeline: scripts + systemd user service (runs until all
 # videos are converted and packaged; resumes after reboot).
