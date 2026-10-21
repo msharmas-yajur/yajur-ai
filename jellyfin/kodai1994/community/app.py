@@ -68,6 +68,10 @@ Routes (JSON):
   GET    /admin/requests           pending requests (admin)
   POST   /admin/requests/<id>/approve   creates the account, returns its password (admin)
   POST   /admin/requests/<id>/reject    (admin)
+  GET    /admin/moderators         members who moderate the site (Jellyfin administrators only)
+  PUT    /admin/moderators/<user>  make a member a moderator; DELETE removes them
+  ("admin" above means a Jellyfin administrator or a moderator; moderators can't manage
+  moderators, and approve requests through JELLYFIN_API_KEY)
 """
 import hashlib
 import json
@@ -105,6 +109,9 @@ SMTP_USER = os.environ.get("SMTP_USER", "")
 SMTP_PASSWORD = os.environ.get("SMTP_PASSWORD", "")
 MAIL_FROM = os.environ.get("MAIL_FROM") or SMTP_USER
 ADMIN_EMAIL = os.environ.get("ADMIN_EMAIL", "")
+# Jellyfin API key, used only to create the account when a moderator approves a request
+# (administrators approve with their own sign-in). Optional; kept in the stack's .env.
+JELLYFIN_API_KEY = os.environ.get("JELLYFIN_API_KEY", "")
 
 TARGET = re.compile(r"^(video:[a-z0-9-]{1,120}|photo:[0-9]{2,3}|memory:[0-9]{1,9})$")  # what comments attach to
 LINK_TARGET = re.compile(r"^(video:[a-z0-9-]{1,120}|photo:[0-9]{2,3})$")              # what memories are tagged to
@@ -329,6 +336,11 @@ CREATE TABLE IF NOT EXISTS memory_files (       -- uploaded PDFs, so only the up
     size        INTEGER NOT NULL,
     created_at  TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS moderators (         -- members who may moderate the site (see identify)
+    user_id     TEXT PRIMARY KEY,               -- Jellyfin user id
+    added_by    TEXT NOT NULL,
+    created_at  TEXT NOT NULL
+);
 CREATE TABLE IF NOT EXISTS access_requests (
     id          INTEGER PRIMARY KEY,
     name        TEXT NOT NULL,
@@ -395,7 +407,13 @@ def identify(token):
     try:
         me = jellyfin("GET", "/Users/Me", token)
         jellyfin("GET", f"/Items/{LIBRARY_ID}", token)  # 404 unless they can see the library
-        who = {"id": me["Id"], "username": me["Name"], "isAdmin": bool(me.get("Policy", {}).get("IsAdministrator"))}
+        server_admin = bool(me.get("Policy", {}).get("IsAdministrator"))
+        # isAdmin: may moderate everything on the site (edit/delete anyone's content, approve
+        # access requests): Jellyfin administrators and the members they made moderators.
+        # isServerAdmin: a Jellyfin administrator; only they manage moderators.
+        moderator = bool(query("SELECT 1 FROM moderators WHERE user_id = ?", (me["Id"],)))
+        who = {"id": me["Id"], "username": me["Name"], "isAdmin": server_admin or moderator,
+               "isServerAdmin": server_admin, "isModerator": moderator and not server_admin}
     except (urllib.error.URLError, KeyError, ValueError):
         who = None
     with identity_lock:
@@ -466,8 +484,15 @@ class Handler(BaseHTTPRequestHandler):
         return who
 
     def admin(self):
+        """Administrators and moderators (see identify)."""
         who = self.member()
         if not who["isAdmin"]:
+            raise ApiError(403, "Only the administrator or a moderator can do that.")
+        return who
+
+    def server_admin(self):
+        who = self.member()
+        if not who["isServerAdmin"]:
             raise ApiError(403, "Only the administrator can do that.")
         return who
 
@@ -499,6 +524,7 @@ class Handler(BaseHTTPRequestHandler):
         who = self.member()
         row = query("SELECT display_name FROM profiles WHERE user_id = ?", (who["id"],))
         return 200, {"id": who["id"], "username": who["username"], "isAdmin": who["isAdmin"],
+                     "isServerAdmin": who["isServerAdmin"], "isModerator": who["isModerator"],
                      "displayName": row[0]["display_name"] if row else None}
 
     def put_me(self, params):
@@ -1359,7 +1385,12 @@ class Handler(BaseHTTPRequestHandler):
 
     def approve_request(self, params, rid):
         who = self.admin()
-        token = self.headers.get("X-Kodai-Token", "")
+        # Creating the account needs Jellyfin admin rights: an administrator's own token, or
+        # for a moderator the service's API key (JELLYFIN_API_KEY). Either way the account is
+        # created as an ordinary member of the Kodai library only (policy below).
+        token = self.headers.get("X-Kodai-Token", "") if who["isServerAdmin"] else JELLYFIN_API_KEY
+        if not token:
+            raise ApiError(503, "Moderators can't approve requests yet: the administrator needs to finish setting it up.")
         req = query("SELECT * FROM access_requests WHERE id = ? AND status = 'pending'", (int(rid),))
         if not req:
             raise ApiError(404, "That request was already handled.")
@@ -1403,6 +1434,28 @@ class Handler(BaseHTTPRequestHandler):
                 (now(), who["username"], int(rid)))
         return 200, {"rejected": int(rid)}
 
+    # ── moderators (administrator only)
+    def get_moderators(self, params):
+        self.server_admin()
+        return 200, query("SELECT m.user_id AS id, COALESCE(p.display_name, p.username) AS name, p.username, m.created_at AS since "
+                          "FROM moderators m LEFT JOIN profiles p ON p.user_id = m.user_id ORDER BY name")
+
+    def put_moderator(self, params, uid):
+        who = self.server_admin()
+        if not query("SELECT 1 FROM profiles WHERE user_id = ?", (uid,)):
+            raise ApiError(404, "That member hasn't signed in yet.")
+        execute("INSERT OR IGNORE INTO moderators (user_id, added_by, created_at) VALUES (?, ?, ?)", (uid, who["id"], now()))
+        with identity_lock:
+            identity_cache.clear()   # takes effect at their next request
+        return 200, {"moderator": uid}
+
+    def delete_moderator(self, params, uid):
+        self.server_admin()
+        execute("DELETE FROM moderators WHERE user_id = ?", (uid,))
+        with identity_lock:
+            identity_cache.clear()
+        return 200, {"removed": uid}
+
 
 ROUTES = {
     "GET": [(r"/me", Handler.get_me), (r"/comments", Handler.get_comments), (r"/counts", Handler.get_counts),
@@ -1412,8 +1465,8 @@ ROUTES = {
             (r"/identify/runs", Handler.get_identify_runs), (r"/identify/suggestions", Handler.get_identify_suggestions),
             (r"/photo-uploads", Handler.get_photo_uploads),
             (r"/memories", Handler.get_memories), (r"/memories/(\d+)", Handler.get_memory),
-            (r"/admin/requests", Handler.get_requests)],
-    "PUT": [(r"/me", Handler.put_me), (r"/memories/(\d+)", Handler.put_memory), (r"/markers/(\d+)", Handler.put_marker), (r"/people/(\d+)", Handler.put_person),
+            (r"/admin/requests", Handler.get_requests), (r"/admin/moderators", Handler.get_moderators)],
+    "PUT": [(r"/me", Handler.put_me), (r"/admin/moderators/([0-9a-f]{32})", Handler.put_moderator), (r"/memories/(\d+)", Handler.put_memory), (r"/markers/(\d+)", Handler.put_marker), (r"/people/(\d+)", Handler.put_person),
             (r"/people/(\d+)/portrait", Handler.put_portrait)],
     "POST": [(r"/comments", Handler.post_comment), (r"/markers", Handler.post_marker), (r"/people", Handler.post_person),
              (r"/photo-tags", Handler.post_photo_tag), (r"/photo-faces", Handler.post_photo_face),
@@ -1423,7 +1476,8 @@ ROUTES = {
              (r"/access-requests", Handler.post_access_request),
              (r"/admin/requests/(\d+)/approve", Handler.approve_request),
              (r"/admin/requests/(\d+)/reject", Handler.reject_request)],
-    "DELETE": [(r"/comments/(\d+)", Handler.delete_comment), (r"/markers/(\d+)", Handler.delete_marker),
+    "DELETE": [(r"/admin/moderators/([0-9a-f]{32})", Handler.delete_moderator),
+               (r"/comments/(\d+)", Handler.delete_comment), (r"/markers/(\d+)", Handler.delete_marker),
                (r"/people/(\d+)", Handler.delete_person), (r"/photo-tags/(\d+)", Handler.delete_photo_tag),
                (r"/photo-faces/(\d+)", Handler.delete_photo_face), (r"/identify/runs/(\d+)", Handler.cancel_identify_run),
                (r"/photo-uploads/(\d+)", Handler.delete_photo_upload), (r"/memories/(\d+)", Handler.delete_memory)],

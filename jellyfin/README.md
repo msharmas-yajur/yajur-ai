@@ -130,6 +130,14 @@ Browser ──https──▶ Cloudflare ──tunnel──▶ cloudflared ──
   run) and served members-only from `~/media/kodai1994-memories/` with a `sandbox` policy.
   Others can comment on a memory; its author or the admin can edit or delete it (deleting
   hides it; the PDF stays on disk and in the backup).
+- **Moderators.** A Jellyfin administrator can make members moderators
+  (`PUT /kodai1994/api/admin/moderators/<user id>`, `DELETE` to remove; table
+  `moderators`). Moderators can do everything the administrator can *on the site*: edit or
+  delete anyone's comments, chapters, events, memories, faces, tags and uploads, manage the
+  People list, review identification, and approve or reject access requests (the account is
+  created with `JELLYFIN_API_KEY` from `.env`, always as an ordinary member). They get no
+  Jellyfin admin rights: no server settings, accounts or passwords, and they can't manage
+  moderators. Request notices still go to `ADMIN_EMAIL` only.
 - **Passwords.** Members change theirs under *Account*. The admin can still create or reset
   accounts from a shell:
 
