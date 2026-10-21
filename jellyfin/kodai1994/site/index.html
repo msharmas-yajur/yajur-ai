@@ -153,19 +153,47 @@
 	.backdrop { position: fixed; inset: 0; z-index: -1; background: var(--pine-deep) center / cover no-repeat; }
 	.backdrop::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgb(var(--bg-rgb) / .78), rgb(var(--bg-rgb) / .93)); }
 
-	.bar { position: absolute; top: 0; left: 0; right: 0; z-index: 2; display: flex; justify-content: space-between; align-items: center; padding: 20px var(--gutter); }
+	/* Top bar: logo (Home) · pages · theme / account. Pinned while scrolling. */
+	.bar { position: sticky; top: 0; z-index: 40; display: flex; align-items: center; gap: 20px; padding: 10px var(--gutter);
+		background: rgb(var(--bg-rgb) / .82); -webkit-backdrop-filter: blur(14px) saturate(1.2); backdrop-filter: blur(14px) saturate(1.2); border-bottom: 1px solid var(--line); }
+	.bar__home { border: 0; padding: 0; background: none; cursor: pointer; border-radius: 12px; flex: none; }
+	.bar__home .logo { height: 54px; }
+	.bar__actions { margin-left: auto; }
+	.nav__extra { display: none; }
+	.menu-btn { display: none; place-items: center; width: 44px; height: 44px; border-radius: 12px; border: 1px solid var(--line); background: var(--panel); color: var(--khadi); cursor: pointer; }
+	.menu-btn svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
+	@media (max-width: 1024px) {
+		/* tablets and phones: the pages fold into a menu */
+		.menu-btn { display: inline-grid; }
+		.bar .nav { display: none; }
+		.bar.is-open .nav { display: grid; position: absolute; top: 100%; left: 0; right: 0; gap: 4px; padding: 10px var(--gutter) 18px;
+			border-radius: 0; border: 0; border-bottom: 1px solid var(--line); background: var(--pine-deep);
+			-webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: 0 18px 40px rgba(0,0,0,.25); }
+		/* a backdrop blur inside the blurred bar renders see-through in Chrome: the open menu is solid */
+		.bar.is-open .nav button, .bar.is-open .nav a { text-align: left; padding: 13px 14px; border-radius: 12px; font-size: 1.05rem; }
+		.bar__home .logo { height: 46px; }
+	}
+	@media (max-width: 640px) {
+		.bar__actions .btn--quiet { display: none; }   /* Account and Sign out move into the menu */
+		.bar.is-open .nav__extra { display: grid; gap: 4px; margin-top: 8px; padding-top: 10px; border-top: 1px solid var(--line); }
+		.nav__extra #signed-in { padding: 4px 14px 6px; font-size: .9rem; }
+	}
+	/* The signed-in member on the Account button: initials + name */
+	.acct { display: inline-flex; align-items: center; gap: 8px; }
+	.acct__avatar { display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; font: 700 .72rem var(--text); color: #0c1912; background: hsl(24 45% 72%); }
+	.acct__name { max-width: 16ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 	.logo { display: block; height: 72px; width: auto; filter: drop-shadow(0 2px 10px rgba(0,0,0,.45)); }
 	.login .logo { height: 120px; margin: 0 auto 20px; }
 	.bar .btn--quiet { color: var(--khadi); text-decoration: none; font-weight: 600; padding: 8px 16px; border-radius: 999px; background: rgb(var(--bg-rgb) / .55); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); border: 1px solid var(--line); }
 
 	/* The photo keeps every face clear: text sits beside it, never over it. */
-	.hero { position: relative; display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); min-height: min(82vh, 780px); background: var(--pine-deep); }
+	.hero { position: relative; display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); min-height: min(74vh, 700px); background: var(--pine-deep); }
 	.hero__photo { position: relative; grid-column: 2; grid-row: 1; background: center 40% / cover no-repeat;
 		-webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 22%), linear-gradient(0deg, transparent 0%, #000 14%);
 		-webkit-mask-composite: source-in; mask-image: linear-gradient(90deg, transparent 0%, #000 22%), linear-gradient(0deg, transparent 0%, #000 14%); mask-composite: intersect; }
 	.hero__photo.is-loaded { animation: focus-in 1.6s ease-out both; }
 	@keyframes focus-in { from { filter: blur(14px) saturate(.6); opacity: .4; } to { filter: none; opacity: 1; } }
-	.hero__text { position: relative; z-index: 1; grid-column: 1; grid-row: 1; align-self: end; padding: 120px 0 64px var(--gutter); }
+	.hero__text { position: relative; z-index: 1; grid-column: 1; grid-row: 1; align-self: end; padding: 64px 0 64px var(--gutter); }
 	.hero h1 { font: 400 clamp(3.5rem, 8.4vw, 8.5rem)/0.92 var(--display); letter-spacing: 0.01em; margin: 0; white-space: nowrap; }
 	.hero__lede { font-size: clamp(1.05rem, 1.6vw, 1.25rem); max-width: 38ch; margin: 22px 0 30px; color: var(--khadi); }
 	@media (max-width: 900px) {
@@ -186,7 +214,75 @@
 	/* "Identify faces" is its own page, but sits with the views */
 	.views a { padding: 9px 20px; border-radius: 999px; font-weight: 500; color: var(--mist); text-decoration: none; white-space: nowrap; }
 	.views button:not([aria-pressed=true]):hover, .views a:hover { color: var(--khadi); }
-	#signed-in { margin-left: auto; }
+	/* ── Videos: Timeline | Gallery */
+	.subtabs { display: inline-flex; gap: 4px; padding: 4px; margin-top: 18px; border: 1px solid var(--line); border-radius: 999px; background: var(--panel); }
+	.subtabs button { border: 0; background: transparent; padding: 8px 18px; border-radius: 999px; cursor: pointer; color: var(--mist); font-weight: 500; }
+	.subtabs button[aria-pressed=true] { background: var(--khadi); color: var(--pine-deep); }
+	.page-head h2 { font: 400 clamp(2rem, 4.5vw, 3rem)/1.1 var(--display); margin: 8px 0 0; }
+
+	/* ── Home: the dashboard. The activity is a notebook of days, on a rail like the Timeline. */
+	.home { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 40px 56px; margin-top: 12px; align-items: start; }
+	.home__welcome { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 24px; }
+	.home__welcome h2 { font: 400 clamp(1.9rem, 4vw, 2.7rem)/1.1 var(--display); margin: 0; }
+	.since { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; padding: 14px 18px; margin-bottom: 26px; border-radius: 16px;
+		background: linear-gradient(90deg, rgba(234,122,42,.14), rgba(234,122,42,.04)); border: 1px solid rgba(234,122,42,.35); }
+	.since b { font-weight: 600; }
+	.since__chip { padding: 3px 11px; border-radius: 999px; background: rgb(var(--bg-rgb) / .5); font-size: .9rem; border: 1px solid var(--line); }
+	.since__chip b { color: var(--accent-text); }
+	.feed-filter { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+	.feed-filter button { border: 1px solid var(--line); border-radius: 999px; padding: 6px 14px; background: transparent; cursor: pointer; color: var(--mist); font-size: .9rem; }
+	.feed-filter button[aria-pressed=true] { background: var(--khadi); color: var(--pine-deep); border-color: var(--khadi); }
+	.feed-day { position: relative; padding-left: 28px; margin-top: 26px; }
+	.feed-day::before { content: ''; position: absolute; left: 6px; top: 34px; bottom: -26px; width: 1px; background: var(--line); }
+	.feed-day:last-of-type::before { bottom: 0; }
+	.feed-day h3 { font: 400 1.35rem/1.2 var(--display); margin: 0 0 10px -28px; padding-left: 28px; position: relative; }
+	.feed-day h3::before { content: ''; position: absolute; left: 2px; top: 50%; width: 9px; height: 9px; margin-top: -5px; border-radius: 50%; background: var(--mist); }
+	.feed { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+	.act { position: relative; display: grid; grid-template-columns: 40px minmax(0, 1fr) auto; gap: 4px 14px; padding: 12px 12px; border-radius: 14px; }
+	.act.is-link { cursor: pointer; }
+	.act.is-link:hover { background: rgb(var(--fg-rgb) / .05); }
+	.act__who { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; font: 600 .9rem var(--text); color: var(--pine-deep); grid-row: span 2; }
+	.act__what { font-size: .98rem; line-height: 1.45; min-width: 0; }
+	.act__what b { font-weight: 600; }
+	.act__what .act__title { font-family: var(--display); font-size: 1.08rem; }
+	.act__when { font-size: .8rem; color: var(--mist); white-space: nowrap; }
+	.act__body { grid-column: 2 / -1; display: flex; gap: 14px; align-items: flex-start; min-width: 0; }
+	.act__excerpt { margin: 0; color: var(--mist); font-size: .93rem; line-height: 1.5; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
+	.act__excerpt.is-quote { border-left: 2px solid var(--line); padding-left: 10px; font-style: italic; }
+	.act__thumb { flex: none; width: 112px; aspect-ratio: 4 / 3; border-radius: 8px; background: var(--pine) center / cover no-repeat; position: relative; }
+	.act__thumb small { position: absolute; left: 6px; bottom: 6px; font-size: .72rem; font-weight: 600; padding: 1px 7px; border-radius: 999px; background: rgba(0,0,0,.66); color: #fff; }
+	.act__strip { display: flex; gap: 6px; flex-wrap: wrap; }
+	.act__strip span { width: 64px; height: 64px; border-radius: 8px; background: var(--pine) center / cover no-repeat; cursor: pointer; }
+	.act__strip em { align-self: center; font-style: normal; color: var(--mist); font-size: .88rem; }
+	.act.is-new::after { content: ''; position: absolute; left: -24px; top: 26px; width: 9px; height: 9px; border-radius: 50%; background: var(--saffron); box-shadow: 0 0 0 4px rgba(234,122,42,.2); }
+	.act__new { font-size: .7rem; font-weight: 700; letter-spacing: .02em; color: var(--accent-text); margin-left: 6px; }
+	.feed-more { margin: 18px 0 0 28px; }
+	.feed-empty { margin: 28px 0 0 28px; color: var(--mist); }
+	.home__side { display: grid; gap: 22px; position: sticky; top: 92px; }
+	.side-card { border: 1px solid var(--line); border-radius: 18px; background: var(--panel); padding: 18px 20px; }
+	.side-card h3 { font: 400 1.25rem var(--display); margin: 0 0 12px; }
+	.stats { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 12px; margin: 0; }
+	.stats div { display: flex; flex-direction: column; }
+	.stats dt { order: 2; font-size: .82rem; color: var(--mist); }
+	.stats dd { order: 1; margin: 0; font: 400 2rem/1 var(--display); }
+	.help-card { background: linear-gradient(160deg, rgba(234,122,42,.16), rgba(234,122,42,.03)); border-color: rgba(234,122,42,.35); }
+	.help-card p { margin: 0 0 12px; font-size: .95rem; }
+	.help-card .btn { text-decoration: none; }
+	.members { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+	.members li { display: grid; grid-template-columns: 36px minmax(0, 1fr); gap: 0 12px; align-items: center; }
+	.members .act__who { width: 36px; height: 36px; grid-row: span 2; font-size: .82rem; }
+	.members b { font-weight: 600; font-size: .95rem; display: flex; align-items: center; gap: 6px; }
+	.members small { color: var(--mist); font-size: .8rem; }
+	.members .badge-mod { font-size: .68rem; font-weight: 600; padding: 1px 7px; border-radius: 999px; border: 1px solid rgba(234,122,42,.5); color: var(--accent-text); }
+	.members .is-online { width: 8px; height: 8px; border-radius: 50%; background: var(--ok); display: inline-block; }
+	@media (max-width: 1100px) { .home { grid-template-columns: minmax(0, 1fr); } .home__side { position: static; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); } }
+	@media (max-width: 640px) {
+		.act { grid-template-columns: 34px minmax(0, 1fr); }
+		.act__who { width: 34px; height: 34px; }
+		.act__when { grid-column: 2; }
+		.act__thumb { width: 88px; }
+		.feed-day { padding-left: 18px; } .feed-day h3 { margin-left: -18px; padding-left: 22px; } .act.is-new::after { left: -15px; }
+	}
 	.status { padding: 0 var(--gutter); }
 	main { padding: 24px var(--gutter) 120px; max-width: 1280px; }
 
@@ -220,14 +316,7 @@
 	.thumb__card { filter: blur(5px) brightness(.42) saturate(.6); transform: scale(1.08); }
 	.is-pending { cursor: default; opacity: .75; }
 	/* People: everyone who appears in the recordings */
-	@media (max-width: 640px) {
-		/* six tabs: two per row, equal width, the whole width of the screen */
-		.controls { display: grid; grid-template-columns: minmax(0, 1fr); justify-content: stretch; gap: 10px; }
-		.views { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; width: 100%; padding: 6px; border-radius: 18px; }
-		.views button, .views a { display: block; padding: 12px 8px; border-radius: 12px; text-align: center; white-space: nowrap; font-size: 1rem; background: rgb(var(--fg-rgb) / .05); color: var(--khadi); }
-		.views button[aria-pressed=true] { background: var(--khadi); color: var(--pine-deep); }
-		#signed-in { margin-left: 0; text-align: center; font-size: .9rem; }
-	}
+
 	.people { margin-top: 28px; max-width: 1100px; }
 	.people__head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 16px; }
 	.people__head h2 { font: 400 clamp(1.8rem, 4vw, 2.6rem)/1.1 var(--display); margin: 0; }
@@ -714,15 +803,31 @@
 <!-- Library -->
 <div id="library-view" hidden>
 	<div class="backdrop" id="backdrop"></div>
-	<div class="bar">
-		<img class="logo" src="/kodai1994/brand/logo.png" alt="Sri Sathya Sai Centenary Celebrations" width="72" height="72">
+	<div class="bar" id="bar">
+		<button class="bar__home" id="go-home" type="button" aria-label="Home" title="Home">
+			<img class="logo" src="/kodai1994/brand/logo.png" alt="Sri Sathya Sai Centenary Celebrations" width="72" height="72">
+		</button>
+		<nav class="views nav" id="nav" aria-label="Pages">
+			<button type="button" data-view="home" aria-pressed="true">Home</button>
+			<button type="button" data-view="videos" aria-pressed="false">Videos</button>
+			<button type="button" data-view="photos" aria-pressed="false">Photos</button>
+			<button type="button" data-view="people" aria-pressed="false">People</button>
+			<button type="button" data-view="memories" aria-pressed="false">Memories</button>
+			<a href="identify.html" title="Help name the people the computer found in the recordings and photos">Identify faces</a>
+			<div class="nav__extra">
+				<span class="muted" id="signed-in"></span>
+				<button type="button" data-action="account">Account</button>
+				<button type="button" data-action="logout">Sign out</button>
+			</div>
+		</nav>
 		<div class="bar__actions">
 			<button class="theme-toggle" data-theme-toggle type="button" aria-label="Switch theme"></button>
-			<button class="btn btn--quiet" id="account-open" type="button">Account<span class="badge" id="account-badge" hidden></span></button>
+			<button class="btn btn--quiet acct" id="account-open" type="button" aria-label="Account"><span class="acct__avatar" id="acct-avatar" aria-hidden="true"></span><span class="acct__name" id="acct-name">Account</span><span class="badge" id="account-badge" hidden></span></button>
 			<button class="btn btn--quiet" id="logout" type="button">Sign out</button>
+			<button class="menu-btn" id="menu-btn" type="button" aria-expanded="false" aria-controls="nav" aria-label="Menu"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16"/><path d="M4 12h16"/><path d="M4 18h16"/></svg></button>
 		</div>
 	</div>
-	<header class="hero">
+	<header class="hero" id="hero">
 		<div class="hero__photo" id="hero-photo" role="img" aria-label="Group photo at Kodaikanal, 1994"></div>
 		<div class="hero__text">
 			<h1>Kodai 1994</h1>
@@ -737,17 +842,6 @@
 		</div>
 	</header>
 
-	<div class="controls">
-		<div class="views" role="group" aria-label="View">
-			<button type="button" data-view="timeline" aria-pressed="true">Timeline</button>
-			<button type="button" data-view="gallery" aria-pressed="false">Gallery</button>
-			<button type="button" data-view="photos" aria-pressed="false">Photos</button>
-			<button type="button" data-view="people" aria-pressed="false">People</button>
-			<button type="button" data-view="memories" aria-pressed="false">Memories</button>
-			<a href="identify.html" title="Help name the people the computer found in the recordings and photos">Identify faces</a>
-		</div>
-		<span class="muted" id="signed-in"></span>
-	</div>
 	<p class="status muted" id="status" aria-live="polite"></p>
 	<main id="content"></main>
 </div>
@@ -1281,7 +1375,10 @@
 		return bar;
 	}
 	var view = storeGet('localStorage', VIEW_KEY);
-	if (['timeline', 'gallery', 'photos', 'people', 'memories'].indexOf(view) < 0) view = 'timeline';
+	var VIDEO_MODE_KEY = 'yajur-kodai-video-mode';
+	var videoMode = storeGet('localStorage', VIDEO_MODE_KEY) === 'gallery' ? 'gallery' : 'timeline';
+	if (view === 'timeline' || view === 'gallery') { videoMode = view; view = 'videos'; }   // the old tabs, now Videos' sub-tabs
+	if (['home', 'videos', 'photos', 'people', 'memories'].indexOf(view) < 0) view = 'home';
 
 	function openLibrary() {
 		setMediaCookie();
@@ -1294,7 +1391,7 @@
 				var lib = (views.Items || []).filter(function (v) { return v.Name === LIBRARY; })[0];
 				if (!lib) throw new Error('This account can’t open the ' + LIBRARY + ' recordings. Ask whoever sent you the link to check your access.');
 				return api('/Items?userId=' + session.userId + '&ParentId=' + lib.Id + '&Recursive=true&IncludeItemTypes=Movie,Video' +
-					'&SortBy=SortName&SortOrder=Ascending&EnableUserData=true&EnableImageTypes=Primary&Limit=500');
+					'&SortBy=SortName&SortOrder=Ascending&EnableUserData=true&EnableImageTypes=Primary&Fields=DateCreated&Limit=500');
 			}),
 			fetch(HLS + 'ready.json', { credentials: 'same-origin', cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : []; }).catch(function () { return []; }),
 			fetch(HLS + 'photos/photos.json', { credentials: 'same-origin', cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : []; }).catch(function () { return []; }),
@@ -1308,6 +1405,15 @@
 			refreshRequestBadge();
 			// Link in the request email: ...#requests opens the review panel for the admin.
 			if (location.hash === '#requests' && me && me.isAdmin && $('account').hidden) openAccount();
+			// Who's signed in, on the Account button
+			var who = (me && me.displayName) || session.name || 'Account';
+			$('acct-name').textContent = who; $('acct-avatar').textContent = initials(who);
+			$('account-open').setAttribute('aria-label', 'Account: signed in as ' + who);
+			// Links from the other pages' top bar (identify.html): #view=…, #account, #signout
+			var vlink = /^#view=(home|videos|photos|people|memories)$/.exec(location.hash);
+			if (vlink) { view = vlink[1]; storeSet('localStorage', VIEW_KEY, view); try { history.replaceState(null, '', location.pathname); } catch (e) {} }
+			if (location.hash === '#account') { try { history.replaceState(null, '', location.pathname); } catch (e) {} setTimeout(openAccount, 0); }
+			if (location.hash === '#signout') { try { history.replaceState(null, '', location.pathname); } catch (e) {} signOut(); return; }
 			var link = /^#person\/(\d+)$/.exec(location.hash);
 			if (link) { personId = Number(link[1]); view = 'person'; }
 			var mlink = /^#memory\/(\d+)$/.exec(location.hash);
@@ -1407,6 +1513,269 @@
 	function clickable(el, e) {
 		if (ready[e.slug]) el.addEventListener('click', function () { play(e); });
 		else { el.classList.add('is-pending'); el.setAttribute('aria-disabled', 'true'); }
+	}
+
+	// ── Videos: one page, seen as a timeline or a gallery
+	function renderVideos(root) {
+		var head = el('div', 'page-head'); head.appendChild(el('h2', '', 'Videos'));
+		var tabs = el('div', 'subtabs'); tabs.setAttribute('role', 'group'); tabs.setAttribute('aria-label', 'Show the videos as');
+		[['timeline', 'Timeline'], ['gallery', 'Gallery']].forEach(function (t) {
+			var b = el('button', '', t[1]); b.type = 'button'; b.dataset.mode = t[0]; b.setAttribute('aria-pressed', String(videoMode === t[0]));
+			b.addEventListener('click', function () { videoMode = t[0]; storeSet('localStorage', VIDEO_MODE_KEY, videoMode); render(); });
+			tabs.appendChild(b);
+		});
+		head.appendChild(tabs); root.appendChild(head);
+		(videoMode === 'gallery' ? renderGallery : renderTimeline)(root);
+	}
+
+	// ── Home: what's happening on the site
+	var AVATAR_HUES = [24, 145, 200, 330, 48, 265, 10, 175];
+	function avatar(name) {
+		var a = el('span', 'act__who', initials(name || '?'));
+		var h = 0; for (var i = 0; i < (name || '').length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0;
+		a.style.background = 'hsl(' + AVATAR_HUES[h % AVATAR_HUES.length] + ' 45% 72%)';
+		a.setAttribute('aria-hidden', 'true');
+		return a;
+	}
+	function dayLabel(iso) {
+		var d = new Date(iso), t = new Date(); t.setHours(0, 0, 0, 0);
+		var diff = Math.round((t - new Date(d.getFullYear(), d.getMonth(), d.getDate())) / 864e5);
+		if (diff === 0) return 'Today';
+		if (diff === 1) return 'Yesterday';
+		return d.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
+	}
+	function targetInfo(target) {
+		if (!target) return null;
+		if (target.indexOf('video:') === 0) {
+			var e = entryBySlug(target.slice(6));
+			return e ? { kind: 'video', e: e, label: e.title, pic: ready[e.slug] ? HLS + e.slug + '/thumb.jpg' : '' } : null;
+		}
+		if (target.indexOf('photo:') === 0) {
+			var ph = photoById(target.slice(6));
+			return ph ? { kind: 'photo', ph: ph, label: 'photo ' + (photos.indexOf(ph) + 1), pic: HLS + 'photos/' + ph.thumb } : null;
+		}
+		if (target.indexOf('memory:') === 0) return { kind: 'memory', id: Number(target.slice(7)), label: 'a memory' };
+		return null;
+	}
+	function openTarget(info, position) {
+		if (!info) return;
+		if (info.kind === 'video' && ready[info.e.slug]) play(info.e, position != null ? position : undefined);
+		else if (info.kind === 'photo') openPhoto(photos.indexOf(info.ph));
+		else if (info.kind === 'memory') openMemory(info.id);
+	}
+	function at(pos) { return pos == null ? '' : (fmtDuration(pos * 1e7) || '0:00'); }
+
+	var homeFilter = 'all';
+	var FEED_FILTERS = [['all', 'Everything'], ['memory', 'Memories'], ['comment', 'Comments'], ['moment', 'Chapters & events'], ['photo', 'Photos & videos'], ['people', 'People']];
+	function feedKind(it) {
+		return it.type === 'chapter' || it.type === 'event' ? 'moment' : it.type === 'video' ? 'photo' : (it.type === 'person' || it.type === 'joined') ? 'people' : it.type;
+	}
+	function renderHome(root) {
+		var wrap = el('section', 'home');
+		var welcome = el('div', 'home__welcome');
+		var hello = (me && me.displayName) || session.name || '';
+		welcome.appendChild(el('h2', '', hello ? 'Welcome back, ' + hello.split(' ')[0] : 'Welcome'));
+		welcome.appendChild(el('p', 'muted', 'What everyone has been adding to Kodai 1994.'));
+		wrap.appendChild(welcome);
+		var main = el('div', 'home__main'), side = el('aside', 'home__side');
+		wrap.append(main, side); root.appendChild(wrap);
+		var status = el('p', 'muted', 'Loading what’s new…'); main.appendChild(status);
+		var state = { items: [], seenAt: null, more: false };
+
+		Promise.all([capi('/activity?limit=50'), capi('/members').catch(function () { return []; })]).then(function (res) {
+			status.remove();
+			var a = res[0];
+			state.seenAt = a.seenAt; state.more = a.more;
+			// New recordings: when Jellyfin added them (there are only a handful)
+			var vids = entries.filter(function (e) { return e.item.DateCreated && ready[e.slug]; }).map(function (e) {
+				return { type: 'video', at: new Date(e.item.DateCreated).toISOString().replace(/\.\d+Z$/, '+00:00'), target: 'video:' + e.slug };
+			});
+			state.items = a.items.concat(vids).sort(function (x, y) { return (y.at || '').localeCompare(x.at || ''); });
+			drawSince(); drawFeed(); drawSide(a, res[1]);
+			// Mark as seen a little later, so a quick reload still shows what was new.
+			setTimeout(function () { capi('/activity/seen', { method: 'POST' }).catch(function () {}); }, 6000);
+		}).catch(function (ex) { status.textContent = 'Couldn’t load the activity: ' + ex.message; });
+
+		var sinceBox = el('div'), filterBox = el('div', 'feed-filter'), feedBox = el('div');
+		main.append(sinceBox, filterBox, feedBox);
+		filterBox.setAttribute('role', 'group'); filterBox.setAttribute('aria-label', 'Show');
+		FEED_FILTERS.forEach(function (f) {
+			var b = el('button', '', f[1]); b.type = 'button'; b.setAttribute('aria-pressed', String(homeFilter === f[0]));
+			b.addEventListener('click', function () {
+				homeFilter = f[0];
+				filterBox.querySelectorAll('button').forEach(function (x) { x.setAttribute('aria-pressed', String(x === b)); });
+				drawFeed();
+			});
+			filterBox.appendChild(b);
+		});
+		function isNew(it) { return state.seenAt && it.at > state.seenAt; }
+
+		function drawSince() {
+			sinceBox.textContent = '';
+			if (!state.seenAt) return;
+			var fresh = state.items.filter(isNew);
+			if (!fresh.length) return;
+			var c = {}; fresh.forEach(function (it) { var k = feedKind(it) === 'photo' ? (it.type === 'video' ? 'video' : 'photo') : feedKind(it); c[k] = (c[k] || 0) + 1; });
+			var bar = el('div', 'since');
+			bar.appendChild(el('span', '', 'Since your last visit, ' + fmtWhen(state.seenAt) + ':'));
+			[['photo', 'new photo'], ['video', 'new recording'], ['memory', 'memory'], ['comment', 'comment'], ['moment', 'chapter or event', 'chapters & events'], ['people', 'new name or member', 'new names & members']].forEach(function (k) {
+				if (!c[k[0]]) return;
+				var chip = el('span', 'since__chip'); chip.append(el('b', '', String(c[k[0]])), document.createTextNode(' ' + (c[k[0]] === 1 ? k[1] : (k[2] || k[1].replace(/y$/, 'ie') + 's'))));
+				bar.appendChild(chip);
+			});
+			sinceBox.appendChild(bar);
+		}
+
+		// Photos one person added close together read as one entry with a strip of them.
+		function grouped(list) {
+			var out = [];
+			list.forEach(function (it) {
+				var last = out[out.length - 1];
+				if (it.type === 'photo' && last && last.type === 'photos' && last.actor === it.actor && Date.parse(last.items[last.items.length - 1].at) - Date.parse(it.at) < 3 * 36e5) {
+					last.items.push(it); return;
+				}
+				if (it.type === 'photo') { out.push({ type: 'photos', actor: it.actor, at: it.at, items: [it] }); return; }
+				out.push(it);
+			});
+			return out;
+		}
+
+		function drawFeed() {
+			feedBox.textContent = '';
+			var list = state.items.filter(function (it) { return homeFilter === 'all' || feedKind(it) === homeFilter; });
+			if (!list.length) { feedBox.appendChild(el('p', 'feed-empty', homeFilter === 'all' ? 'Nothing here yet. Write a memory, add a chapter, or comment on a photo, and it will show up here.' : 'Nothing of this kind yet.')); }
+			var day = null, ol = null;
+			grouped(list).forEach(function (it) {
+				var label = dayLabel(it.at);
+				if (label !== day) {
+					day = label;
+					var sec = el('section', 'feed-day'); sec.appendChild(el('h3', '', label));
+					ol = el('ol', 'feed'); sec.appendChild(ol); feedBox.appendChild(sec);
+				}
+				ol.appendChild(actItem(it));
+			});
+			if (state.more) {
+				var more = el('button', 'btn btn--quiet feed-more', 'Show older'); more.type = 'button';
+				more.addEventListener('click', function () {
+					more.disabled = true;
+					var last = state.items.filter(function (x) { return x.type !== 'video'; }).pop();
+					capi('/activity?limit=50&before=' + encodeURIComponent(last ? last.at : '')).then(function (a) {
+						state.more = a.more;
+						var seen = {}; state.items.forEach(function (x) { seen[x.type + x.at + (x.id || x.memoryId || x.target || '')] = 1; });
+						state.items = state.items.concat(a.items.filter(function (x) { return !seen[x.type + x.at + (x.id || x.memoryId || x.target || '')]; }));
+						drawFeed();
+					}).catch(function (ex) { more.disabled = false; more.textContent = ex.message; });
+				});
+				feedBox.appendChild(more);
+			}
+		}
+
+		function actItem(it) {
+			var li = el('li', 'act'), what = el('div', 'act__what'), body = el('div', 'act__body');
+			var fresh = it.type === 'photos' ? it.items.some(isNew) : isNew(it);
+			if (fresh) li.classList.add('is-new');
+			var info = targetInfo(it.target), click = null;
+			function who() { return el('b', '', it.actor || 'A member'); }
+			function title(t) { return el('span', 'act__title', '“' + t + '”'); }
+			function onTarget() { return info ? ' ' + (info.kind === 'video' ? 'in ' : 'on ') + (info.kind === 'photo' ? info.label : info.label) : ''; }
+			switch (it.type) {
+			case 'memory':
+				what.append(who(), document.createTextNode(it.memoryKind === 'notes' ? ' shared notes ' : ' wrote a memory '), title(it.title));
+				if (it.excerpt) body.appendChild(el('p', 'act__excerpt', it.excerpt));
+				click = function () { openMemory(it.memoryId); };
+				break;
+			case 'comment':
+				what.append(who(), document.createTextNode(' commented' + (info ? ' on ' + (info.kind === 'video' ? info.label + (it.position != null ? ' at ' + at(it.position) : '') : info.label) : '')));
+				body.appendChild(el('p', 'act__excerpt is-quote', it.excerpt));
+				click = function () { openTarget(info, it.position); };
+				break;
+			case 'chapter':
+				what.append(who(), document.createTextNode(' added the chapter '), title(it.title), document.createTextNode(info ? ' to ' + info.label + ' at ' + at(it.position) : ''));
+				click = function () { openTarget(info, it.position); };
+				break;
+			case 'event':
+				what.append(who(), document.createTextNode(' tagged '), el('b', '', it.title || 'someone'), document.createTextNode(info ? ' in ' + info.label + ' at ' + at(it.position) : ''));
+				click = function () { openTarget(info, it.position); };
+				break;
+			case 'photos':
+				var n = it.items.length;
+				what.append(who(), document.createTextNode(n === 1 ? ' added a photo' : ' added ' + n + ' photos'));
+				var strip = el('div', 'act__strip');
+				it.items.slice(0, 6).forEach(function (pi) {
+					var t = targetInfo(pi.target); if (!t) return;
+					var sp = el('span'); sp.style.backgroundImage = 'url("' + t.pic + '")'; sp.title = 'Open ' + t.label;
+					sp.addEventListener('click', function (ev) { ev.stopPropagation(); openTarget(t); });
+					strip.appendChild(sp);
+				});
+				if (n > 6) strip.appendChild(el('em', '', '+' + (n - 6) + ' more'));
+				body.appendChild(strip);
+				var firstInfo = targetInfo(it.items[0].target);
+				click = function () { if (firstInfo) openTarget(firstInfo); };
+				info = null;
+				break;
+			case 'video':
+				what.append(el('b', '', 'New recording: '), title(info ? info.label : 'a recording'), document.createTextNode(info ? ', ' + info.e.longDate : ''));
+				click = function () { openTarget(info); };
+				break;
+			case 'person':
+				what.append(who(), document.createTextNode(' added '), el('b', '', it.title), document.createTextNode(' to the People list'));
+				click = function () { openPerson(it.personId); };
+				break;
+			case 'joined':
+				what.append(who(), document.createTextNode(' joined Kodai 1994'));
+				break;
+			}
+			if (fresh) what.appendChild(el('span', 'act__new', 'NEW'));
+			if (info && info.pic) {
+				var th = el('span', 'act__thumb'); th.style.backgroundImage = 'url("' + info.pic + '")';
+				if (info.kind === 'video' && it.position != null) th.appendChild(el('small', '', at(it.position)));
+				body.insertBefore(th, body.firstChild);
+			}
+			var when = el('time', 'act__when', fmtWhen(it.at)); when.dateTime = it.at; when.title = new Date(it.at).toLocaleString('en-GB');
+			li.append(avatar(it.type === 'video' ? 'Kodai 1994' : it.actor), what, when);
+			if (body.childNodes.length) li.appendChild(body);
+			if (click) {
+				li.classList.add('is-link'); li.tabIndex = 0; li.setAttribute('role', 'link');
+				li.addEventListener('click', click);
+				li.addEventListener('keydown', function (ev) { if (ev.key === 'Enter') click(); });
+			}
+			li.addEventListener('contextmenu', function (ev) { ev.preventDefault(); });
+			return li;
+		}
+
+		function drawSide(a, members) {
+			var t = a.totals, hours = entries.reduce(function (s2, e) { return s2 + (e.item.RunTimeTicks || 0); }, 0);
+			var col = el('section', 'side-card'); col.appendChild(el('h3', '', 'The collection'));
+			var dl = el('dl', 'stats');
+			[[entries.length, 'recordings'], [fmtHours(hours).replace(' hours', ''), 'hours of video'], [photos.length, 'photographs'],
+			 [t.people, 'people named'], [t.chapters + t.events, 'chapters & events'], [t.memories, t.memories === 1 ? 'memory' : 'memories'], [t.faces, 'faces marked'], [t.comments, t.comments === 1 ? 'comment' : 'comments']]
+				.forEach(function (x) { var d = el('div'); d.append(el('dt', '', x[1]), el('dd', '', Number(x[0]).toLocaleString('en-IN'))); dl.appendChild(d); });
+			col.appendChild(dl); side.appendChild(col);
+			if (a.identify && a.identify.pending) {
+				var help = el('section', 'side-card help-card'); help.appendChild(el('h3', '', 'Help name the faces'));
+				help.appendChild(el('p', '', 'The computer found ' + a.identify.pending.toLocaleString('en-IN') + ' faces in the recordings and photos' +
+					(a.identify.likely ? ', ' + a.identify.likely.toLocaleString('en-IN') + ' of them likely matches. A quick yes or no from you helps everyone.' : '. Do you recognise them?')));
+				var go = el('a', 'btn', 'Identify faces'); go.href = 'identify.html'; help.appendChild(go);
+				side.appendChild(help);
+			}
+			var mem = el('section', 'side-card'); mem.appendChild(el('h3', '', 'Members (' + members.length + ')'));
+			var ul = el('ul', 'members');
+			members.forEach(function (m) {
+				var li = el('li'), name = el('b', '', m.name);
+				if (m.lastSeen && Date.now() - Date.parse(m.lastSeen) < 15 * 6e4) { var dot = el('span', 'is-online'); dot.title = 'Here now'; name.appendChild(dot); }
+				if (m.moderator) name.appendChild(el('span', 'badge-mod', 'Moderator'));
+				var c = m.contributions, bits = [];
+				if (c.memories) bits.push(plural(c.memories, 'memory').replace('memorys', 'memories'));
+				if (c.photos) bits.push(plural(c.photos, 'photo'));
+				if (c.moments) bits.push(plural(c.moments, 'moment'));
+				if (c.comments) bits.push(plural(c.comments, 'comment'));
+				if (c.faces) bits.push(plural(c.faces, 'face') + ' marked');
+				var line = (m.joined ? 'Joined ' + new Date(m.joined).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : 'Member') + (bits.length ? ' · ' + bits.slice(0, 2).join(', ') : '');
+				li.append(avatar(m.name), name, el('small', '', line));
+				ul.appendChild(li);
+			});
+			mem.appendChild(ul); side.appendChild(mem);
+		}
 	}
 
 	function renderTimeline(root) {
@@ -2295,12 +2664,13 @@
 	function render() {
 		var root = $('content'); root.textContent = '';
 		var tab = view === 'person' ? 'people' : (view === 'memory' || view === 'memory-edit') ? 'memories' : view;
-		document.querySelectorAll('.views button').forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.view === tab)); });
+		document.querySelectorAll('.nav button[data-view]').forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.view === tab)); });
+		$('hero').hidden = view !== 'home';
 		if (view === 'person' && !personId) view = 'people';
 		if (view === 'memory' && !memoryId) view = 'memories';
 		if (view === 'memory-edit' && !memoryDraft) view = 'memories';
 		if (memoryComments) { mountComments(memoryComments, null); memoryComments = null; }
-		({ timeline: renderTimeline, gallery: renderGallery, photos: renderPhotos, people: renderPeople, person: renderPerson,
+		({ home: renderHome, videos: renderVideos, photos: renderPhotos, people: renderPeople, person: renderPerson,
 			memories: renderMemories, memory: renderMemory, 'memory-edit': renderMemoryEditor })[view](root);
 	}
 
@@ -2878,13 +3248,27 @@
 		var dx = ev.changedTouches[0].clientX - touchX; touchX = null;
 		if (Math.abs(dx) > 40) showPhoto(photoIndex + (dx < 0 ? 1 : -1));
 	});
-	document.querySelectorAll('.views button').forEach(function (b) {
-		b.addEventListener('click', function () {
-			view = b.dataset.view; personId = null; memoryId = null; storeSet('localStorage', VIEW_KEY, view);
-			if (/^#(person|memory)\//.test(location.hash)) { try { history.replaceState(null, '', location.pathname); } catch (e) {} }
-			render();
-		});
+	function goTo(v) {
+		view = v; personId = null; memoryId = null; storeSet('localStorage', VIEW_KEY, view);
+		if (/^#(person|memory)\//.test(location.hash)) { try { history.replaceState(null, '', location.pathname); } catch (e) {} }
+		closeMenu(); render();
+		if (v === 'home') window.scrollTo({ top: 0 });
+		else $('content').scrollIntoView({ block: 'start' });
+	}
+	document.querySelectorAll('.nav button[data-view]').forEach(function (b) {
+		b.addEventListener('click', function () { goTo(b.dataset.view); });
 	});
+	$('go-home').addEventListener('click', function () { goTo('home'); });
+	// Tablets and phones: the pages fold into a menu behind the hamburger button.
+	function closeMenu() { $('bar').classList.remove('is-open'); $('menu-btn').setAttribute('aria-expanded', 'false'); }
+	$('menu-btn').addEventListener('click', function () {
+		var open = !$('bar').classList.contains('is-open');
+		$('bar').classList.toggle('is-open', open); $('menu-btn').setAttribute('aria-expanded', String(open));
+	});
+	document.addEventListener('keydown', function (ev) { if (ev.key === 'Escape' && $('bar').classList.contains('is-open')) closeMenu(); });
+	document.addEventListener('click', function (ev) { if ($('bar').classList.contains('is-open') && !$('bar').contains(ev.target)) closeMenu(); });
+	document.querySelector('.nav__extra [data-action=account]').addEventListener('click', function () { closeMenu(); $('account-open').click(); });
+	document.querySelector('.nav__extra [data-action=logout]').addEventListener('click', function () { closeMenu(); $('logout').click(); });
 
 	// ── Chapters & tagged events on a video, beside the player. Any member can add them;
 	// people edit or delete their own (the admin, any). Clicking one jumps there.
