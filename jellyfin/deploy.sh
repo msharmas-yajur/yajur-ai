@@ -53,6 +53,13 @@ install -m 644 "$HERE/kodai1994/kodai1994-stabilize.service" "$HERE/kodai1994/ko
 systemctl --user daemon-reload
 systemctl --user enable --now kodai1994-stabilize.timer >/dev/null 2>&1
 
+# Hourly: each recording's three sounds (Enhanced, Voice focus, Original) kept up to date
+# (kodai1994/audio-queue.sh; up-to-date ones are skipped, so it's safe to leave on).
+install -m 755 "$HERE/kodai1994/audio.sh" "$HERE/kodai1994/audio-queue.sh" "$HERE/kodai1994/sound-sections.py" "$DEST/kodai1994/bin/"
+install -m 644 "$HERE/kodai1994/kodai1994-audio.service" "$HERE/kodai1994/kodai1994-audio.timer" "$HOME/.config/systemd/user/"
+systemctl --user daemon-reload
+systemctl --user enable --now kodai1994-audio.timer >/dev/null 2>&1
+
 # Nightly backup to Google Drive (kodai1994/backup.sh), once it's configured in .env.
 install -m 755 "$HERE/kodai1994/backup.sh" "$DEST/kodai1994/bin/"
 install -m 644 "$HERE/kodai1994/kodai1994-backup.service" "$HERE/kodai1994/kodai1994-backup.timer" "$HOME/.config/systemd/user/"
