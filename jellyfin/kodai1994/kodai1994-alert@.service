@@ -1,0 +1,6 @@
+[Unit]
+Description=Kodai 1994: report that %i failed
+
+[Service]
+Type=oneshot
+ExecStart=%h/services/yajur-videos/kodai1994/bin/monitor.py --unit-failed %i

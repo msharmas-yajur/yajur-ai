@@ -3,3 +3,5 @@ config/
 cache/
 __pycache__/
 *.pyc
+# the page's own copy of a script library (the root .gitignore drops vendor/ for Jekyll)
+!kodai1994/site/vendor/

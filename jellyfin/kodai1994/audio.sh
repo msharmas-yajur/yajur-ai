@@ -67,7 +67,9 @@ for s in "$@"; do
 
   if [ "$demuxed" = 1 ]; then
     # Only the processed sounds change: the rest is linked, not copied.
-    cp -al "$src" "$out"; for k in $kinds; do rm -rf "$out"/a-*-"$k"; done; rm -f "$out/audio.json"
+    # The files written below are unlinked first: writing into a linked one would change the
+    # live folder's copy too (that emptied a live master.m3u8 once).
+    cp -al "$src" "$out"; for k in $kinds; do rm -rf "$out"/a-*-"$k"; done; rm -f "$out/audio.json" "$out/master.m3u8"
   else
     mkdir -p "$out"
     find "$src" -mindepth 1 -maxdepth 1 ! -name hi ! -name lo ! -name master.m3u8 ! -name audio.json -exec cp -a {} "$out/" \;

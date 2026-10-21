@@ -1,6 +1,6 @@
 # Kodai 1994 — Captions, transcripts and video descriptions
 
-**Status:** Plan — parked, awaiting decisions (see §6)
+**Status:** Built 2026-10-21 with the private defaults (§7); full run waiting for the go-ahead
 **Date:** 2026-10-20
 **Branch:** `claude/secure-video-library`
 **Where it lives:** `jellyfin/kodai1994/` (worker, community service, page)
@@ -63,6 +63,27 @@ Captions come first: they produce the transcripts the descriptions are written f
 2. Caption languages beyond Original + English (Hindi? Telugu? Tamil?).
 3. Descriptions with Claude: which Anthropic API key / billing account?
 4. Who may edit descriptions and captions: administrators only, or all members?
+
+## 7. What was built (2026-10-21)
+
+Decisions taken, as the private defaults (change any of them later):
+1. **Audio stays on this machine**: Whisper large-v3-turbo (faster-whisper, int8, CPU) in a
+   container with no network. Sarvam isn't used (no key in the stack).
+2. **Captions**: "Original (as spoken)"; "English" appears for recordings in another
+   language once lines have English text.
+3. **Descriptions**: `describe.py` with Claude, only once `ANTHROPIC_API_KEY` is in `.env`.
+4. **Editing**: moderators correct lines and descriptions (audit-logged).
+
+Pilot findings (3-4 minute stretches of the 14 April discourse, the 1 May Q&A, and the
+picnic): the tapes are mostly **English** conversation and Q&A. With the language sampled
+once per recording and the "Voice focus" sound, the English is readable with mistakes
+(names, overlapping voices). Forcing Telugu gave nonsense, and Whisper's translation of
+Telugu output Telugu script, not English: **local translation doesn't work**. Singing makes
+Whisper loop; repetitive, low-confidence and wrong-script lines are dropped. Speed ≈ 3-4×
+real time on 6-8 cores (all 37 h ≈ 10-12 h of CPU).
+
+Next, if wanted: queue everything (*Transcribe every recording without one*); add a Sarvam
+or Claude step for English lines of Telugu parts; set `ANTHROPIC_API_KEY` for descriptions.
 
 ## Sources
 

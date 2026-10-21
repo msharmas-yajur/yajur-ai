@@ -1,0 +1,9 @@
+[Unit]
+Description=Kodai 1994: check the Drive backup can be read back (restores nothing)
+OnFailure=kodai1994-alert@%n.service
+
+[Service]
+Type=oneshot
+Environment=RCLONE=%h/.local/bin/rclone
+ExecStart=%h/services/yajur-videos/kodai1994/bin/restore-test.py
+Nice=10

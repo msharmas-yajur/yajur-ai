@@ -2,7 +2,8 @@
 // Same shaders and render loop; the React wrapper is replaced by
 //   createPatternWaves(container, props) → { destroy() }
 // Needs WebGL2; on older browsers it does nothing.
-import { Renderer, Program, Mesh, Triangle, RenderTarget, Texture } from 'https://cdn.jsdelivr.net/npm/ogl@1.0.11/src/index.js';
+// ogl 1.0.11 (MIT): jsDelivr's ES module build of it, kept here so the page loads no script from jsDelivr
+import { Renderer, Program, Mesh, Triangle, RenderTarget, Texture } from '/kodai1994/vendor/ogl-1.0.11.js';
 
 const SURFACE_PRESETS = {
   silk: { pattern: 'dot', wave: 'silk', spacing: 9, markSize: 0.95, depth: 0.95, light: 0, shine: 0.8, contrast: 1.2, speed: 0.35, scale: 1, direction: 20 },

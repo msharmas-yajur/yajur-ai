@@ -1,0 +1,70 @@
+# Staging copy of the video stack, for trying changes before deploy.sh: http://127.0.0.1:8097/kodai1994/
+# Started by tests/staging.sh, which fills in the environment below.
+#   jellyfin   tests/stub_jellyfin.py standing in for Jellyfin (accounts: see that file)
+#   gateway    the real Caddyfile and site from this checkout (edits show up on reload)
+#   community  the real app.py from this checkout, on a copy of the live database
+# Streams, photos and face crops are the live ones, read-only. Anything staging writes
+# (uploads, memories, the database) stays in STAGING_DIR.
+name: kodai-staging
+
+services:
+  jellyfin:
+    image: python:3.13.5-alpine
+    command: python3 -I /app/stub_jellyfin.py
+    user: "${PUID}:${PGID}"
+    volumes:
+      - ../stub_jellyfin.py:/app/stub_jellyfin.py:ro
+      - "${STAGING_DIR}/items.json:/app/items.json:ro"
+    environment:
+      - LIBRARY_ID=${KODAI_LIBRARY_ID}
+      - ITEMS=/app/items.json
+
+  gateway:
+    image: caddy:2.10.2-alpine
+    ports:
+      - "127.0.0.1:8097:80"
+    volumes:
+      - ../../Caddyfile:/etc/caddy/Caddyfile:ro
+      - ../../kodai1994/site:/srv/kodai1994:ro
+      - "${MEDIA_DIR}/kodai1994-hls:/srv/kodai1994-hls:ro"
+      - "${MEDIA_DIR}/kodai1994-brand:/srv/kodai1994-brand:ro"
+      - "${MEDIA_DIR}/kodai1994-identify:/srv/kodai1994-faces:ro"
+      - "${STAGING_DIR}/memories:/srv/kodai1994-memories:ro"
+      - "${STAGING_DIR}/captions:/srv/kodai1994-captions:ro"
+    environment:
+      - KODAI_LIBRARY_ID=${KODAI_LIBRARY_ID}
+    depends_on:
+      - jellyfin
+
+  # The captions worker on staging's database; started by staging.sh only with CAPTIONS=1
+  captions:
+    image: yajur-kodai-captions
+    profiles: ["captions"]
+    user: "${PUID}:${PGID}"
+    cpus: 6
+    network_mode: none
+    volumes:
+      - "${STAGING_DIR}/data:/data"
+      - "${HOME}/services/yajur-videos/captions-models:/models:ro"
+      - "${MEDIA_DIR}/kodai1994-hls:/media/hls:ro"
+    environment:
+      - DATA_DIR=/data
+      - THREADS=6
+
+  community:
+    image: python:3.13.5-alpine
+    command: python3 -I /app/app.py
+    user: "${PUID}:${PGID}"
+    volumes:
+      - ../../kodai1994/community/app.py:/app/app.py:ro
+      - "${STAGING_DIR}/data:/data"
+      - "${STAGING_DIR}/uploads:/uploads"
+      - "${STAGING_DIR}/memories:/memories"
+      - "${STAGING_DIR}/captions:/captions"
+    environment:
+      - KODAI_LIBRARY_ID=${KODAI_LIBRARY_ID}
+      - DATA_DIR=/data
+      - SITE_URL=http://127.0.0.1:8097/kodai1994/
+      - JELLYFIN_API_KEY=${STUB_ADMIN_TOKEN}
+    depends_on:
+      - jellyfin
