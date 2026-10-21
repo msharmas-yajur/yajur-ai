@@ -254,6 +254,12 @@
 	.chal__acts .btn { flex: 1; padding: 6px 10px; }
 	.chal__yes { background: var(--ok); color: var(--pine-deep); }
 	.chal__done { font-size: .85rem; color: var(--ok); }
+	.chal__other { flex-basis: 100%; text-align: left; font-size: .8rem; }
+	.chal__pick { display: grid; gap: 6px; }
+	.chal__pick .tagger__chips { display: none; }   /* one choice: no chips, just + and the search */
+	.chal__pick .tagger__search { position: relative; }
+	.chal__pick .tagger__preview { display: none; }
+	.chal__pick .linkish { justify-self: start; font-size: .8rem; }
 	.challenge__foot { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; margin-top: 14px; }
 	.week__chips { display: flex; flex-wrap: wrap; gap: 6px; }
 	.week__chip { padding: 3px 10px; border-radius: 999px; border: 1px solid var(--line); font-size: .85rem; }
@@ -1831,20 +1837,36 @@
 					where.addEventListener('click', function () { openTarget(info, sg.frame != null ? Math.max(0, sg.frame - 1) : sg.start); });
 					var acts = el('div', 'chal__acts');
 					var yes = el('button', 'btn btn--small chal__yes', 'Yes'), no = el('button', 'btn btn--quiet btn--small', 'No'); yes.type = no.type = 'button';
-					function answer(action) {
-						yes.disabled = no.disabled = true;
-						capi('/identify/suggestions/' + sg.id, { method: 'POST', body: { action: action } }).then(function () {
+					// personAs: confirm it as someone other than the suggestion ("Someone else…")
+					function answer(action, personAs) {
+						yes.disabled = no.disabled = other.disabled = true;
+						var body = { action: action }; if (personAs) body.person = personAs.id;
+						return capi('/identify/suggestions/' + sg.id, { method: 'POST', body: body }).then(function () {
 							c.classList.add(action === 'confirm' ? 'is-yes' : 'is-no');
-							acts.textContent = ''; acts.appendChild(el('span', 'chal__done', action === 'confirm' ? '✓ Thank you, confirmed' : 'Thanks, noted'));
+							acts.textContent = ''; c.querySelectorAll('.chal__pick').forEach(function (x) { x.remove(); });
+							acts.appendChild(el('span', 'chal__done', action !== 'confirm' ? 'Thanks, noted' : personAs ? '✓ Thank you, marked as ' + personAs.name : '✓ Thank you, confirmed'));
+							if (personAs) q.textContent = 'This is ' + personAs.name;
 							if (++done === list.length) more.hidden = false;
 						}).catch(function (ex) {
-							yes.disabled = no.disabled = false;
+							yes.disabled = no.disabled = other.disabled = false;
 							acts.appendChild(el('span', 'error', ex.status === 409 && /name/.test(ex.message) ? 'Choose the name others see (under Account) first.' : ex.message));
+							throw ex;
 						});
 					}
 					yes.addEventListener('click', function () { answer('confirm'); });
 					no.addEventListener('click', function () { answer('reject'); });
-					acts.append(yes, no);
+					var other = el('button', 'linkish chal__other', 'Someone else…'); other.type = 'button';
+					other.title = 'It’s a different person: choose who';
+					other.addEventListener('click', function () {
+						other.hidden = true;
+						var box = el('div', 'chal__pick');
+						var pk = peoplePicker([], null, { label: null, empty: ' ', onAdd: function (pp) { return answer('confirm', pp); } });
+						var cancel = el('button', 'linkish', 'Cancel'); cancel.type = 'button';
+						cancel.addEventListener('click', function () { box.remove(); other.hidden = false; });
+						box.append(pk.el, cancel); c.insertBefore(box, acts.nextSibling);
+						pk.focus();
+					});
+					acts.append(yes, no, other);
 					c.append(pair, q, where, acts);
 					row.appendChild(c);
 				});
