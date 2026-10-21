@@ -62,7 +62,38 @@
 	.btn--yes { background: var(--leaf); color: var(--pine-deep); }
 	.btn--small { padding: 6px 14px; font-size: .88rem; }
 
-	.top { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 18px var(--gutter); border-bottom: 1px solid var(--line); }
+	/* The signed-in member on the Account button: initials + name */
+	.acct { display: inline-flex; align-items: center; gap: 8px; }
+	.acct__avatar { display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; font: 700 .72rem var(--text); color: #0c1912; background: hsl(24 45% 72%); }
+	.acct__name { max-width: 16ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+	/* Top bar: the same as the main pages (index.html) */
+	.site-bar { position: sticky; top: 0; z-index: 40; display: flex; align-items: center; gap: 20px; padding: 10px var(--gutter);
+		background: rgb(var(--bg-rgb) / .82); -webkit-backdrop-filter: blur(14px) saturate(1.2); backdrop-filter: blur(14px) saturate(1.2); border-bottom: 1px solid var(--line); }
+	.bar__home { flex: none; border-radius: 12px; }
+	.logo { display: block; height: 54px; width: auto; filter: drop-shadow(0 2px 10px rgba(0,0,0,.45)); }
+	.views { display: inline-flex; padding: 4px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel); }
+	.views a { padding: 9px 20px; border-radius: 999px; font-weight: 500; color: var(--mist); text-decoration: none; white-space: nowrap; }
+	.views a:hover { color: var(--khadi); }
+	.views a[aria-current=page] { background: var(--khadi); color: var(--pine-deep); }
+	.bar__actions { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+	.site-bar .btn--quiet { text-decoration: none; padding: 8px 16px; background: rgb(var(--bg-rgb) / .55); font-weight: 600; }
+	.nav__extra { display: none; }
+	.menu-btn { display: none; place-items: center; width: 44px; height: 44px; border-radius: 12px; border: 1px solid var(--line); background: var(--panel); color: var(--khadi); cursor: pointer; }
+	.menu-btn svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
+	@media (max-width: 1024px) {
+		.menu-btn { display: inline-grid; }
+		.site-bar .nav { display: none; }
+		.site-bar.is-open .nav { display: grid; position: absolute; top: 100%; left: 0; right: 0; gap: 4px; padding: 10px var(--gutter) 18px; border-radius: 0; border: 0;
+			border-bottom: 1px solid var(--line); background: var(--pine-deep); box-shadow: 0 18px 40px rgba(0,0,0,.25); }
+		.site-bar.is-open .nav a { text-align: left; padding: 13px 14px; border-radius: 12px; font-size: 1.05rem; }
+		.logo { height: 46px; }
+	}
+	@media (max-width: 640px) {
+		.bar__actions .btn--quiet { display: none; }
+		.site-bar.is-open .nav__extra { display: grid; gap: 4px; margin-top: 8px; padding-top: 10px; border-top: 1px solid var(--line); }
+		.nav__extra #signed-in { padding: 4px 14px 6px; font-size: .9rem; }
+	}
+
 	.top a { color: var(--khadi); text-decoration: none; font-weight: 500; }
 	.top a:hover { color: var(--saffron); }
 	.intro { padding: 36px var(--gutter) 8px; max-width: 900px; }
@@ -160,10 +191,27 @@
 </style>
 </head>
 <body>
-<div class="top">
-	<a href="/kodai1994/">← Kodai 1994</a>
-	<span class="top__end"><span class="muted" id="signed-in"></span>
-	<button class="theme-toggle" data-theme-toggle type="button" aria-label="Switch theme"></button></span>
+<div class="site-bar" id="bar">
+	<a class="bar__home" href="/kodai1994/#view=home" aria-label="Home" title="Home"><img class="logo" src="/kodai1994/brand/logo.png" alt="Sri Sathya Sai Centenary Celebrations" width="72" height="72"></a>
+	<nav class="views nav" id="nav" aria-label="Pages">
+		<a href="/kodai1994/#view=home">Home</a>
+		<a href="/kodai1994/#view=videos">Videos</a>
+		<a href="/kodai1994/#view=photos">Photos</a>
+		<a href="/kodai1994/#view=people">People</a>
+		<a href="/kodai1994/#view=memories">Memories</a>
+		<a href="identify.html" aria-current="page">Identify faces</a>
+		<div class="nav__extra">
+			<span class="muted" id="signed-in"></span>
+			<a href="/kodai1994/#account">Account</a>
+			<a href="/kodai1994/#signout">Sign out</a>
+		</div>
+	</nav>
+	<div class="bar__actions">
+		<button class="theme-toggle" data-theme-toggle type="button" aria-label="Switch theme"></button>
+		<a class="btn btn--quiet acct" id="acct" href="/kodai1994/#account" aria-label="Account"><span class="acct__avatar" id="acct-avatar" aria-hidden="true"></span><span class="acct__name" id="acct-name">Account</span></a>
+		<a class="btn btn--quiet" href="/kodai1994/#signout">Sign out</a>
+		<button class="menu-btn" id="menu-btn" type="button" aria-expanded="false" aria-controls="nav" aria-label="Menu"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16"/><path d="M4 12h16"/><path d="M4 18h16"/></svg></button>
+	</div>
 </div>
 <div class="intro">
 	<h1>Identify faces</h1>
@@ -277,7 +325,10 @@
 			state.me = res[3];
 			setPeople(res[4]);
 			setRuns(res[5]);
-			$('signed-in').textContent = 'Signed in as ' + (state.me.displayName || state.me.username);
+			var who = state.me.displayName || state.me.username;
+			$('signed-in').textContent = 'Signed in as ' + who;
+			$('acct-name').textContent = who; $('acct-avatar').textContent = who.split(/\s+/).map(function (w) { return w[0]; }).slice(0, 2).join('').toUpperCase();
+			$('acct').setAttribute('aria-label', 'Account: signed in as ' + who);
 			$('status').hidden = true; $('layout').hidden = false;
 			var m = /^#(video|photo)\/([a-z0-9-]+)$/.exec(location.hash);
 			if (m) state.kind = m[1];
@@ -699,6 +750,14 @@
 		var m = /^#(video|photo)\/([a-z0-9-]+)$/.exec(location.hash);
 		if (m && !(state.current && state.current.kind === m[1] && state.current.key === m[2])) { state.kind = m[1]; renderTabs(); select(m[1], m[2], true); }
 	});
+	// Tablets and phones: the pages fold into a menu (as on the main pages)
+	$('menu-btn').addEventListener('click', function (ev) {
+		ev.stopPropagation();
+		var open = !$('bar').classList.contains('is-open');
+		$('bar').classList.toggle('is-open', open); $('menu-btn').setAttribute('aria-expanded', String(open));
+	});
+	document.addEventListener('click', function (ev) { if (!$('bar').contains(ev.target)) { $('bar').classList.remove('is-open'); $('menu-btn').setAttribute('aria-expanded', 'false'); } });
+	document.addEventListener('keydown', function (ev) { if (ev.key === 'Escape') { $('bar').classList.remove('is-open'); $('menu-btn').setAttribute('aria-expanded', 'false'); } });
 	start();
 })();
 </script>

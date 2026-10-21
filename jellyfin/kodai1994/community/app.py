@@ -18,6 +18,12 @@ details from the page instead.
 
 Routes (JSON):
   GET    /me                       who am I, my display name, am I admin
+  GET    /activity?before=ISO      the Home page: newest-first activity (memories, chapters, events,
+                                   comments, uploaded photos, new names, members joining), my
+                                   previous visit (seenAt), collection totals, faces to review
+  POST   /activity/seen            remember that I've looked (for "new since your last visit")
+  GET    /members                  everyone who has joined: display name, joined, last active,
+                                   contributions (never their email)
   PUT    /me                       {displayName}
   GET    /comments?target=...      comments on video:<slug> or photo:<id>
   GET    /counts                   {target: number of comments}
@@ -356,6 +362,12 @@ CREATE TABLE IF NOT EXISTS access_requests (
 """)
 
 
+# Members: first seen, last active, and when they last looked at the activity stream.
+_prof_cols = [r[1] for r in db.execute("PRAGMA table_info(profiles)").fetchall()]
+for _col in ("created_at", "last_seen_at", "activity_seen_at"):
+    if _col not in _prof_cols:
+        db.execute(f"ALTER TABLE profiles ADD COLUMN {_col} TEXT")
+db.commit()
 # Whether each access request's emails went out: the notice to ADMIN_EMAIL and, once
 # approved, the sign-in details to the person (NULL = not attempted, 0 = failed, 1 = sent).
 _req_cols = [r[1] for r in db.execute("PRAGMA table_info(access_requests)").fetchall()]
@@ -421,8 +433,10 @@ def identify(token):
         if len(identity_cache) > 5000:
             identity_cache.clear()
     if who:
-        execute("INSERT INTO profiles (user_id, username, updated_at) VALUES (?, ?, ?) "
-                "ON CONFLICT(user_id) DO UPDATE SET username = excluded.username", (who["id"], who["username"], now()))
+        t = now()
+        execute("INSERT INTO profiles (user_id, username, updated_at, created_at, last_seen_at) VALUES (?, ?, ?, ?, ?) "
+                "ON CONFLICT(user_id) DO UPDATE SET username = excluded.username, last_seen_at = excluded.last_seen_at, "
+                "created_at = COALESCE(profiles.created_at, excluded.created_at)", (who["id"], who["username"], t, t, t))
     return who
 
 
@@ -913,6 +927,99 @@ class Handler(BaseHTTPRequestHandler):
             raise ApiError(403, "Only the person who marked this face, or the administrator, can make it the portrait.")
         execute("UPDATE people SET portrait_face = ? WHERE id = ?", (face, int(pid)))
         return 200, {"portrait": face}
+
+    # ── Home: activity stream, members, totals
+    TEST_USER = "(p.username LIKE 'zz-%' OR p.username = 'kodai-test')"
+    NAME = "COALESCE(p.display_name, 'A member')"   # never the username: it's their email
+
+    def get_activity(self, params):
+        who = self.member()
+        before = urllib.parse.unquote(params.get("before", "")) or "9999"
+        try:
+            limit = max(1, min(80, int(params.get("limit", 40))))
+        except ValueError:
+            limit = 40
+        J = "LEFT JOIN profiles p ON p.user_id = "
+        T, N = self.TEST_USER, self.NAME
+        items = []
+        for r in query(f"SELECT c.id, c.created_at AS at, {N} AS actor, c.target, c.body, c.position_s FROM comments c {J}c.user_id "
+                       f"WHERE c.deleted_at IS NULL AND c.created_at < ? AND NOT {T} ORDER BY c.created_at DESC LIMIT ?", (before, limit)):
+            items.append({"type": "comment", "at": r["at"], "actor": r["actor"], "target": r["target"],
+                          "excerpt": " ".join(r["body"].split())[:180], "position": r["position_s"], "id": r["id"]})
+        for r in query(f"SELECT m.id, m.created_at AS at, {N} AS actor, m.target, m.kind, m.title, m.position_s, "
+                       "(SELECT GROUP_CONCAT(name, ', ') FROM (SELECT pe.name FROM marker_people mp JOIN people pe ON pe.id = mp.person_id "
+                       " WHERE mp.marker_id = m.id ORDER BY mp.ord)) AS names "
+                       f"FROM markers m {J}m.user_id WHERE m.deleted_at IS NULL AND m.created_at < ? AND NOT {T} "
+                       "ORDER BY m.created_at DESC LIMIT ?", (before, limit)):
+            items.append({"type": r["kind"], "at": r["at"], "actor": r["actor"], "target": r["target"],
+                          "title": r["names"] or r["title"] if r["kind"] == "event" else r["title"], "position": r["position_s"], "id": r["id"]})
+        for r in query(f"SELECT m.id, m.created_at AS at, {N} AS actor, m.kind, m.title, m.body, "
+                       "(SELECT target FROM memory_links l WHERE l.memory_id = m.id ORDER BY ord LIMIT 1) AS target, "
+                       "(SELECT position_s FROM memory_links l WHERE l.memory_id = m.id ORDER BY ord LIMIT 1) AS position "
+                       f"FROM memories m {J}m.user_id WHERE m.deleted_at IS NULL AND m.created_at < ? AND NOT {T} "
+                       "ORDER BY m.created_at DESC LIMIT ?", (before, limit)):
+            items.append({"type": "memory", "at": r["at"], "actor": r["actor"], "memoryId": r["id"], "memoryKind": r["kind"],
+                          "title": r["title"], "excerpt": " ".join(re.sub(r"[*#>]", "", r["body"]).split())[:180],
+                          "target": r["target"], "position": r["position"]})
+        for r in query(f"SELECT u.photo_id, u.created_at AS at, {N} AS actor FROM photo_uploads u {J}u.user_id "
+                       f"WHERE u.status = 'ready' AND u.created_at < ? AND NOT {T} ORDER BY u.created_at DESC LIMIT ?", (before, limit)):
+            items.append({"type": "photo", "at": r["at"], "actor": r["actor"], "target": "photo:" + r["photo_id"]})
+        for r in query(f"SELECT pe.id, pe.name, pe.created_at AS at, {N} AS actor FROM people pe {J}pe.added_by "
+                       f"WHERE pe.deleted_at IS NULL AND pe.added_by != 'seed' AND pe.created_at < ? AND NOT {T} "
+                       "ORDER BY pe.created_at DESC LIMIT ?", (before, limit)):
+            items.append({"type": "person", "at": r["at"], "actor": r["actor"], "personId": r["id"], "title": r["name"]})
+        for r in query(f"SELECT a.decided_at AS at, COALESCE(p.display_name, a.name) AS actor FROM access_requests a "
+                       "LEFT JOIN profiles p ON p.username = a.email WHERE a.status = 'approved' AND a.decided_at < ? "
+                       "ORDER BY a.decided_at DESC LIMIT ?", (before, limit)):
+            items.append({"type": "joined", "at": r["at"], "actor": r["actor"]})
+        items.sort(key=lambda x: x["at"] or "", reverse=True)
+        items = items[:limit]
+        mine = query("SELECT activity_seen_at FROM profiles WHERE user_id = ?", (who["id"],))
+        totals = {
+            "memories": query("SELECT COUNT(*) AS n FROM memories WHERE deleted_at IS NULL")[0]["n"],
+            "comments": query("SELECT COUNT(*) AS n FROM comments WHERE deleted_at IS NULL")[0]["n"],
+            "chapters": query("SELECT COUNT(*) AS n FROM markers WHERE deleted_at IS NULL AND kind = 'chapter'")[0]["n"],
+            "events": query("SELECT COUNT(*) AS n FROM markers WHERE deleted_at IS NULL AND kind = 'event'")[0]["n"],
+            "people": query("SELECT COUNT(*) AS n FROM people WHERE deleted_at IS NULL")[0]["n"],
+            "faces": query("SELECT COUNT(*) AS n FROM photo_faces")[0]["n"],
+            "members": query(f"SELECT COUNT(*) AS n FROM profiles p WHERE NOT {T} AND p.username != 'yajur-admin'")[0]["n"],
+        }
+        help_ = {"pending": query("SELECT COUNT(*) AS n FROM identify_suggestions WHERE status = 'pending'")[0]["n"],
+                 "likely": query("SELECT COUNT(*) AS n FROM identify_suggestions WHERE status = 'pending' AND score >= 0.35")[0]["n"]}
+        return 200, {"items": items, "seenAt": mine[0]["activity_seen_at"] if mine else None,
+                     "more": len(items) == limit, "totals": totals, "identify": help_}
+
+    def post_activity_seen(self, params):
+        who = self.member()
+        execute("UPDATE profiles SET activity_seen_at = ? WHERE user_id = ?", (now(), who["id"]))
+        return 200, {"ok": True}
+
+    def get_members(self, params):
+        self.member()
+        T = self.TEST_USER
+        rows = query("SELECT p.user_id, p.display_name, p.last_seen_at, "
+                     "COALESCE((SELECT a.decided_at FROM access_requests a WHERE a.email = p.username AND a.status = 'approved'), p.created_at) AS joined, "
+                     "(SELECT COUNT(*) FROM comments c WHERE c.user_id = p.user_id AND c.deleted_at IS NULL) AS comments, "
+                     "(SELECT COUNT(*) FROM memories m WHERE m.user_id = p.user_id AND m.deleted_at IS NULL) AS memories, "
+                     "(SELECT COUNT(*) FROM markers k WHERE k.user_id = p.user_id AND k.deleted_at IS NULL) AS moments, "
+                     "(SELECT COUNT(*) FROM photo_uploads u WHERE u.user_id = p.user_id AND u.status = 'ready') AS photos, "
+                     "(SELECT COUNT(*) FROM photo_faces f WHERE f.added_by = p.user_id) AS faces, "
+                     "EXISTS (SELECT 1 FROM moderators mo WHERE mo.user_id = p.user_id) AS moderator, "
+                     # earliest trace of them, for members who predate the joined/first-seen records
+                     "(SELECT MIN(t) FROM (SELECT MIN(created_at) AS t FROM comments WHERE user_id = p.user_id "
+                     " UNION ALL SELECT MIN(created_at) FROM markers WHERE user_id = p.user_id "
+                     " UNION ALL SELECT MIN(created_at) FROM photo_uploads WHERE user_id = p.user_id "
+                     " UNION ALL SELECT MIN(created_at) FROM photo_faces WHERE added_by = p.user_id "
+                     " UNION ALL SELECT MIN(created_at) FROM people WHERE added_by = p.user_id)) AS first_trace "
+                     f"FROM profiles p WHERE NOT {T} AND p.username != 'yajur-admin'")
+        def joined(r):
+            ts = [t for t in (r["joined"], r["first_trace"]) if t]
+            return min(ts) if ts else None
+        out = [{"name": r["display_name"] or "A member", "joined": joined(r), "lastSeen": r["last_seen_at"],
+                "moderator": bool(r["moderator"]),
+                "contributions": {k: r[k] for k in ("comments", "memories", "moments", "photos", "faces")}} for r in rows]
+        out.sort(key=lambda m: m["lastSeen"] or "", reverse=True)
+        return 200, out
 
     # ── memories: articles and PDF notes
     @staticmethod
@@ -1465,6 +1572,7 @@ ROUTES = {
             (r"/identify/runs", Handler.get_identify_runs), (r"/identify/suggestions", Handler.get_identify_suggestions),
             (r"/photo-uploads", Handler.get_photo_uploads),
             (r"/memories", Handler.get_memories), (r"/memories/(\d+)", Handler.get_memory),
+            (r"/activity", Handler.get_activity), (r"/members", Handler.get_members),
             (r"/admin/requests", Handler.get_requests), (r"/admin/moderators", Handler.get_moderators)],
     "PUT": [(r"/me", Handler.put_me), (r"/admin/moderators/([0-9a-f]{32})", Handler.put_moderator), (r"/memories/(\d+)", Handler.put_memory), (r"/markers/(\d+)", Handler.put_marker), (r"/people/(\d+)", Handler.put_person),
             (r"/people/(\d+)/portrait", Handler.put_portrait)],
@@ -1473,6 +1581,7 @@ ROUTES = {
              (r"/identify/runs", Handler.post_identify_run), (r"/identify/suggestions/(\d+)", Handler.review_suggestion),
              (r"/photo-uploads", Handler.post_photo_upload),
              (r"/memories", Handler.post_memory), (r"/memory-files", Handler.post_memory_file),
+             (r"/activity/seen", Handler.post_activity_seen),
              (r"/access-requests", Handler.post_access_request),
              (r"/admin/requests/(\d+)/approve", Handler.approve_request),
              (r"/admin/requests/(\d+)/reject", Handler.reject_request)],
