@@ -45,11 +45,13 @@ Routes (JSON):
   PUT    /markers/<id>             {title?, people?, position?, kind?}  own marker, or any for the admin
   DELETE /markers/<id>             own marker, or any for the admin
   GET    /memories?target=...      memories (articles and PDF notes), newest first; with target
-                                   (video:<slug> or photo:<id>) only those tagged to it
+                                   (video:<slug> or photo:<id>) only those tagged to it; with
+                                   person=<id> only those that person is tagged in
   GET    /memories/<id>            one memory in full, with what it's tagged to
   POST   /memory-files             body: a PDF (up to 25 MB) → {file}, to attach to a notes memory
-  POST   /memories                 {kind: "article"|"notes", title, body, file?, links: [{target, position?}]}
-  PUT    /memories/<id>            {title?, body?, links?}  (its author, or the admin)
+  POST   /memories                 {kind: "article"|"notes", title, body, file?, links: [{target, position?}],
+                                    people?: [person ids]}
+  PUT    /memories/<id>            {title?, body?, links?, people?}  (its author, or the admin)
   DELETE /memories/<id>            (its author, or the admin)
   POST   /photo-uploads            body: the image (image/jpeg, png or webp, up to 15 MB); the
                                    worker (faceid/worker.py) adds it to the Photos page
@@ -309,6 +311,13 @@ CREATE TABLE IF NOT EXISTS memory_links (
     PRIMARY KEY (memory_id, target)
 );
 CREATE INDEX IF NOT EXISTS memory_links_by_target ON memory_links (target);
+CREATE TABLE IF NOT EXISTS memory_people (      -- who a memory is about / who appears in it
+    memory_id   INTEGER NOT NULL,
+    person_id   INTEGER NOT NULL,
+    ord         INTEGER NOT NULL,
+    PRIMARY KEY (memory_id, person_id)
+);
+CREATE INDEX IF NOT EXISTS memory_people_by_person ON memory_people (person_id);
 CREATE TABLE IF NOT EXISTS memory_files (       -- uploaded PDFs, so only the uploader can attach one
     file        TEXT PRIMARY KEY,
     user_id     TEXT NOT NULL,
@@ -758,8 +767,11 @@ class Handler(BaseHTTPRequestHandler):
                   "markedBy": f["marker"], "canRemove": who["isAdmin"] or f["added_by"] == who["id"]}
                  for f in query("SELECT f.*, COALESCE(p.display_name, p.username, 'Member') AS marker FROM photo_faces f "
                                 "LEFT JOIN profiles p ON p.user_id = f.added_by WHERE f.person_id = ? ORDER BY f.id", (int(pid),))]
+        memories = [{"id": m["id"], "kind": m["kind"], "title": m["title"], "author": m["author"], "createdAt": m["created_at"]}
+                    for m in query(self.MEMORY_SQL + "AND m.id IN (SELECT memory_id FROM memory_people WHERE person_id = ?) "
+                                   "ORDER BY m.created_at DESC", (int(pid),))]
         return 200, {"person": self.person_row(who, rows[0]), "photos": photos, "faces": faces,
-                     "videos": [{"target": t, "events": ev} for t, ev in videos.items()]}
+                     "videos": [{"target": t, "events": ev} for t, ev in videos.items()], "memories": memories}
 
     # ── people tagged in photos
     def get_photo_tags(self, params):
@@ -884,6 +896,35 @@ class Handler(BaseHTTPRequestHandler):
         return out
 
     @staticmethod
+    def memory_people_ids(data):
+        ids = data.get("people", [])
+        if not isinstance(ids, list) or len(ids) > 60:
+            raise ApiError(400, "Tag at most 60 people in one memory.")
+        out = []
+        for i in ids:
+            if not isinstance(i, int) or i in out:
+                raise ApiError(400, "That list of people isn't valid. Reload the page and try again.")
+            if not query("SELECT 1 FROM people WHERE id = ? AND deleted_at IS NULL", (i,)):
+                raise ApiError(400, "Someone you tagged was removed from the People list. Reload the page and try again.")
+            out.append(i)
+        return out
+
+    @staticmethod
+    def set_memory_people(mid, ids):
+        execute("DELETE FROM memory_people WHERE memory_id = ?", (mid,))
+        for i, pid in enumerate(ids):
+            execute("INSERT INTO memory_people (memory_id, person_id, ord) VALUES (?, ?, ?)", (mid, pid, i))
+
+    @staticmethod
+    def people_for(ids):
+        out = {}
+        if ids:
+            for r in query("SELECT mp.memory_id, pe.id, pe.name FROM memory_people mp JOIN people pe ON pe.id = mp.person_id "
+                           "AND pe.deleted_at IS NULL WHERE mp.memory_id IN (%s) ORDER BY mp.memory_id, mp.ord" % ",".join("?" * len(ids)), ids):
+                out.setdefault(r["memory_id"], []).append({"id": r["id"], "name": r["name"]})
+        return out
+
+    @staticmethod
     def memory_text(data, kind):
         title = clean(data.get("title"), 140)
         if len(title) < 2:
@@ -893,9 +934,9 @@ class Handler(BaseHTTPRequestHandler):
             raise ApiError(400, "Write a little more: at least a sentence or two.")
         return title, body
 
-    def memory_row(self, who, r, links, full):
+    def memory_row(self, who, r, links, full, people=None):
         body = r["body"]
-        return {"id": r["id"], "kind": r["kind"], "title": r["title"],
+        return {"id": r["id"], "kind": r["kind"], "title": r["title"], "people": (people or {}).get(r["id"], []),
                 "body": body if full else None,
                 "excerpt": (body[:280].rsplit(" ", 1)[0] + "…") if len(body) > 280 else body,
                 "words": len(body.split()), "pdf": f"/kodai1994/memories/{r['file']}" if r["file"] else None,
@@ -918,17 +959,23 @@ class Handler(BaseHTTPRequestHandler):
     def get_memories(self, params):
         who = self.member()
         target = urllib.parse.unquote(params.get("target", ""))
+        person = params.get("person", "")
         if target:
             if not LINK_TARGET.match(target):
                 raise ApiError(400, "Unknown video or photo.")
             rows = query(self.MEMORY_SQL + "AND m.id IN (SELECT memory_id FROM memory_links WHERE target = ?) ORDER BY m.created_at DESC", (target,))
+        elif person:
+            if not person.isdigit():
+                raise ApiError(400, "Unknown person.")
+            rows = query(self.MEMORY_SQL + "AND m.id IN (SELECT memory_id FROM memory_people WHERE person_id = ?) ORDER BY m.created_at DESC", (int(person),))
         else:
             rows = query(self.MEMORY_SQL + "ORDER BY m.created_at DESC")
         links = self.links_for([r["id"] for r in rows])
+        people = self.people_for([r["id"] for r in rows])
         counts = {r["target"]: r["n"] for r in query("SELECT target, COUNT(*) AS n FROM comments WHERE deleted_at IS NULL AND target LIKE 'memory:%' GROUP BY target")}
         out = []
         for r in rows:
-            row = self.memory_row(who, r, links, False)
+            row = self.memory_row(who, r, links, False, people)
             row["comments"] = counts.get(f"memory:{r['id']}", 0)
             out.append(row)
         return 200, out
@@ -938,7 +985,7 @@ class Handler(BaseHTTPRequestHandler):
         rows = query(self.MEMORY_SQL + "AND m.id = ?", (int(mid),))
         if not rows:
             raise ApiError(404, "That memory was removed.")
-        return 200, self.memory_row(who, rows[0], self.links_for([int(mid)]), True)
+        return 200, self.memory_row(who, rows[0], self.links_for([int(mid)]), True, self.people_for([int(mid)]))
 
     def post_memory_file(self, params):
         who = self.member()
@@ -970,6 +1017,7 @@ class Handler(BaseHTTPRequestHandler):
             raise ApiError(400, "Choose Article or Notes.")
         title, body = self.memory_text(data, kind)
         links = self.memory_links(data)
+        people = self.memory_people_ids(data)
         file = None
         if kind == "notes":
             file = str(data.get("file", ""))
@@ -983,6 +1031,7 @@ class Handler(BaseHTTPRequestHandler):
         mid = execute("INSERT INTO memories (kind, title, body, file, user_id, created_at) VALUES (?, ?, ?, ?, ?, ?)",
                       (kind, title, body, file, who["id"], now()))
         self.set_memory_links(mid, links)
+        self.set_memory_people(mid, people)
         return 201, {"id": mid}
 
     @staticmethod
@@ -1009,6 +1058,9 @@ class Handler(BaseHTTPRequestHandler):
             execute("UPDATE memories SET title = ?, body = ?, updated_at = ? WHERE id = ?", (title, body, now(), int(mid)))
         if "links" in data:
             self.set_memory_links(int(mid), self.memory_links(data))
+            execute("UPDATE memories SET updated_at = ? WHERE id = ?", (now(), int(mid)))
+        if "people" in data:
+            self.set_memory_people(int(mid), self.memory_people_ids(data))
             execute("UPDATE memories SET updated_at = ? WHERE id = ?", (now(), int(mid)))
         return 200, {"id": int(mid)}
 
