@@ -8,7 +8,7 @@
 	var APP = '/kodai1994/';
 	var PAGES = [['home', APP + '#view=home', 'Home'], ['videos', APP + '#view=videos', 'Videos'], ['photos', APP + '#view=photos', 'Photos'],
 		['people', APP + '#view=people', 'People'], ['memories', APP + '#view=memories', 'Memories'],
-		['identify', APP + 'identify.html', 'Identify faces'], ['sound', APP + 'audio-compare.html', 'Sound'], ['picture', APP + 'video-compare.html', 'Picture']];
+		['identify', APP + 'identify.html', 'Identify faces'], ['sound', APP + 'audio-compare.html', 'Sound'], ['enhance', APP + 'video-compare.html', 'Video Enhancement']];
 	var bar = document.createElement('div');
 	bar.className = 'site-bar'; bar.id = 'bar';
 	bar.innerHTML =
@@ -41,7 +41,7 @@
 		if (!me) return;
 		var who = me.displayName || me.username;
 		bar.querySelector('#signed-in').textContent = 'Signed in as ' + who;
-		bar.querySelector('#acct-name').textContent = who;
+		bar.querySelector('#acct-name').textContent = who; bar.querySelector('#acct').title = who;
 		bar.querySelector('#acct-avatar').textContent = who.split(/\s+/).map(function (w) { return w[0]; }).slice(0, 2).join('').toUpperCase();
 		bar.querySelector('#acct').setAttribute('aria-label', 'Account: signed in as ' + who);
 	}).catch(function () {});

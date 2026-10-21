@@ -159,11 +159,12 @@
 	.bar__home { border: 0; padding: 0; background: none; cursor: pointer; border-radius: 12px; flex: none; }
 	.bar__home .logo { height: 54px; }
 	.bar__actions { margin-left: auto; }
+	.bar__actions > *, .bar__actions .btn { flex: none; white-space: nowrap; }   /* never squeezed or wrapped */
 	.nav__extra { display: none; }
 	.menu-btn { display: none; place-items: center; width: 44px; height: 44px; border-radius: 12px; border: 1px solid var(--line); background: var(--panel); color: var(--khadi); cursor: pointer; }
 	.menu-btn svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
-	@media (max-width: 1024px) {
-		/* tablets and phones: the pages fold into a menu */
+	@media (max-width: 1365px) {
+		/* tablets, phones and narrow laptops: the pages fold into a menu */
 		.menu-btn { display: inline-grid; }
 		.bar .nav { display: none; }
 		.bar.is-open .nav { display: grid; position: absolute; top: 100%; left: 0; right: 0; gap: 4px; padding: 10px var(--gutter) 18px;
@@ -216,7 +217,14 @@
 	.views button:not([aria-pressed=true]):hover, .views a:hover { color: var(--khadi); }
 	/* "KODAI 1994" beside the logo, only when the menu is behind the hamburger */
 	.bar__brand { display: none; font: 400 1.15rem/1 var(--display); letter-spacing: .14em; color: var(--khadi); white-space: nowrap; }
-	@media (max-width: 1024px) { .bar__home { display: inline-flex; align-items: center; gap: 12px; text-decoration: none; } .bar__brand { display: inline; } }
+	@media (max-width: 1365px) { .bar__home { display: inline-flex; align-items: center; gap: 12px; text-decoration: none; } .bar__brand { display: inline; } }
+	/* Eight pages plus the actions: tighter up to 1500 px (the account shows its initials;
+	   the name is in its tooltip), and folded into the menu below 1366 px */
+	@media (min-width: 1366px) and (max-width: 1500px) {
+		.bar { gap: 12px; }
+		.views button, .views a { padding: 9px 12px; }
+		.bar .acct__name { display: none; }
+	}
 	@media (max-width: 640px) {
 		.bar { gap: 10px; }
 		.bar__brand { font-size: 1rem; letter-spacing: .1em; }
@@ -922,7 +930,7 @@
 			<button type="button" data-view="memories" aria-pressed="false">Memories</button>
 			<a href="identify.html" title="Help name the people the computer found in the recordings and photos">Identify faces</a>
 			<a href="audio-compare.html" title="Hear the recordings’ sound, original and enhanced">Sound</a>
-			<a href="video-compare.html" title="Compare ways of improving the recordings’ picture">Picture</a>
+			<a href="video-compare.html" title="Compare ways of improving the recordings’ picture">Video Enhancement</a>
 			<div class="nav__extra">
 				<span class="muted" id="signed-in"></span>
 				<button class="theme-toggle" data-theme-toggle type="button" aria-label="Switch theme"></button>
@@ -1535,7 +1543,7 @@
 			// Who's signed in, on the Account button
 			var who = (me && me.displayName) || session.name || 'Account';
 			$('acct-name').textContent = who; $('acct-avatar').textContent = initials(who);
-			$('account-open').setAttribute('aria-label', 'Account: signed in as ' + who);
+			$('account-open').setAttribute('aria-label', 'Account: signed in as ' + who); $('account-open').title = who;
 			// Links from the other pages' top bar (identify.html): #view=…, #account, #signout
 			var vlink = /^#view=(home|videos|photos|people|memories)$/.exec(location.hash);
 			if (vlink) { view = vlink[1]; storeSet('localStorage', VIEW_KEY, view); try { history.replaceState(null, '', location.pathname); } catch (e) {} }
@@ -1699,7 +1707,7 @@
 	// "This week": the last seven days at a glance (instead of an email digest)
 	function weekCard(w) {
 		var c = el('section', 'side-card week'); c.appendChild(el('h3', '', 'This week'));
-		var labels = [['memories', 'memory', 'memories'], ['photos', 'photo', 'photos'], ['moments', 'chapter or event', 'chapters & events'],
+		var labels = [['memories', 'memory', 'memories'], ['photos', 'photo', 'photos'], ['chapters', 'chapter', 'chapters'], ['events', 'event', 'events'],
 			['faces', 'face confirmed', 'faces confirmed'], ['comments', 'comment', 'comments'], ['members', 'member joined', 'members joined']];
 		var chips = el('div', 'week__chips');
 		labels.forEach(function (l) { var n = w.counts[l[0]] || 0; if (!n) return; var ch = el('span', 'week__chip'); ch.append(el('b', '', n.toLocaleString('en-IN')), document.createTextNode(' ' + (n === 1 ? l[1] : l[2]))); chips.appendChild(ch); });
@@ -1741,7 +1749,7 @@
 	// Contribution milestones: who has added the most, by the round number they've passed
 	var STEPS = [5, 10, 25, 50, 100, 250, 500, 1000, 2500];
 	function milestonesCard(members) {
-		var verbs = { photos: ['added', 'photos'], moments: ['added', 'chapters & events'], faces: ['marked', 'faces'], memories: ['wrote', 'memories'], comments: ['left', 'comments'] };
+		var verbs = { photos: ['added', 'photos'], chapters: ['added', 'chapters'], events: ['added', 'events'], faces: ['marked', 'faces'], memories: ['wrote', 'memories'], comments: ['left', 'comments'] };
 		var out = [];
 		members.forEach(function (m) {
 			Object.keys(verbs).forEach(function (k) {
@@ -1763,9 +1771,9 @@
 		return c;
 	}
 	var homeFilter = 'all';
-	var FEED_FILTERS = [['all', 'Everything'], ['memory', 'Memories'], ['comment', 'Comments'], ['moment', 'Chapters & events'], ['photo', 'Photos & videos'], ['people', 'People']];
+	var FEED_FILTERS = [['all', 'Everything'], ['memory', 'Memories'], ['comment', 'Comments'], ['chapter', 'Chapters'], ['event', 'Events'], ['photo', 'Photos & videos'], ['people', 'People']];
 	function feedKind(it) {
-		return it.type === 'chapter' || it.type === 'event' ? 'moment' : it.type === 'video' ? 'photo' : (it.type === 'person' || it.type === 'joined') ? 'people' : it.type;
+		return it.type === 'video' ? 'photo' : (it.type === 'person' || it.type === 'joined') ? 'people' : it.type;
 	}
 	function renderHome(root) {
 		var wrap = el('section', 'home');
@@ -1835,7 +1843,7 @@
 			var c = {}; fresh.forEach(function (it) { var k = feedKind(it) === 'photo' ? (it.type === 'video' ? 'video' : 'photo') : feedKind(it); c[k] = (c[k] || 0) + 1; });
 			var bar = el('div', 'since');
 			bar.appendChild(el('span', '', 'Since your last visit, ' + fmtWhen(state.seenAt) + ':'));
-			[['photo', 'new photo'], ['video', 'new recording'], ['memory', 'memory'], ['comment', 'comment'], ['moment', 'chapter or event', 'chapters & events'], ['people', 'new name or member', 'new names & members']].forEach(function (k) {
+			[['photo', 'new photo'], ['video', 'new recording'], ['memory', 'memory'], ['comment', 'comment'], ['chapter', 'chapter'], ['event', 'event'], ['people', 'new name or member', 'new names & members']].forEach(function (k) {
 				if (!c[k[0]]) return;
 				var chip = el('span', 'since__chip'); chip.append(el('b', '', String(c[k[0]])), document.createTextNode(' ' + (c[k[0]] === 1 ? k[1] : (k[2] || k[1].replace(/y$/, 'ie') + 's'))));
 				bar.appendChild(chip);
@@ -1967,7 +1975,7 @@
 			var col = el('section', 'side-card'); col.appendChild(el('h3', '', 'The collection'));
 			var dl = el('dl', 'stats');
 			[[entries.length, 'recordings'], [fmtHours(hours).replace(' hours', ''), 'hours of video'], [photos.length, 'photographs'],
-			 [t.people, 'people named'], [t.chapters + t.events, 'chapters & events'], [t.memories, t.memories === 1 ? 'memory' : 'memories'], [t.faces, 'faces marked'], [t.comments, t.comments === 1 ? 'comment' : 'comments']]
+			 [t.people, 'people named'], [t.chapters, t.chapters === 1 ? 'chapter' : 'chapters'], [t.events, t.events === 1 ? 'event' : 'events'], [t.memories, t.memories === 1 ? 'memory' : 'memories'], [t.faces, 'faces marked'], [t.comments, t.comments === 1 ? 'comment' : 'comments']]
 				.forEach(function (x) { var d = el('div'); d.append(el('dt', '', x[1]), el('dd', '', Number(x[0]).toLocaleString('en-IN'))); dl.appendChild(d); });
 			col.appendChild(dl); side.appendChild(col);
 			if (a.identify && a.identify.pending) {
@@ -1987,7 +1995,8 @@
 				var c = m.contributions, bits = [];
 				if (c.memories) bits.push(plural(c.memories, 'memory').replace('memorys', 'memories'));
 				if (c.photos) bits.push(plural(c.photos, 'photo'));
-				if (c.moments) bits.push(plural(c.moments, 'moment'));
+				if (c.chapters) bits.push(plural(c.chapters, 'chapter'));
+				if (c.events) bits.push(plural(c.events, 'event'));
 				if (c.comments) bits.push(plural(c.comments, 'comment'));
 				if (c.faces) bits.push(plural(c.faces, 'face') + ' marked');
 				var line = (m.joined ? 'Joined ' + new Date(m.joined).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : 'Member') + (bits.length ? ' · ' + bits.slice(0, 2).join(', ') : '');

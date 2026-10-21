@@ -13,7 +13,7 @@
 .icon-round svg { width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 /* "KODAI 1994" beside the logo, only when the menu is behind the hamburger */
 .bar__brand { display: none; font: 400 1.15rem/1 var(--display); letter-spacing: .14em; color: var(--khadi); white-space: nowrap; }
-@media (max-width: 1024px) { .bar__home { display: inline-flex; align-items: center; gap: 12px; text-decoration: none; } .bar__brand { display: inline; } }
+@media (max-width: 1365px) { .bar__home { display: inline-flex; align-items: center; gap: 12px; text-decoration: none; } .bar__brand { display: inline; } }
 @media (max-width: 640px) {
 	.site-bar { gap: 10px; }
 	.bar__brand { font-size: 1rem; letter-spacing: .1em; }
@@ -33,11 +33,12 @@
 .views a:hover { color: var(--khadi); }
 .views a[aria-current=page] { background: var(--khadi); color: var(--pine-deep); }
 .bar__actions { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+.bar__actions > *, .bar__actions .btn { flex: none; white-space: nowrap; }   /* never squeezed or wrapped */
 .site-bar .btn--quiet { text-decoration: none; padding: 8px 16px; background: rgb(var(--bg-rgb) / .55); font-weight: 600; }
 .nav__extra { display: none; }
 .menu-btn { display: none; place-items: center; width: 44px; height: 44px; border-radius: 12px; border: 1px solid var(--line); background: var(--panel); color: var(--khadi); cursor: pointer; }
 .menu-btn svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
-@media (max-width: 1024px) {
+@media (max-width: 1365px) {
 	.menu-btn { display: inline-grid; }
 	.site-bar .nav { display: none; }
 	.site-bar.is-open .nav { display: grid; position: absolute; top: 100%; left: 0; right: 0; gap: 4px; padding: 10px var(--gutter) 18px; border-radius: 0; border: 0;
@@ -49,4 +50,11 @@
 	.bar__actions .btn--quiet { display: none; }
 	.site-bar.is-open .nav__extra { display: grid; gap: 4px; margin-top: 8px; padding-top: 10px; border-top: 1px solid var(--line); }
 	.nav__extra #signed-in { padding: 4px 14px 6px; font-size: .9rem; }
+}
+/* Eight pages plus the actions: tighter up to 1500 px (the account shows its initials; the
+   name is in its tooltip), and folded into the menu below 1366 px (above) */
+@media (min-width: 1366px) and (max-width: 1500px) {
+	.site-bar { gap: 12px; }
+	.views a { padding: 9px 12px; }
+	.site-bar .acct__name { display: none; }
 }
