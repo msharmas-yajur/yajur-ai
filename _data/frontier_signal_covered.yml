@@ -246,3 +246,99 @@ covered:
     title: "Remote Control for iOS — view and reply to local desktop agents from mobile without cloud routing"
     date: 2026-10-06
     edition: 2026-10-11
+  # --- Edition 7: 2026-11-21 ---
+  # Anthropic
+  - company: Anthropic
+    url: https://www.anthropic.com/claude-fable-and-mythos-5-2
+    title: "Introducing Claude Fable 5.2 and Claude Mythos 5.2"
+    date: 2026-11-09
+    edition: 2026-11-21
+  - company: Anthropic
+    url: https://www.anthropic.com/news/ipo-close
+    title: "Anthropic closes IPO — 1.127B Class A shares at $83.00; full underwriter option exercised"
+    date: 2026-11-20
+    edition: 2026-11-21
+  - company: Anthropic
+    url: https://www.anthropic.com/news/donating-agent-skills-to-the-agentic-ai-foundation
+    title: "Donating Agent Skills open standard to the Agentic AI Foundation (70+ platforms adopted)"
+    date: 2026-10-22
+    edition: 2026-11-21
+  - company: Anthropic
+    url: https://www.anthropic.com/research/early-progress-drug-development
+    title: "Early progress on accelerating drug development with Claude — partnerships with six companies"
+    date: 2026-10-27
+    edition: 2026-11-21
+  - company: Anthropic
+    url: https://www.anthropic.com/news/ai-for-science-expands-foundations-research-institutions
+    title: "AI for Science expands to 20+ scientific foundations and research institutions"
+    date: 2026-10-28
+    edition: 2026-11-21
+  # OpenAI
+  - company: OpenAI
+    url: https://openai.com/news/product-releases/gpt-6-2
+    title: "GPT-6.2 Astra and GPT-6.2 Sol — new frontier models for professional work and coding"
+    date: 2026-11-17
+    edition: 2026-11-21
+  - company: OpenAI
+    url: https://openai.com/news/product-releases/gpt-6-1-terra
+    title: "GPT-6.1 Terra — rolls out in ChatGPT Work and Responses API"
+    date: 2026-10-26
+    edition: 2026-11-21
+  - company: OpenAI
+    url: https://openai.com/news/product-releases/chatgpt-wallet
+    title: "ChatGPT Wallet — agents can make purchases on behalf of users (Pro, US)"
+    date: 2026-11-13
+    edition: 2026-11-21
+  - company: OpenAI
+    url: https://openai.com/news/company-announcements/pierre-computer
+    title: "OpenAI announces plans to acquire Pierre Computer Company"
+    date: 2026-11-05
+    edition: 2026-11-21
+  # Google (Gemini / DeepMind)
+  - company: Google
+    url: https://deepmind.google/models/gemini/gemini-4-carbon
+    title: "Gemini 4 Carbon — enterprise and developer release via Vertex AI"
+    date: 2026-11-10
+    edition: 2026-11-21
+  - company: Google
+    url: https://deepmind.google/models/gemini/gemini-4-hydrogen
+    title: "Gemini 4 Hydrogen — professional and enterprise workloads"
+    date: 2026-11-12
+    edition: 2026-11-21
+  - company: Google
+    url: https://deepmind.google/models/gemini/gemini-4-neon
+    title: "Gemini 4 Neon — broad rollout via Google AI Studio and Gemini API"
+    date: 2026-11-18
+    edition: 2026-11-21
+  # SpaceX
+  - company: SpaceX
+    url: https://en.wikipedia.org/wiki/Starship_flight_15
+    title: "Starship Flight 15 — first ship tower catch from orbit; Ship 42 recovered Nov 14; 26 V3 Starlinks deployed"
+    date: 2026-11-14
+    edition: 2026-11-21
+  - company: SpaceX
+    url: https://spaceflightnow.com/2026/10/30/live-coverage-spacex-to-close-out-october-with-halloween-eve-falcon-9-launch/
+    title: "Falcon 9 700th launch milestone — Halloween-eve Starlink mission caps 11 flights in October"
+    date: 2026-10-30
+    edition: 2026-11-21
+  # Cursor
+  - company: Cursor
+    url: https://www.cursor.com/blog/live-apps
+    title: "Live Apps — build and deploy full-stack apps (database, auth, hosting) directly from Cursor"
+    date: 2026-11-05
+    edition: 2026-11-21
+  - company: Cursor
+    url: https://www.cursor.com/blog/voice-chat
+    title: "Voice Chat — bidirectional spoken conversation with the Cursor agent"
+    date: 2026-11-06
+    edition: 2026-11-21
+  - company: Cursor
+    url: https://www.cursor.com/blog/projects-multiplayer
+    title: "Cursor Projects is now multiplayer — team collaboration in beta"
+    date: 2026-11-10
+    edition: 2026-11-21
+  - company: Cursor
+    url: https://www.cursor.com/blog/security-incident-update
+    title: "Security incident update — malicious Claude Code extension blocked; last attacker activity Nov 1"
+    date: 2026-11-01
+    edition: 2026-11-21
