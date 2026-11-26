@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-11-26
+
+- post: Frontier Signal — 2026-11-26 roundup
+
+
 ## 2026-11-21
 
 - post: Frontier Signal — 2026-11-21 roundup
