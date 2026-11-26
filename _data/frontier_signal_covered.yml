@@ -342,3 +342,42 @@ covered:
     title: "Security incident update — malicious Claude Code extension blocked; last attacker activity Nov 1"
     date: 2026-11-01
     edition: 2026-11-21
+  # --- Edition 8: 2026-11-26 ---
+  # Anthropic
+  - company: Anthropic
+    url: https://www.anthropic.com/news/expanding-partnership-gsa
+    title: "Expanding our partnership with GSA to bring Claude to all levels of government — 40% discount, $1B in savings"
+    date: 2026-10-27
+    edition: 2026-11-26
+  # OpenAI
+  - company: OpenAI
+    url: https://deploymentsafety.openai.com/gpt-6-2-chatgpt
+    title: "GPT-6.2 rolls out to ChatGPT Plus, Pro, Business and Enterprise"
+    date: 2026-11-23
+    edition: 2026-11-26
+  - company: OpenAI
+    url: https://openai.com/index/introducing-shirudo
+    title: "OpenAI and Cisco introduce Shirudo — open-source eBPF runtime for AI-powered live security patching"
+    date: 2026-11-23
+    edition: 2026-11-26
+  - company: OpenAI
+    url: https://help.openai.com/en/articles/20001656-healthcare-model-configurations-in-the-openai-api
+    title: "Healthcare model configurations in the OpenAI API — gpt-6.2-astra-healthcare and gpt-6.2-sol-healthcare"
+    date: 2026-11-24
+    edition: 2026-11-26
+  - company: OpenAI
+    url: https://openai.com/index/gpt-6-models-demonstrate-intrinsic-protein-design-capabilities
+    title: "GPT-6 models demonstrate intrinsic protein-design capabilities"
+    date: 2026-11-24
+    edition: 2026-11-26
+  # Google (Gemini / DeepMind)
+  - company: Google
+    url: https://deepmind.google/blog/gemini-robotics-2-5-accelerates-real-world-physical-intelligence
+    title: "Gemini Robotics 2.5: Accelerating Physical Intelligence — VLA model for real-world robot dexterity"
+    date: 2026-11-10
+    edition: 2026-11-26
+  - company: Google
+    url: https://deepmind.google/models/model-cards/genie-4
+    title: "Genie 4 — real-time 720p world model with audio, available to Ultra subscribers and developers"
+    date: 2026-11-18
+    edition: 2026-11-26
